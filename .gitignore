@@ -25,3 +25,9 @@ __pycache__/
 # OS files
 .DS_Store
 Thumbs.db
+
+# Local data cache
+data/
+app/data/
+scratch/
+*.cache.json

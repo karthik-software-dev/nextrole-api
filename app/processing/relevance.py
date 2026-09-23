@@ -11,7 +11,6 @@ HARD_EXCLUDE_TITLE_KEYWORDS = [
     "vp",
     "vice president",
     "head of",
-    "head",
     "engineering manager",
     "general manager",
     "manager",
@@ -459,7 +458,7 @@ def calculate_relevance_score(job: Job) -> tuple[float, list[str]]:
     return score, matched_skills
 
 
-def filter_relevant_jobs(jobs: list[Job], min_score: float = 12.0) -> list[Job]:
+def filter_relevant_jobs(jobs: list[Job], min_score: float = 8.0) -> list[Job]:
     """Filters, scores, and ranks normalized Job objects based on relevance score."""
     relevant_jobs: list[Job] = []
 

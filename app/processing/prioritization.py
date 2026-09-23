@@ -123,7 +123,7 @@ def calculate_priority_score(job: Job) -> tuple[float, str]:
     return round(priority, 1), tier
 
 
-def select_by_location_quota(jobs: list[Job], target_total: int = 50) -> list[Job]:
+def select_by_location_quota(jobs: list[Job], target_total: int = 100) -> list[Job]:
     """Selects jobs respecting the 80% Bangalore / 15% Chennai / 5% Other distribution.
 
     If Chennai or Other has fewer qualified jobs than its quota, slots smoothly roll over
@@ -136,9 +136,9 @@ def select_by_location_quota(jobs: list[Job], target_total: int = 50) -> list[Jo
     maa_jobs = [j for j in jobs if get_location_bucket(j) == "CHENNAI"]
     other_jobs = [j for j in jobs if get_location_bucket(j) == "OTHER"]
 
-    target_blr = int(target_total * 0.80)  # 40 jobs (80%)
-    target_maa = int(target_total * 0.15)  # 7-8 jobs (15%)
-    target_other = target_total - target_blr - target_maa  # 2-3 jobs (5%)
+    target_blr = int(target_total * 0.80)  # 80 jobs (80%)
+    target_maa = int(target_total * 0.15)  # 15 jobs (15%)
+    target_other = target_total - target_blr - target_maa  # 5 jobs (5%)
 
     selected_maa = maa_jobs[:target_maa]
     selected_other = other_jobs[:target_other]

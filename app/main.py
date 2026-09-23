@@ -15,6 +15,8 @@ from sources.indeed_source import fetch_indeed_jobs
 from sources.linkedin_source import fetch_linkedin_jobs
 from sources.naukri_source import fetch_naukri_jobs
 from sources.wellfound_source import fetch_wellfound_jobs
+from storage.database import get_db, init_db
+from storage.repositories.job_repository import JobRepository
 
 
 def main():
@@ -22,9 +24,46 @@ def main():
     print("JOB DISCOVERY ENGINE - MULTI-SOURCE & TARGET CAREERS (V6)")
     print("=" * 60)
 
+    # Database Dashboard / CLI inspect commands
+    if "--db-stats" in sys.argv:
+        if init_db():
+            with get_db() as session:
+                stats = JobRepository.get_database_stats(session)
+                print("\n" + "=" * 60)
+                print("POSTGRESQL DATABASE DASHBOARD SUMMARY ('job_agent')")
+                print("=" * 60)
+                print(f"Total Canonical Jobs   : {stats['total_jobs']}")
+                print(f"Active Opportunities   : {stats['active_jobs']}")
+                print(f"Inactive / Soft-Deleted: {stats['inactive_jobs']}")
+                print(f"Tier 1 (High Priority) : {stats['tier1_jobs']}")
+                print(f"Tier 2 (Solid Match)   : {stats['tier2_jobs']}")
+                print(f"Tracked Companies      : {stats['total_companies']}")
+                print(f"Total Source Postings  : {stats['total_sources']}")
+                print(f"Bengaluru Opportunities: {stats['bangalore_jobs']}")
+                print(f"Chennai Opportunities  : {stats['chennai_jobs']}")
+                print(f"Other / Remote Jobs    : {stats['other_jobs']}")
+                print("=" * 60 + "\n")
+        return
+
+    deact_arg = next((arg.split("=")[1] for arg in sys.argv if arg.startswith("--deactivate=")), None)
+    if deact_arg:
+        if init_db():
+            with get_db() as session:
+                try:
+                    job_id = int(deact_arg)
+                    success = JobRepository.deactivate_job(session, job_id)
+                    if success:
+                        print(f"\n[DATABASE] Job #{job_id} successfully marked as inactive (soft-deleted).\n")
+                    else:
+                        print(f"\n[WARN] Job #{job_id} not found in database.\n")
+                except ValueError:
+                    print("\n[ERROR] Invalid job ID for --deactivate. Must be an integer.\n")
+        return
+
     # Check CLI arguments
     force_live = "--live" in sys.argv
     use_cache = not force_live
+
 
     # Determine which sources to scrape
     source_arg = next((arg.split("=")[1].lower() for arg in sys.argv if arg.startswith("--source=")), "all")
@@ -36,35 +75,24 @@ def main():
     jobs = []
     source_counts = {}
 
-    if source_arg in ("indeed", "all"):
-        indeed_jobs = fetch_indeed_jobs(use_cache=use_cache)
-        source_counts["Indeed"] = len(indeed_jobs)
-        jobs.extend(indeed_jobs)
+    source_definitions = [
+        ("Indeed", ("indeed", "all"), fetch_indeed_jobs),
+        ("Naukri", ("naukri", "all"), fetch_naukri_jobs),
+        ("LinkedIn", ("linkedin", "all"), fetch_linkedin_jobs),
+        ("Wellfound", ("wellfound", "all"), fetch_wellfound_jobs),
+        ("Google Jobs", ("google_jobs", "google", "all"), fetch_google_jobs),
+        ("Target Careers", ("ats", "careers", "target_companies", "all"), fetch_target_company_jobs),
+    ]
 
-    if source_arg in ("naukri", "all"):
-        naukri_jobs = fetch_naukri_jobs(use_cache=use_cache)
-        source_counts["Naukri"] = len(naukri_jobs)
-        jobs.extend(naukri_jobs)
-
-    if source_arg in ("linkedin", "all"):
-        linkedin_jobs = fetch_linkedin_jobs(use_cache=use_cache)
-        source_counts["LinkedIn"] = len(linkedin_jobs)
-        jobs.extend(linkedin_jobs)
-
-    if source_arg in ("wellfound", "all"):
-        wellfound_jobs = fetch_wellfound_jobs(use_cache=use_cache)
-        source_counts["Wellfound"] = len(wellfound_jobs)
-        jobs.extend(wellfound_jobs)
-
-    if source_arg in ("google_jobs", "google", "all"):
-        google_jobs = fetch_google_jobs(use_cache=use_cache)
-        source_counts["Google Jobs"] = len(google_jobs)
-        jobs.extend(google_jobs)
-
-    if source_arg in ("ats", "careers", "target_companies", "all"):
-        ats_jobs = fetch_target_company_jobs(use_cache=use_cache)
-        source_counts["Target Careers"] = len(ats_jobs)
-        jobs.extend(ats_jobs)
+    for label, triggers, fetcher in source_definitions:
+        if source_arg in triggers:
+            try:
+                fetched_jobs = fetcher(use_cache=use_cache)
+                source_counts[label] = len(fetched_jobs)
+                jobs.extend(fetched_jobs)
+            except Exception as src_err:
+                print(f"[WARN] Failed to fetch from {label}: {src_err}")
+                source_counts[label] = 0
 
     sources_summary = ", ".join(f"{k}: {v}" for k, v in source_counts.items())
     print(f"\nTotal jobs collected & normalized: {len(jobs)} ({sources_summary})")
@@ -83,7 +111,7 @@ def main():
         prioritized_jobs = [j for j in prioritized_jobs if not any(k in (j.location or "").lower() for k in ["bengaluru", "bangalore", "karnataka", "chennai"])]
     else:
         # Default 'all': apply 80% Bangalore / 15% Chennai / 5% Other quota
-        prioritized_jobs = select_by_location_quota(prioritized_jobs, target_total=50)
+        prioritized_jobs = select_by_location_quota(prioritized_jobs, target_total=100)
 
     duplicates_count = len(relevant_jobs) - len(prioritized_jobs)
     direct_ats_count = sum(1 for j in prioritized_jobs if j.apply_type in ("DIRECT_ATS", "COMPANY_CAREERS"))
@@ -162,6 +190,22 @@ def main():
             print(f"Duplicates   : {job.duplicate_count} listings merged", flush=True)
         print(f"Direct Apply : {direct_apply}", flush=True)
         print(f"Discovery    : {job.discovery_url}", flush=True)
+
+    # Persist and Sync Opportunities to PostgreSQL Database ('job_agent')
+    try:
+        if init_db():
+            with get_db() as session:
+                synced_count = 0
+                for job in prioritized_jobs:
+                    try:
+                        with session.begin_nested():
+                            JobRepository.upsert_job(session, job)
+                        synced_count += 1
+                    except Exception as job_err:
+                        print(f"[WARN] Failed to sync job '{job.title}': {job_err}")
+                print(f"\n[DATABASE] Successfully synced {synced_count} opportunities to PostgreSQL ('job_agent')")
+    except Exception as e:
+        print(f"\n[WARN] Database sync skipped ({e})")
 
     print("\n" + "=" * 60)
     print("DONE")

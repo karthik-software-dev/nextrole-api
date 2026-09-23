@@ -33,7 +33,17 @@ def fetch_linkedin_jobs(use_cache: bool = False, cache_file: Path | None = None)
         except Exception as e:
             print(f"[WARN] Failed to read LinkedIn cache ({e}), falling back to live Apify fetch...")
 
-    # 2. Live fetch via Apify Client
+    # 2. Check Apify Token
+    if not APIFY_API_TOKEN:
+        print("[WARN] APIFY_API_TOKEN not configured in environment.")
+        if target_cache.exists():
+            print(f"[FALLBACK] Using existing cache {target_cache.name}.")
+            with open(target_cache, "r", encoding="utf-8") as f:
+                raw_items = json.load(f)
+            return normalize_linkedin_jobs(raw_items)
+        return []
+
+    # 3. Live fetch via Apify Client
     print("[APIFY] Connecting to Apify to scrape LinkedIn jobs...")
     client = ApifyClient(APIFY_API_TOKEN)
 
@@ -60,7 +70,7 @@ def fetch_linkedin_jobs(use_cache: bool = False, cache_file: Path | None = None)
             with open(target_cache, "r", encoding="utf-8") as f:
                 raw_items = json.load(f)
             return normalize_linkedin_jobs(raw_items)
-        raise
+        return []
 
     # 3. Save raw items to local cache
     try:

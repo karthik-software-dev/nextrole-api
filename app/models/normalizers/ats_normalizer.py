@@ -134,13 +134,79 @@ def normalize_greenhouse_job(item: dict[str, Any], company_name: str, board_toke
     )
 
 
+def normalize_lever_job(item: dict[str, Any], company_name: str, board_token: str) -> Job:
+    """Normalizes a Lever API job posting into a canonical Job model.
+
+    Lever posting structure:
+      id, text (title), hostedUrl (apply link),
+      categories.location, descriptionPlain / description,
+      createdAt (Unix ms timestamp)
+    """
+    raw_id = str(item.get("id") or "").strip()
+    title = (item.get("text") or "Unknown Position").strip()
+
+    job_id = f"ats_lever_{board_token.lower()}_{raw_id}" if raw_id else f"ats_lever_{board_token.lower()}_{hashlib.md5(title.encode()).hexdigest()[:8]}"
+
+    # Location lives inside categories
+    categories = item.get("categories") or {}
+    location = categories.get("location") or categories.get("team") or None
+
+    is_remote = False
+    if location and "remote" in location.lower():
+        is_remote = True
+    elif "remote" in title.lower():
+        is_remote = True
+
+    # Lever gives a hosted apply page URL
+    direct_apply_url = item.get("hostedUrl") or item.get("applyUrl")
+    discovery_url = direct_apply_url
+
+    # Prefer plain text description over HTML
+    raw_description = item.get("descriptionPlain") or item.get("description") or ""
+    description = _strip_html(raw_description) or title
+
+    min_exp, max_exp, raw_exp = extract_experience(f"{title} {description}")
+
+    # Lever timestamps are Unix ms
+    created_at_ms = item.get("createdAt")
+    posted_at = None
+    if created_at_ms:
+        try:
+            from datetime import datetime, timezone
+            posted_at = datetime.fromtimestamp(int(created_at_ms) / 1000, tz=timezone.utc).isoformat()
+        except Exception:
+            posted_at = str(created_at_ms)
+
+    return Job(
+        id=job_id,
+        title=title,
+        company=company_name,
+        source="ats",
+        location=location,
+        is_remote=is_remote,
+        salary_raw=None,
+        description=description,
+        discovery_url=discovery_url,
+        apply_url=direct_apply_url,
+        ats_provider="Lever",
+        apply_type="DIRECT_ATS",
+        posted_at=posted_at,
+        relevance_score=0.0,
+        experience_min=min_exp,
+        experience_max=max_exp,
+        experience_raw=raw_exp,
+        raw_data=item,
+    )
+
+
 def normalize_ats_job(item: dict[str, Any], company_name: str, ats_type: str, identifier: str) -> Job:
     """Dispatches normalization based on ATS provider type."""
     if ats_type == "smartrecruiters":
         return normalize_smartrecruiters_job(item, company_name, identifier)
     elif ats_type == "greenhouse":
         return normalize_greenhouse_job(item, company_name, identifier)
-    else:
+    elif ats_type == "lever":
+        return normalize_lever_job(item, company_name, identifier)
         # Generic fallback
         raw_id = str(item.get("id") or "").strip()
         title = str(item.get("title") or item.get("name") or "Unknown Position").strip()

@@ -129,6 +129,27 @@ def fetch_greenhouse_postings(company: TargetCompany) -> list[dict[str, Any]]:
         return []
 
 
+def fetch_lever_postings(company: TargetCompany) -> list[dict[str, Any]]:
+    """Fetches job postings from Lever public REST API (zero cost, no auth required).
+
+    Lever API: GET https://api.lever.co/v0/postings/<identifier>?mode=json
+    Returns a flat list of posting objects.
+    """
+    url = f"https://api.lever.co/v0/postings/{company.identifier}?mode=json&limit=100"
+    req = urllib.request.Request(url, headers=HTTP_HEADERS)
+    try:
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            items = json.loads(resp.read().decode("utf-8"))
+            # Lever returns a list directly (not wrapped in a key)
+            if not isinstance(items, list):
+                items = items.get("data", [])
+            print(f"[ATS: Lever] Fetched {len(items)} postings for {company.name}")
+            return items
+    except Exception as e:
+        print(f"[WARN] Failed to fetch Lever postings for {company.name}: {e}")
+        return []
+
+
 def fetch_target_company_jobs(
     use_cache: bool = False,
     cache_file: Path | None = None,
@@ -168,13 +189,27 @@ def fetch_target_company_jobs(
             raw_items = fetch_smartrecruiters_postings(comp)
         elif comp.ats_type == "greenhouse":
             raw_items = fetch_greenhouse_postings(comp)
+        elif comp.ats_type == "lever":
+            raw_items = fetch_lever_postings(comp)
         else:
             print(f"[WARN] Unsupported ATS type: {comp.ats_type} for {comp.name}")
             continue
 
         matched_for_comp = 0
         for item in raw_items:
-            loc_val = item.get("location")
+            if comp.ats_type == "lever":
+                categories = item.get("categories") or {}
+                all_locs = categories.get("allLocations") or []
+                all_locs_str = " ".join(all_locs) if isinstance(all_locs, list) else str(all_locs)
+                loc_val = {
+                    "name": categories.get("location"),
+                    "country": item.get("country"),
+                    "region": categories.get("team"),
+                    "fullLocation": f"{all_locs_str} {categories.get('location', '')} {item.get('country', '')}"
+                }
+            else:
+                loc_val = item.get("location")
+
             if not is_location_match(loc_val, comp.location_filter):
                 continue
 

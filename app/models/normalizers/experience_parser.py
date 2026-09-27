@@ -11,6 +11,7 @@ def extract_experience(text: str | None) -> tuple[int | None, int | None, str | 
         return None, None, None
 
     clean_text = text.replace("\u00a0", " ")
+    clean_text = re.sub(r"[\u2013\u2014\u2212\uff0d]", "-", clean_text)
 
     # 1. Experience Range: e.g. "1-3 years", "2 to 5 Yrs", "0 - 2 yrs", "1-4 years of experience"
     range_match = re.search(

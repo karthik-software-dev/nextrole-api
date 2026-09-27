@@ -10,6 +10,7 @@ import { ApplicationsPage } from './pages/ApplicationsPage';
 import { CompaniesPage } from './pages/CompaniesPage';
 import { DiscoveryPage } from './pages/DiscoveryPage';
 import { SettingsPage } from './pages/SettingsPage';
+import { AnalyticsPage } from './pages/AnalyticsPage';
 
 export function App() {
   return (
@@ -20,6 +21,8 @@ export function App() {
             <Routes>
               <Route path="/" element={<AppLayout />}>
                 <Route index element={<DashboardPage />} />
+                <Route path="dashboard" element={<DashboardPage />} />
+                <Route path="analytics" element={<AnalyticsPage />} />
                 <Route path="jobs" element={<JobsPage />} />
                 <Route path="opportunities" element={<Navigate to="/jobs" replace />} />
                 <Route path="applications" element={<ApplicationsPage />} />

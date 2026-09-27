@@ -1,5 +1,6 @@
 from typing import TYPE_CHECKING
 from sqlalchemy import BigInteger, String
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from storage.models.base import ActiveMixin, Base, TimestampMixin
@@ -21,6 +22,7 @@ class User(Base, TimestampMixin, ActiveMixin):
         default="Python Backend Engineer",
         nullable=False,
     )
+    preferences_json: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
 
     # Relationships
     applications: Mapped[list["Application"]] = relationship(

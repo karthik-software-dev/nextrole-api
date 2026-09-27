@@ -6,7 +6,7 @@ from typing import Any
 
 from apify_client import ApifyClient
 
-from config import APIFY_API_TOKEN
+from config import extract_apify_dataset_id, get_apify_token
 from models.job import Job
 from models.normalizers.indeed_normalizer import normalize_indeed_jobs
 
@@ -35,8 +35,9 @@ def fetch_indeed_jobs(use_cache: bool = False, cache_file: Path | None = None) -
             print(f"[WARN] Failed to read cache ({e}), falling back to live Apify fetch...")
 
     # 2. Check Apify Token
-    if not APIFY_API_TOKEN:
-        print("[WARN] APIFY_API_TOKEN not configured in environment.")
+    token = get_apify_token()
+    if not token:
+        print("[WARN] APIFY_API_TOKEN not configured in environment or settings.")
         if target_cache.exists():
             print(f"[FALLBACK] Using existing cache {target_cache.name}.")
             with open(target_cache, "r", encoding="utf-8") as f:
@@ -46,26 +47,42 @@ def fetch_indeed_jobs(use_cache: bool = False, cache_file: Path | None = None) -
 
     # 3. Live fetch via Apify Client
     print("[APIFY] Connecting to Apify to scrape Indeed jobs...")
-    client = ApifyClient(APIFY_API_TOKEN)
+    client = ApifyClient(token)
 
-    run_input = {
-        "position": "Python Backend Engineer",
-        "maxItemsPerSearch": 50,
-        "country": "IN",
-        "location": "Bengaluru",
-        "parseCompanyDetails": True,
-        "saveOnlyUniqueItems": True,
-    }
+    search_configs = [
+        {
+            "position": "Python Backend Engineer",
+            "location": "Bengaluru",
+            "maxItemsPerSearch": 25,
+            "country": "IN",
+            "parseCompanyDetails": True,
+            "saveOnlyUniqueItems": True,
+        },
+        {
+            "position": "Python Backend Developer",
+            "location": "Chennai",
+            "maxItemsPerSearch": 25,
+            "country": "IN",
+            "parseCompanyDetails": True,
+            "saveOnlyUniqueItems": True,
+        },
+    ]
 
+    raw_items: list[dict[str, Any]] = []
     try:
-        run = client.actor(ACTOR_ID).call(run_input=run_input)
-        dataset_id = run.get("defaultDatasetId")
-        if not dataset_id:
-            raise RuntimeError(f"Apify run finished without a defaultDatasetId: {run}")
+        for cfg in search_configs:
+            print(f"[APIFY: Indeed] Scraping '{cfg['position']}' in {cfg['location']} (max {cfg['maxItemsPerSearch']})...")
+            run = client.actor(ACTOR_ID).call(run_input=cfg)
+            dataset_id = extract_apify_dataset_id(run)
+            if not dataset_id:
+                print(f"[WARN] Indeed run finished without datasetId: {run}")
+                continue
+            batch = list(client.dataset(dataset_id).iterate_items())
+            print(f"[APIFY: Indeed] Fetched {len(batch)} items for {cfg['location']}.")
+            raw_items.extend(batch)
 
-        raw_items: list[dict[str, Any]] = list(
-            client.dataset(dataset_id).iterate_items()
-        )
+        if not raw_items:
+            raise RuntimeError("Indeed scraper returned zero items across all locations.")
     except Exception as e:
         print(f"[ERROR] Failed to fetch from Apify: {e}")
         # If cache exists as fallback on failure, use it

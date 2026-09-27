@@ -24,8 +24,10 @@ class TestWellfoundNormalizer(unittest.TestCase):
         self.assertEqual(job.location, "Bengaluru")
         self.assertFalse(job.is_remote)
         self.assertEqual(job.salary_raw, "₹25L – ₹36L")
+        self.assertEqual(job.salary_min, 2500000.0)
+        self.assertEqual(job.salary_max, 3600000.0)
         self.assertEqual(job.discovery_url, "https://wellfound.com/jobs/4144491-backend-engineer")
-        self.assertIsNone(job.apply_url)
+        self.assertEqual(job.apply_url, "https://wellfound.com/jobs/4144491-backend-engineer")
         self.assertIn("Python Backend Engineer", job.description)
         self.assertIn("FastAPI and PostgreSQL.", job.description)
 

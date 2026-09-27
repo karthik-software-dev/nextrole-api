@@ -5,7 +5,7 @@ from typing import Any
 
 from apify_client import ApifyClient
 
-from config import APIFY_API_TOKEN
+from config import extract_apify_dataset_id, get_apify_token
 from models.job import Job
 from models.normalizers.linkedin_normalizer import normalize_linkedin_jobs
 
@@ -34,8 +34,9 @@ def fetch_linkedin_jobs(use_cache: bool = False, cache_file: Path | None = None)
             print(f"[WARN] Failed to read LinkedIn cache ({e}), falling back to live Apify fetch...")
 
     # 2. Check Apify Token
-    if not APIFY_API_TOKEN:
-        print("[WARN] APIFY_API_TOKEN not configured in environment.")
+    token = get_apify_token()
+    if not token:
+        print("[WARN] APIFY_API_TOKEN not configured in environment or settings.")
         if target_cache.exists():
             print(f"[FALLBACK] Using existing cache {target_cache.name}.")
             with open(target_cache, "r", encoding="utf-8") as f:
@@ -45,24 +46,40 @@ def fetch_linkedin_jobs(use_cache: bool = False, cache_file: Path | None = None)
 
     # 3. Live fetch via Apify Client
     print("[APIFY] Connecting to Apify to scrape LinkedIn jobs...")
-    client = ApifyClient(APIFY_API_TOKEN)
+    client = ApifyClient(token)
 
-    run_input = {
-        "keyword": "Python Backend Engineer",
-        "location": "Bengaluru, India",
-        "results_wanted": 25,
-        "collectDetails": True,
-    }
+    search_configs = [
+        {
+            "keyword": "Python Backend Engineer",
+            "location": "Bengaluru, India",
+            "results_wanted": 50,
+            "posted_date": "7d",
+            "collectDetails": True,
+        },
+        {
+            "keyword": "Python Backend Engineer",
+            "location": "Chennai, India",
+            "results_wanted": 50,
+            "posted_date": "7d",
+            "collectDetails": True,
+        },
+    ]
 
+    raw_items: list[dict[str, Any]] = []
     try:
-        run = client.actor(ACTOR_ID).call(run_input=run_input)
-        dataset_id = run.get("defaultDatasetId")
-        if not dataset_id:
-            raise RuntimeError(f"LinkedIn run finished without a defaultDatasetId: {run}")
+        for cfg in search_configs:
+            print(f"[APIFY: LinkedIn] Scraping '{cfg['keyword']}' in {cfg['location']} (max {cfg['results_wanted']})...")
+            run = client.actor(ACTOR_ID).call(run_input=cfg)
+            dataset_id = extract_apify_dataset_id(run)
+            if not dataset_id:
+                print(f"[WARN] LinkedIn run finished without datasetId: {run}")
+                continue
+            batch = list(client.dataset(dataset_id).iterate_items())
+            print(f"[APIFY: LinkedIn] Fetched {len(batch)} items for {cfg['location']}.")
+            raw_items.extend(batch)
 
-        raw_items: list[dict[str, Any]] = list(
-            client.dataset(dataset_id).iterate_items()
-        )
+        if not raw_items:
+            raise RuntimeError("LinkedIn scraper returned zero items across all locations.")
     except Exception as e:
         print(f"[ERROR] Failed to fetch from LinkedIn via Apify: {e}")
         if target_cache.exists():

@@ -5,6 +5,11 @@
 @tailwind utilities;
 
 @layer base {
+  html {
+    /* Bump base font-size ~6% so all rem-based text scales up globally */
+    font-size: 106.25%;
+  }
+
   :root {
     --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   }
@@ -15,7 +20,7 @@
 
   body {
     font-family: var(--font-sans);
-    @apply bg-slate-50 text-slate-900 dark:bg-[#0B0F17] dark:text-slate-100 antialiased;
+    @apply bg-slate-50 text-slate-800 dark:bg-[#0B0F17] dark:text-slate-50 antialiased;
     min-height: 100vh;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -50,3 +55,81 @@
 .dark ::-webkit-scrollbar-thumb:hover {
   background: rgba(71, 85, 105, 0.9);
 }
+
+/* UI Motion & Smoothness Polish */
+:root {
+  --ease-smooth: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes pageReveal {
+  from {
+    opacity: 0;
+    transform: translateY(3px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes menuReveal {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes modalEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+@keyframes backdropFade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.page-reveal {
+  animation: pageReveal 180ms var(--ease-smooth) both;
+}
+
+.menu-reveal {
+  animation: menuReveal 150ms var(--ease-smooth) both;
+  transform-origin: top;
+}
+
+.modal-enter {
+  animation: modalEnter 180ms var(--ease-smooth) both;
+}
+
+.backdrop-fade {
+  animation: backdropFade 160ms ease-out both;
+}
+
+/* Accessibility: Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  ::before,
+  ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+

@@ -1,4 +1,5 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 interface DrawerProps {
@@ -16,6 +17,34 @@ export const Drawer: React.FC<DrawerProps> = ({
   children,
   width = 'xl',
 }) => {
+  const [mounted, setMounted] = useState(isOpen);
+  const [visible, setVisible] = useState(false);
+  const closingTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      if (closingTimerRef.current) clearTimeout(closingTimerRef.current);
+      setMounted(true);
+      // Double rAF ensures the browser paints the offscreen state before sliding in
+      const raf = requestAnimationFrame(() => {
+        requestAnimationFrame(() => {
+          setVisible(true);
+        });
+      });
+      document.body.style.overflow = 'hidden';
+      return () => cancelAnimationFrame(raf);
+    } else {
+      setVisible(false);
+      closingTimerRef.current = setTimeout(() => {
+        setMounted(false);
+        document.body.style.overflow = '';
+      }, 350);
+      return () => {
+        if (closingTimerRef.current) clearTimeout(closingTimerRef.current);
+      };
+    }
+  }, [isOpen]);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && isOpen) {
@@ -23,18 +52,15 @@ export const Drawer: React.FC<DrawerProps> = ({
       }
     };
     if (isOpen) {
-      document.body.style.overflow = 'hidden';
       window.addEventListener('keydown', handleKeyDown);
-    } else {
-      document.body.style.overflow = '';
     }
     return () => {
-      document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);
+      document.body.style.overflow = '';
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!mounted && !isOpen) return null;
 
   const widthStyles = {
     md: 'max-w-md',
@@ -43,25 +69,29 @@ export const Drawer: React.FC<DrawerProps> = ({
     '2xl': 'max-w-2xl',
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
-        {/* Backdrop */}
+        {/* Backdrop with smooth fade transition */}
         <div
-          className="absolute inset-0 bg-slate-950/50 backdrop-blur-xs transition-opacity duration-300 ease-in-out"
+          className={`absolute inset-0 bg-slate-950/65 backdrop-blur-md transition-opacity duration-300 ease-out cursor-pointer ${
+            visible ? 'opacity-100' : 'opacity-0'
+          }`}
           onClick={onClose}
         />
 
-        <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10">
+        <div className="pointer-events-none fixed inset-y-0 right-0 flex max-w-full pl-10 h-full">
           <div
-            className={`pointer-events-auto w-screen ${widthStyles[width]} transform transition-transform duration-300 ease-in-out bg-white dark:bg-slate-900 border-l border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col`}
+            className={`pointer-events-auto w-screen ${widthStyles[width]} h-full transform transition-transform duration-350 ease-[cubic-bezier(0.16,1,0.3,1)] bg-white dark:bg-[#111726] border-l border-slate-200/90 dark:border-slate-800 shadow-[-16px_0_48px_rgba(0,0,0,0.18)] dark:shadow-[-16px_0_48px_rgba(0,0,0,0.65)] flex flex-col ${
+              visible ? 'translate-x-0' : 'translate-x-full'
+            }`}
           >
             {/* Header */}
-            <div className="flex items-center justify-between border-b border-slate-200 dark:border-slate-800 px-6 py-4">
-              <div className="flex-1 pr-4">{title}</div>
+            <div className="flex items-center justify-between border-b border-slate-200/90 dark:border-slate-800 px-6 py-4.5 bg-white dark:bg-[#111726] sticky top-0 z-10 shrink-0">
+              <div className="flex-1 pr-4 min-w-0">{title}</div>
               <button
                 onClick={onClose}
-                className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
+                className="rounded-xl p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700 dark:hover:bg-slate-800 dark:hover:text-slate-200 transition-colors cursor-pointer"
                 title="Close drawer"
               >
                 <X className="h-5 w-5" />
@@ -69,10 +99,13 @@ export const Drawer: React.FC<DrawerProps> = ({
             </div>
 
             {/* Content */}
-            <div className="flex-1 overflow-y-auto px-6 py-6">{children}</div>
+            <div className="flex-1 overflow-y-auto px-6 py-6 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
+              {children}
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

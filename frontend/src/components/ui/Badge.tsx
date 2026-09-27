@@ -16,9 +16,9 @@ export const Badge: React.FC<BadgeProps> = ({
   dot = false,
 }) => {
   const sizeStyles = {
-    xs: 'px-1.5 py-0.5 text-[10px] font-medium',
-    sm: 'px-2 py-0.5 text-xs font-medium',
-    md: 'px-2.5 py-1 text-xs font-semibold',
+    xs: 'px-1.5 py-0.5 text-[10.5px] font-semibold',
+    sm: 'px-2 py-0.5 text-[11.5px] font-semibold',
+    md: 'px-2.5 py-1 text-[12px] font-semibold',
   };
 
   const variantStyles = {
@@ -49,9 +49,9 @@ export const Badge: React.FC<BadgeProps> = ({
 
   return (
     <span
-      className={`inline-flex items-center gap-1.5 rounded-md border transition-colors ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
+      className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-md border transition-colors ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
     >
-      {dot && <span className={`h-1.5 w-1.5 rounded-full ${dotStyles[variant]}`} />}
+      {dot && <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotStyles[variant]}`} />}
       {children}
     </span>
   );
@@ -68,26 +68,26 @@ export const TierBadge: React.FC<{ tier: string; className?: string }> = ({ tier
   return <Badge variant="tier3" className={className}>Tier 3</Badge>;
 };
 
-export const ApplicationStatusBadge: React.FC<{ status: string; className?: string }> = ({ status, className }) => {
+export const ApplicationStatusBadge: React.FC<{ status: string; size?: 'xs' | 'sm' | 'md'; className?: string }> = ({ status, size = 'sm', className }) => {
   const normalized = (status || '').toLowerCase().replace(/_/g, ' ');
   switch (normalized) {
     case 'offered':
     case 'offer':
-      return <Badge variant="emerald" dot className={className}>Offered</Badge>;
+      return <Badge variant="emerald" size={size} dot className={className}>Offered</Badge>;
     case 'interviewing':
     case 'interview':
-      return <Badge variant="purple" dot className={className}>Interviewing</Badge>;
+      return <Badge variant="purple" size={size} dot className={className}>Interviewing</Badge>;
     case 'under review':
-      return <Badge variant="blue" dot className={className}>Under Review</Badge>;
+      return <Badge variant="blue" size={size} dot className={className}>Under Review</Badge>;
     case 'applied':
-      return <Badge variant="indigo" dot className={className}>Applied</Badge>;
+      return <Badge variant="indigo" size={size} dot className={className}>Applied</Badge>;
     case 'drafted':
     case 'saved':
-      return <Badge variant="slate" dot className={className}>Saved / Draft</Badge>;
+      return <Badge variant="slate" size={size} dot className={className}>Saved / Draft</Badge>;
     case 'rejected':
-      return <Badge variant="rose" dot className={className}>Rejected</Badge>;
+      return <Badge variant="rose" size={size} dot className={className}>Rejected</Badge>;
     default:
-      return <Badge variant="slate" className={className}>{status || 'Unknown'}</Badge>;
+      return <Badge variant="slate" size={size} className={className}>{status || 'Unknown'}</Badge>;
   }
 };
 

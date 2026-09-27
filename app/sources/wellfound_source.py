@@ -5,7 +5,7 @@ from typing import Any
 
 from apify_client import ApifyClient
 
-from config import APIFY_API_TOKEN
+from config import extract_apify_dataset_id, get_apify_token
 from models.job import Job
 from models.normalizers.wellfound_normalizer import normalize_wellfound_jobs
 
@@ -34,8 +34,9 @@ def fetch_wellfound_jobs(use_cache: bool = False, cache_file: Path | None = None
             print(f"[WARN] Failed to read Wellfound cache ({e}), falling back to live Apify fetch...")
 
     # 2. Check Apify Token
-    if not APIFY_API_TOKEN:
-        print("[WARN] APIFY_API_TOKEN not configured in environment.")
+    token = get_apify_token()
+    if not token:
+        print("[WARN] APIFY_API_TOKEN not configured in environment or settings.")
         if target_cache.exists():
             print(f"[FALLBACK] Using existing cache {target_cache.name}.")
             with open(target_cache, "r", encoding="utf-8") as f:
@@ -45,7 +46,7 @@ def fetch_wellfound_jobs(use_cache: bool = False, cache_file: Path | None = None
 
     # 3. Live fetch via Apify Client
     print("[APIFY] Connecting to Apify to scrape Wellfound startup jobs...")
-    client = ApifyClient(APIFY_API_TOKEN)
+    client = ApifyClient(token)
 
     run_input = {
         "role": "backend-engineer",
@@ -55,7 +56,7 @@ def fetch_wellfound_jobs(use_cache: bool = False, cache_file: Path | None = None
 
     try:
         run = client.actor(ACTOR_ID).call(run_input=run_input)
-        dataset_id = run.get("defaultDatasetId")
+        dataset_id = extract_apify_dataset_id(run)
         if not dataset_id:
             raise RuntimeError(f"Wellfound run finished without a defaultDatasetId: {run}")
 

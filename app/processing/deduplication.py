@@ -83,14 +83,63 @@ def normalize_company(company: str | None) -> str:
     return re.sub(r"\s+", " ", name).strip()
 
 
-def normalize_title(title: str | None) -> str:
-    """Normalizes job title by stripping bracketed qualifiers and department tags."""
+def clean_job_title(title: str | None) -> str:
+    """Cleans job titles by removing requisition codes, recruiter tags, and corrupted characters
+    while preserving the core professional job title.
+
+    Examples:
+        "Senior Backend Engineer  Python IRC302277" -> "Senior Backend Engineer - Python"
+        "python back end Engineer-PAN INDIA(C2H)" -> "python back end Engineer"
+        "Senior Backend Developer- Python & Django [T500-29526]" -> "Senior Backend Developer- Python & Django"
+        "Senior Python Backend Engineer (Immediate Joiners only)" -> "Senior Python Backend Engineer"
+    """
     if not title:
         return ""
 
-    t = title.lower()
+    # Fix character encoding glitches
+    t = (
+        title.replace("\ufffd", " - ")
+        .replace("\x96", " - ")
+        .replace("–", "-")
+        .replace("—", "-")
+    )
+
+    # Remove requisition & ATS codes
+    t = re.sub(r"\bIRC\d+\b", "", t, flags=re.IGNORECASE)
+    t = re.sub(r"\[\s*T\d+-\d+\s*\]", "", t, flags=re.IGNORECASE)
+    t = re.sub(r"\[\s*REQ-?\d+\s*\]", "", t, flags=re.IGNORECASE)
+    t = re.sub(
+        r"\b(?:Job\s*(?:Code|Id|ID)|Requisition\s*ID)[\s:]*[A-Za-z0-9_-]+\b",
+        "",
+        t,
+        flags=re.IGNORECASE,
+    )
+
+    # Remove recruiter & contract badges
+    t = re.sub(
+        r"\(\s*(?:C2H|Immediate Joiners? only|Immediate Joiner|Immediate Joining|PAN INDIA|Contract to Hire)\s*\)",
+        "",
+        t,
+        flags=re.IGNORECASE,
+    )
+    t = re.sub(r"-\s*PAN INDIA\b", "", t, flags=re.IGNORECASE)
+
+    # Clean dangling hyphens and excessive whitespace
+    t = re.sub(r"\s*-\s*$", "", t)
+    t = re.sub(r"^\s*-\s*", "", t)
+    return re.sub(r"\s+", " ", t).strip()
+
+
+def normalize_title(title: str | None) -> str:
+    """Normalizes job title for semantic deduplication by stripping bracketed qualifiers,
+    requisition codes, and location/department tags."""
+    if not title:
+        return ""
+
+    cleaned = clean_job_title(title).lower()
     # Remove bracketed text like (Retail), (Bangalore), (5+ Years)
-    t = re.sub(r"\([^)]*\)", "", t)
+    t = re.sub(r"\([^)]*\)", "", cleaned)
+    t = re.sub(r"\[[^\]]*\]", "", t)
     # Remove after hyphens if it's location/department
     t = re.sub(
         r"\s*-\s*(bangalore|bengaluru|india|karnataka|retail|studio team)\b.*",

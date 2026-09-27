@@ -1,3 +1,4 @@
+from datetime import datetime
 from pydantic import BaseModel
 
 
@@ -28,6 +29,30 @@ class SourceBreakdownItemOut(BaseModel):
     count: int
 
 
+class DiscoveryTrendItemOut(BaseModel):
+    """Daily or periodic trend of discovered jobs."""
+
+    date: str
+    count: int
+
+
+class LocationStatItemOut(BaseModel):
+    """Aggregated opportunity counts by location name."""
+
+    name: str
+    count: int
+
+
+class RecentActivityItemOut(BaseModel):
+    """Real audit log or discovery event record."""
+
+    id: str
+    title: str
+    description: str | None = None
+    timestamp: datetime
+    activity_type: str
+
+
 class DashboardSummaryOut(BaseModel):
     """High-level metrics for dashboard cards and pipeline charts."""
 
@@ -41,3 +66,7 @@ class DashboardSummaryOut(BaseModel):
     location_breakdown: LocationBreakdownOut
     application_breakdown: ApplicationStatusBreakdownOut
     sources_breakdown: list[SourceBreakdownItemOut] = []
+    new_jobs: int = 0
+    discovery_trend: list[DiscoveryTrendItemOut] = []
+    locations_breakdown: list[LocationStatItemOut] = []
+    recent_activities: list[RecentActivityItemOut] = []

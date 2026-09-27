@@ -5,7 +5,13 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from models.job import Job as JobDataclass
-from processing.deduplication import canonicalize_url, normalize_company, normalize_title
+from models.normalizers import parse_salary
+from processing.deduplication import (
+    canonicalize_url,
+    clean_job_title,
+    normalize_company,
+    normalize_title,
+)
 from processing.prioritization import get_location_bucket
 from storage.models.company import Company
 from storage.models.job import Job
@@ -15,7 +21,7 @@ from storage.repositories.company_repository import CompanyRepository
 
 def compute_dedup_hash(job: JobDataclass) -> str:
     """Computes a deterministic 64-char SHA-256 deduplication hash for a job opportunity."""
-    canon_apply = canonicalize_url(job.apply_url)
+    canon_apply = canonicalize_url(job.apply_url or job.discovery_url)
 
     # 1. Direct verified apply link is the strongest requisition identifier
     if canon_apply and job.apply_type in ("DIRECT_ATS", "COMPANY_CAREERS"):
@@ -73,7 +79,13 @@ class JobRepository:
         existing_job = session.scalar(stmt)
 
         now = datetime.now(timezone.utc)
-        clean_apply_url = canonicalize_url(job_dc.apply_url)
+        clean_apply_url = canonicalize_url(job_dc.apply_url or job_dc.discovery_url)
+        clean_title = clean_job_title(job_dc.title)
+
+        if job_dc.salary_min is not None or job_dc.salary_max is not None:
+            sal_min, sal_max, sal_currency = job_dc.salary_min, job_dc.salary_max, job_dc.salary_currency
+        else:
+            sal_min, sal_max, sal_currency = parse_salary(job_dc.salary_raw)
 
         if existing_job:
             # Update existing canonical job
@@ -81,7 +93,7 @@ class JobRepository:
             existing_job.last_seen_at = now
             existing_job.is_active = True  # Reactivate if it was previously inactive
 
-            # Upgrade apply link if incoming has direct ATS link
+            # Upgrade apply link if incoming has direct ATS link or existing is empty
             if job_dc.apply_type in ("DIRECT_ATS", "COMPANY_CAREERS") and existing_job.apply_type not in ("DIRECT_ATS", "COMPANY_CAREERS"):
                 existing_job.canonical_apply_url = clean_apply_url
                 existing_job.apply_type = job_dc.apply_type
@@ -89,12 +101,23 @@ class JobRepository:
             elif not existing_job.canonical_apply_url and clean_apply_url:
                 existing_job.canonical_apply_url = clean_apply_url
 
-            # Keep higher scores
+            # Title clean update if current title has raw artifacts
+            if clean_title and existing_job.title != clean_title:
+                existing_job.title = clean_title
+                existing_job.normalized_title = normalize_title(clean_title)
+
+            # Salary numeric backfill if existing is null
+            if (existing_job.salary_min is None and existing_job.salary_max is None) and (sal_min is not None or sal_max is not None):
+                existing_job.salary_min = sal_min
+                existing_job.salary_max = sal_max
+                existing_job.currency = sal_currency
+
+            # Keep higher priority scores, authoritatively synchronize relevance score
             if job_dc.priority_score > float(existing_job.priority_score):
                 existing_job.priority_score = job_dc.priority_score
                 existing_job.priority_tier = job_dc.priority_tier
-            if job_dc.relevance_score > float(existing_job.relevance_score):
-                existing_job.relevance_score = job_dc.relevance_score
+            existing_job.relevance_score = job_dc.relevance_score
+            existing_job.is_active = True
 
             # Union matched skills
             current_skills = list(existing_job.matched_skills or [])
@@ -136,8 +159,8 @@ class JobRepository:
 
         new_job = Job(
             company_id=company.id,
-            title=job_dc.title,
-            normalized_title=normalize_title(job_dc.title),
+            title=clean_title,
+            normalized_title=normalize_title(clean_title),
             dedup_hash=dedup_hash,
             location=job_dc.location,
             city=city,
@@ -147,6 +170,9 @@ class JobRepository:
             experience_max=job_dc.experience_max,
             experience_raw=job_dc.experience_raw,
             salary_raw=job_dc.salary_raw,
+            salary_min=sal_min,
+            salary_max=sal_max,
+            currency=sal_currency,
             description=job_dc.description,
             canonical_apply_url=clean_apply_url,
             apply_type=job_dc.apply_type,
@@ -182,6 +208,28 @@ class JobRepository:
         session.flush()
 
         return new_job, True
+
+    @staticmethod
+    def deactivate_irrelevant_job(session: Session, job_dc: JobDataclass) -> bool:
+        """If an irrelevant job already exists in the database, updates its relevance score
+        and sets is_active = False. Does NOT insert new irrelevant jobs.
+
+        Returns:
+            bool: True if an existing job was found and deactivated, False otherwise.
+        """
+        dedup_hash = compute_dedup_hash(job_dc)
+        stmt = select(Job).where(Job.dedup_hash == dedup_hash)
+        existing_job = session.scalar(stmt)
+
+        if existing_job:
+            now = datetime.now(timezone.utc)
+            existing_job.relevance_score = job_dc.relevance_score
+            existing_job.is_active = False
+            existing_job.last_seen_at = now
+            session.flush()
+            return True
+
+        return False
 
     @staticmethod
     def get_active_jobs(
@@ -255,14 +303,6 @@ class JobRepository:
             for k, v in sorted(normalized_counts.items(), key=lambda item: item[1], reverse=True)
             if v > 0
         ]
-        if not sources_breakdown:
-            sources_breakdown = [
-                {"name": "LinkedIn", "count": 24},
-                {"name": "Naukri", "count": 18},
-                {"name": "Indeed", "count": 12},
-                {"name": "Wellfound", "count": 8},
-                {"name": "Company Sites", "count": 6},
-            ]
 
         return {
             "total_jobs": total_jobs,

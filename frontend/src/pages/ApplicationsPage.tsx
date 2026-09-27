@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
   Layers,
-  Kanban,
-  Table as TableIcon,
   Plus,
   Clock,
   ExternalLink,
@@ -13,6 +11,11 @@ import {
   FileText,
   Building2,
   Loader2,
+  Search,
+  X,
+  MapPin,
+  Globe,
+  TrendingUp,
 } from 'lucide-react';
 import { getApplications, updateApplication, createApplication, getJobs } from '../api';
 import type { Application, JobSummary } from '../types';
@@ -27,7 +30,7 @@ export const ApplicationsPage: React.FC = () => {
   const { toast } = useToast();
   const [applications, setApplications] = useState<Application[]>([]);
   const [selectedTab, setSelectedTab] = useState<string>('all');
-  const [viewMode, setViewMode] = useState<'kanban' | 'table'>('table');
+  const [searchQuery, setSearchQuery] = useState<string>('');
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [isLoading, setIsLoading] = useState(true);
@@ -121,10 +124,17 @@ export const ApplicationsPage: React.FC = () => {
     }
   };
 
-  // Filter applications by tab
+  // Filter applications by tab & search query
   const filteredApps = applications.filter((app) => {
-    if (selectedTab === 'all') return true;
-    return app.status.toLowerCase() === selectedTab.toLowerCase();
+    const matchesTab = selectedTab === 'all' || app.status.toLowerCase() === selectedTab.toLowerCase();
+    if (!matchesTab) return false;
+    if (!searchQuery.trim()) return true;
+    const q = searchQuery.toLowerCase();
+    const titleMatch = app.job?.title?.toLowerCase().includes(q) || false;
+    const companyMatch = app.job?.company_name?.toLowerCase().includes(q) || false;
+    const notesMatch = app.notes?.toLowerCase().includes(q) || false;
+    const portalMatch = app.portal_type?.toLowerCase().includes(q) || false;
+    return titleMatch || companyMatch || notesMatch || portalMatch;
   });
 
   const totalFiltered = filteredApps.length;
@@ -144,58 +154,23 @@ export const ApplicationsPage: React.FC = () => {
     { label: 'Rejected', value: 'rejected', count: applications.filter((a) => a.status === 'rejected').length },
   ];
 
-  const kanbanColumns = [
-    { id: 'drafted', title: 'Saved / Draft' },
-    { id: 'applied', title: 'Applied' },
-    { id: 'under_review', title: 'Under Review' },
-    { id: 'interviewing', title: 'Interviewing' },
-    { id: 'offered', title: 'Offered' },
-    { id: 'rejected', title: 'Rejected' },
-  ];
-
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
+          <h1 className="text-[28px] sm:text-[32px] font-bold tracking-tight text-slate-900 dark:text-white">
             Applications CRM
           </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <p className="mt-1 text-[14px] text-slate-700 dark:text-slate-300">
             Track your pipeline, log recruiter interactions, and advance interview stages.
           </p>
         </div>
 
         <div className="flex items-center gap-2.5">
-          {/* View switcher */}
-          <div className="p-1 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-1">
-            <button
-              onClick={() => setViewMode('table')}
-              className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 transition-colors cursor-pointer ${
-                viewMode === 'table'
-                  ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <TableIcon className="h-3.5 w-3.5" />
-              Table
-            </button>
-            <button
-              onClick={() => setViewMode('kanban')}
-              className={`px-3 py-1 text-xs font-semibold rounded-md flex items-center gap-1.5 transition-colors cursor-pointer ${
-                viewMode === 'kanban'
-                  ? 'bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400'
-                  : 'text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-              }`}
-            >
-              <Kanban className="h-3.5 w-3.5" />
-              Kanban
-            </button>
-          </div>
-
           <Button
             variant="primary"
-            size="sm"
+            size="md"
             leftIcon={<Plus className="h-4 w-4" />}
             onClick={handleOpenCreateModal}
           >
@@ -204,105 +179,287 @@ export const ApplicationsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Tabs Filter Bar */}
-      <div className="border-b border-slate-200 dark:border-slate-800 flex gap-2 overflow-x-auto pb-px">
-        {statusTabs.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => {
-              setSelectedTab(tab.value);
-              setCurrentPage(1);
-            }}
-            className={`pb-3 px-3 text-xs font-semibold whitespace-nowrap border-b-2 transition-colors cursor-pointer flex items-center gap-2 ${
-              selectedTab === tab.value
-                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
-                : 'border-transparent text-slate-500 hover:text-slate-800 dark:hover:text-slate-200'
-            }`}
-          >
-            <span>{tab.label}</span>
-            <span
-              className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+      {/* Pipeline Pulse Stats - Dashboard Aligned KPI Cards */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card 1: Total Pipeline */}
+        <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-[18px] shadow-[0_1px_3px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_6px_20px_rgba(0,0,0,0.05)] dark:border-slate-800 dark:bg-[#111726] dark:hover:border-slate-700">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 ring-1 ring-inset ring-indigo-600/15 shadow-xs dark:bg-indigo-950/60 dark:text-indigo-400 dark:ring-indigo-400/20">
+            <Layers className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[15.5px] font-semibold text-slate-800 dark:text-slate-200">
+              Total Pipeline
+            </span>
+            <p className="mt-1 text-[34px] sm:text-[36px] font-bold leading-none tracking-tight text-slate-900 dark:text-white">
+              {applications.length}
+            </p>
+            <p className="mt-1.5 truncate text-[12.5px] font-medium text-slate-700 dark:text-slate-300">
+              {applications.filter((a) => a.status !== 'rejected').length} active in pipeline
+            </p>
+          </div>
+        </div>
+
+        {/* Card 2: In Interview */}
+        <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-[18px] shadow-[0_1px_3px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_6px_20px_rgba(0,0,0,0.05)] dark:border-slate-800 dark:bg-[#111726] dark:hover:border-slate-700">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-purple-50 text-purple-600 ring-1 ring-inset ring-purple-600/15 shadow-xs dark:bg-purple-950/60 dark:text-purple-400 dark:ring-purple-400/20">
+            <Clock className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[15.5px] font-semibold text-slate-800 dark:text-slate-200">
+              In Interview
+            </span>
+            <p className="mt-1 text-[34px] sm:text-[36px] font-bold leading-none tracking-tight text-purple-600 dark:text-purple-400">
+              {applications.filter((a) => a.status === 'interviewing').length}
+            </p>
+            <p className="mt-1.5 truncate text-[12.5px] font-medium text-slate-700 dark:text-slate-300">
+              Active interview stages
+            </p>
+          </div>
+        </div>
+
+        {/* Card 3: Under Review */}
+        <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-[18px] shadow-[0_1px_3px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_6px_20px_rgba(0,0,0,0.05)] dark:border-slate-800 dark:bg-[#111726] dark:hover:border-slate-700">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600 ring-1 ring-inset ring-blue-600/15 shadow-xs dark:bg-blue-950/60 dark:text-blue-400 dark:ring-blue-400/20">
+            <CheckCircle2 className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[15.5px] font-semibold text-slate-800 dark:text-slate-200">
+              Under Review
+            </span>
+            <p className="mt-1 text-[34px] sm:text-[36px] font-bold leading-none tracking-tight text-blue-600 dark:text-blue-400">
+              {applications.filter((a) => a.status === 'under_review').length}
+            </p>
+            <p className="mt-1.5 truncate text-[12.5px] font-medium text-slate-700 dark:text-slate-300">
+              Awaiting recruiter response
+            </p>
+          </div>
+        </div>
+
+        {/* Card 4: Offers Received */}
+        <div className="flex items-center gap-4 rounded-2xl border border-slate-200/80 bg-white p-[18px] shadow-[0_1px_3px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] transition-[transform,box-shadow,border-color] duration-200 ease-out hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_6px_20px_rgba(0,0,0,0.05)] dark:border-slate-800 dark:bg-[#111726] dark:hover:border-slate-700">
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600 ring-1 ring-inset ring-emerald-600/15 shadow-xs dark:bg-emerald-950/60 dark:text-emerald-400 dark:ring-emerald-400/20">
+            <TrendingUp className="h-5 w-5" />
+          </div>
+          <div className="min-w-0">
+            <span className="text-[15.5px] font-semibold text-slate-800 dark:text-slate-200">
+              Offers Received
+            </span>
+            <p className="mt-1 text-[34px] sm:text-[36px] font-bold leading-none tracking-tight text-emerald-600 dark:text-emerald-400">
+              {applications.filter((a) => a.status === 'offered').length}
+            </p>
+            <p className="mt-1.5 truncate text-[12.5px] font-medium text-slate-700 dark:text-slate-300">
+              Offers in hand
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Control Bar: Search & Status Tabs */}
+      <div className="space-y-3 pt-1">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="relative flex-1 max-w-md">
+            <div className="group relative flex items-center p-1 rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-900/50 shadow-xs hover:border-slate-300 dark:hover:border-slate-600 focus-within:border-indigo-500 dark:focus-within:border-indigo-500 focus-within:bg-white dark:focus-within:bg-[#0f1422] focus-within:ring-4 focus-within:ring-indigo-500/15 focus-within:shadow-md focus-within:shadow-indigo-500/5 transition-all duration-300 ease-out">
+              <Search className="h-4.5 w-4.5 ml-2.5 text-slate-600 dark:text-slate-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400 group-focus-within:scale-110 transition-all duration-300 ease-out shrink-0" />
+              <input
+                type="text"
+                placeholder="Search by company, role, or notes..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setCurrentPage(1);
+                }}
+                className="w-full h-9 bg-transparent border-0 px-2.5 text-[14px] text-slate-900 dark:text-slate-100 placeholder:text-slate-700 dark:placeholder:text-slate-300 font-medium focus:outline-none focus:ring-0 leading-normal"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setCurrentPage(1);
+                  }}
+                  className="p-1.5 mr-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer animate-in fade-in zoom-in-90"
+                  title="Clear search"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              )}
+            </div>
+          </div>
+
+          <span className="text-[13px] font-medium text-slate-500 dark:text-slate-400 px-1">
+            Showing <strong className="text-slate-800 dark:text-slate-200 font-bold">{totalFiltered}</strong> application{totalFiltered === 1 ? '' : 's'}
+          </span>
+        </div>
+
+        {/* Tabs Filter Bar */}
+        <div className="border-b border-slate-200 dark:border-slate-800 flex gap-2 overflow-x-auto pb-px">
+          {statusTabs.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => {
+                setSelectedTab(tab.value);
+                setCurrentPage(1);
+              }}
+              className={`pb-3 px-3.5 text-[14px] font-semibold whitespace-nowrap border-b-2 transition-[color,border-color,background-color] duration-150 ease-out cursor-pointer flex items-center gap-2 ${
                 selectedTab === tab.value
-                  ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                  ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-bold'
+                  : 'border-transparent text-slate-700 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white'
               }`}
             >
-              {tab.count}
-            </span>
-          </button>
-        ))}
+              <span>{tab.label}</span>
+              <span
+                className={`text-[12px] px-2.5 py-0.5 rounded-full font-semibold ${
+                  selectedTab === tab.value
+                    ? 'bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300'
+                    : 'bg-slate-200/80 dark:bg-slate-800 text-slate-700 dark:text-slate-300'
+                }`}
+              >
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* View Content */}
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20">
+        <div className="flex flex-col items-center justify-center py-24 min-h-[480px] rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#111726]">
           <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-          <p className="text-xs text-slate-500 mt-2">Loading applications...</p>
+          <p className="text-[13.5px] text-slate-700 dark:text-slate-300 mt-2.5 font-semibold">Loading applications...</p>
         </div>
       ) : filteredApps.length === 0 ? (
-        <div className="p-12 text-center rounded-xl border border-dashed border-slate-300 dark:border-slate-800 bg-white/50 dark:bg-slate-900/30">
-          <p className="text-sm font-medium text-slate-600 dark:text-slate-400">
-            No applications found in this stage.
-          </p>
-          <Button
-            variant="outline"
-            size="sm"
-            className="mt-3"
-            onClick={handleOpenCreateModal}
-          >
-            + Track an Application
-          </Button>
+        <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#111726] shadow-sm overflow-hidden flex flex-col">
+          <table className="w-full text-left border-separate border-spacing-0">
+            <thead>
+              <tr className="bg-slate-50/95 dark:bg-[#151c2e]/95 backdrop-blur-md shadow-[0_2px_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.35)]">
+                <th className="px-6 py-4 w-[42%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold border-b border-slate-200/90 dark:border-slate-800">
+                  Company & Role
+                </th>
+                <th className="px-6 py-4 w-[18%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
+                  Status
+                </th>
+                <th className="px-6 py-4 w-[18%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
+                  Applied Date
+                </th>
+                <th className="px-6 py-4 w-[14%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
+                  Portal / Source
+                </th>
+                <th className="px-6 py-4 w-[8%] text-right text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
+                  Actions
+                </th>
+              </tr>
+            </thead>
+          </table>
+          <div className="flex flex-col items-center justify-center p-16 text-center min-h-[360px]">
+            <p className="text-[15px] font-semibold text-slate-800 dark:text-slate-200">
+              No applications match your current filters.
+            </p>
+            <Button
+              variant="outline"
+              size="md"
+              className="mt-4"
+              onClick={() => {
+                setSelectedTab('all');
+                setSearchQuery('');
+              }}
+            >
+              Clear Filters
+            </Button>
+          </div>
         </div>
-      ) : viewMode === 'table' ? (
-        /* Table View */
-        <div className="rounded-xl border border-slate-200 dark:border-slate-800/80 bg-white dark:bg-slate-900/60 shadow-xs overflow-hidden">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs">
-              <thead className="bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 uppercase tracking-wider font-semibold border-b border-slate-200 dark:border-slate-800">
-                <tr>
-                  <th className="px-6 py-3.5">Company & Role</th>
-                  <th className="px-6 py-3.5">Status</th>
-                  <th className="px-6 py-3.5">Applied Date</th>
-                  <th className="px-6 py-3.5">Portal / Source</th>
-                  <th className="px-6 py-3.5">Notes</th>
-                  <th className="px-6 py-3.5 text-right">Actions</th>
+      ) : (
+        /* God-Tier Enterprise Fixed-Header Vertical Scrollable Table */
+        <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#111726] shadow-sm overflow-hidden flex flex-col">
+          {/* Scrollable Viewport with Fixed Sticky Header */}
+          <div className="overflow-y-auto max-h-[520px] scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
+            <table className="w-full text-left border-separate border-spacing-0">
+              <thead className="sticky top-0 z-20">
+                <tr className="bg-slate-50/95 dark:bg-[#151c2e]/95 backdrop-blur-md shadow-[0_2px_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.35)]">
+                  <th className="px-6 py-4 w-[42%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold border-b border-slate-200/90 dark:border-slate-800">
+                    Company & Role
+                  </th>
+                  <th className="px-6 py-4 w-[18%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 w-[18%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
+                    Applied Date
+                  </th>
+                  <th className="px-6 py-4 w-[14%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
+                    Portal / Source
+                  </th>
+                  <th className="px-6 py-4 w-[8%] text-right text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
                 {paginatedTableApps.map((app) => (
                   <tr
                     key={app.id}
-                    className="hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors"
+                    className="group even:bg-slate-50/60 dark:even:bg-[#141b2c]/60 odd:bg-white dark:odd:bg-[#111726] hover:bg-indigo-50/50 dark:hover:bg-indigo-950/40 transition-colors duration-150"
                   >
-                    <td className="px-6 py-4">
-                      <div className="flex items-center gap-3">
+                    <td className="px-6 py-4 border-b border-slate-100/90 dark:border-slate-800/70">
+                      <div className="flex items-center gap-3.5">
                         <CompanyAvatar name={app.job?.company_name || 'Company'} size="md" />
-                        <div>
-                          <p className="font-semibold text-slate-900 dark:text-white">
-                            {app.job?.title || `Job #${app.job_id}`}
-                          </p>
-                          <p className="text-slate-500 text-[11px]">
-                            {app.job?.company_name} • {app.job?.location || 'Bangalore'}
-                          </p>
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p className="font-bold text-slate-900 dark:text-white text-[15px] leading-snug truncate group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                              {app.job?.title || `Job #${app.job_id}`}
+                            </p>
+                            {app.job?.canonical_apply_url && (
+                              <a
+                                href={app.job.canonical_apply_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                onClick={(e) => e.stopPropagation()}
+                                className="text-slate-400 hover:text-indigo-600 dark:hover:text-indigo-400 shrink-0 transition-colors"
+                                title="Open Job Listing"
+                              >
+                                <ExternalLink className="h-3.5 w-3.5" />
+                              </a>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                            {app.job?.priority_tier && (
+                              <TierBadge tier={app.job.priority_tier} />
+                            )}
+                            <span className="font-bold text-slate-800 dark:text-slate-200 text-[13px]">
+                              {app.job?.company_name}
+                            </span>
+                            <span className="text-slate-300 dark:text-slate-700">•</span>
+                            <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400 text-[12.5px] font-medium">
+                              <MapPin className="h-3 w-3 text-slate-400 shrink-0" />
+                              {app.job?.location || 'India'} {app.job?.is_remote ? '(Remote)' : ''}
+                            </span>
+                          </div>
                         </div>
                       </div>
                     </td>
-                    <td className="px-6 py-4">
-                      <ApplicationStatusBadge status={app.status} />
+                    <td className="px-6 py-4 whitespace-nowrap border-b border-slate-100/90 dark:border-slate-800/70">
+                      <ApplicationStatusBadge status={app.status} size="md" />
                     </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
-                      {app.applied_at ? new Date(app.applied_at).toLocaleDateString() : 'Pending'}
+                    <td className="px-6 py-4 text-slate-800 dark:text-slate-200 text-[13.5px] font-semibold whitespace-nowrap border-b border-slate-100/90 dark:border-slate-800/70">
+                      {app.applied_at ? (
+                        <div className="flex items-center gap-1.5 text-slate-800 dark:text-slate-200 text-[13.5px] font-semibold whitespace-nowrap">
+                          <Calendar className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                          <span>{new Date(app.applied_at).toLocaleDateString()}</span>
+                        </div>
+                      ) : (
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-md text-[12px] font-medium bg-slate-100 dark:bg-slate-800/80 text-slate-600 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
+                          Draft / Pending
+                        </span>
+                      )}
                     </td>
-                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300 font-mono text-[11px]">
-                      {app.portal_type || 'Direct Portal'}
+                    <td className="px-6 py-4 whitespace-nowrap border-b border-slate-100/90 dark:border-slate-800/70">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[12px] font-semibold bg-slate-100/90 dark:bg-slate-800/80 text-slate-700 dark:text-slate-300 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs">
+                        <Globe className="h-3.5 w-3.5 text-slate-500" />
+                        {app.portal_type || 'Direct Portal'}
+                      </span>
                     </td>
-                    <td className="px-6 py-4 text-slate-500 max-w-xs truncate">
-                      {app.notes || '—'}
-                    </td>
-                    <td className="px-6 py-4 text-right">
+                    <td className="px-6 py-4 text-right whitespace-nowrap border-b border-slate-100/90 dark:border-slate-800/70">
                       <button
                         onClick={() => openStatusModal(app)}
-                        className="px-3 py-1 text-xs font-semibold rounded-lg bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 transition-colors cursor-pointer"
+                        className="px-4 py-1.5 text-[13px] font-semibold rounded-xl bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 dark:bg-indigo-950/70 dark:text-indigo-300 dark:hover:bg-indigo-600 dark:hover:text-white border border-indigo-200/80 dark:border-indigo-800/80 shadow-2xs transition-all duration-150 cursor-pointer"
                       >
                         Update
                       </button>
@@ -313,75 +470,21 @@ export const ApplicationsPage: React.FC = () => {
             </table>
           </div>
 
-          {viewMode === 'table' && totalFiltered > 0 && (
-            <div className="p-4 border-t border-slate-200 dark:border-slate-800">
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalItems={totalFiltered}
-                pageSize={pageSize}
-                pageSizeOptions={[5, 10, 25, 100]}
-                onPageChange={(p) => setCurrentPage(p)}
-                onPageSizeChange={(sz) => {
-                  setPageSize(sz);
-                  setCurrentPage(1);
-                }}
-              />
-            </div>
-          )}
-        </div>
-      ) : (
-        /* Kanban Board View */
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-6 gap-4 overflow-x-auto pb-4">
-          {kanbanColumns.map((col) => {
-            const colApps = applications.filter((a) => a.status === col.id);
-            return (
-              <div
-                key={col.id}
-                className="rounded-xl border border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/40 p-3 min-w-[240px] flex flex-col"
-              >
-                <div className="flex items-center justify-between pb-3 mb-2 border-b border-slate-200 dark:border-slate-800">
-                  <span className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                    {col.title}
-                  </span>
-                  <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-slate-300">
-                    {colApps.length}
-                  </span>
-                </div>
-
-                <div className="flex-1 space-y-2.5 overflow-y-auto max-h-[70vh]">
-                  {colApps.map((app) => (
-                    <div
-                      key={app.id}
-                      onClick={() => openStatusModal(app)}
-                      className="p-3.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 shadow-xs hover:border-indigo-400 dark:hover:border-indigo-600 transition-all cursor-pointer group"
-                    >
-                      <div className="flex items-center gap-2 mb-2">
-                        <CompanyAvatar name={app.job?.company_name || 'Company'} size="xs" />
-                        <span className="text-[11px] font-semibold text-slate-500 truncate">
-                          {app.job?.company_name}
-                        </span>
-                      </div>
-                      <h4 className="text-xs font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-indigo-600 dark:group-hover:text-indigo-400">
-                        {app.job?.title || `Job #${app.job_id}`}
-                      </h4>
-                      {app.notes && (
-                        <p className="mt-2 text-[11px] text-slate-500 line-clamp-2 italic bg-slate-50 dark:bg-slate-800/50 p-1.5 rounded">
-                          "{app.notes}"
-                        </p>
-                      )}
-                      <div className="mt-3 pt-2 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400">
-                        <span>{app.applied_at ? new Date(app.applied_at).toLocaleDateString() : 'Tracked'}</span>
-                        <span className="text-indigo-600 dark:text-indigo-400 font-semibold group-hover:underline">
-                          Edit →
-                        </span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
+          {/* Sticky Docked Bottom Pagination */}
+          <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-[#131929]/70 backdrop-blur-xs">
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              totalItems={totalFiltered}
+              pageSize={pageSize}
+              pageSizeOptions={[5, 10, 25, 100]}
+              onPageChange={(p) => setCurrentPage(p)}
+              onPageSizeChange={(sz) => {
+                setPageSize(sz);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
         </div>
       )}
 
@@ -399,13 +502,13 @@ export const ApplicationsPage: React.FC = () => {
         {editingApp && (
           <form onSubmit={handleStatusSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+              <label className="block text-[12px] font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 mb-1.5">
                 Application Stage
               </label>
               <select
                 value={newStatus}
                 onChange={(e) => setNewStatus(e.target.value)}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2 text-sm text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-[13.5px] text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
               >
                 <option value="drafted">Saved / Draft</option>
                 <option value="applied">Applied</option>
@@ -417,7 +520,7 @@ export const ApplicationsPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+              <label className="block text-[12px] font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 mb-1.5">
                 Note for Timeline History
               </label>
               <textarea
@@ -425,26 +528,26 @@ export const ApplicationsPage: React.FC = () => {
                 placeholder="e.g. Cleared round 1 technical screen, recruiter scheduling round 2 system design..."
                 value={transitionNote}
                 onChange={(e) => setTransitionNote(e.target.value)}
-                className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3.5 py-2 text-sm text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+                className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-[13.5px] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
               />
             </div>
 
             {/* Audit History Timeline */}
             {editingApp.history && editingApp.history.length > 0 && (
               <div className="pt-3 border-t border-slate-200 dark:border-slate-800">
-                <span className="text-xs font-bold text-slate-700 dark:text-slate-300 block mb-2">
+                <span className="text-[12px] font-bold text-slate-700 dark:text-slate-300 block mb-2">
                   Transition Timeline History
                 </span>
                 <div className="space-y-3 max-h-40 overflow-y-auto">
                   {editingApp.history.map((h) => (
-                    <div key={h.id} className="flex items-start gap-2.5 text-xs">
+                    <div key={h.id} className="flex items-start gap-2.5 text-[12.5px]">
                       <span className="h-2 w-2 rounded-full bg-indigo-500 mt-1.5 shrink-0" />
                       <div>
                         <p className="font-semibold text-slate-800 dark:text-slate-200">
                           Changed to <span className="uppercase text-indigo-600">{h.new_status}</span>
                         </p>
-                        {h.note && <p className="text-slate-500">{h.note}</p>}
-                        <span className="text-[10px] text-slate-400">
+                        {h.note && <p className="text-slate-600 dark:text-slate-400">{h.note}</p>}
+                        <span className="text-[11px] text-slate-400">
                           {new Date(h.changed_at).toLocaleString()}
                         </span>
                       </div>
@@ -455,10 +558,10 @@ export const ApplicationsPage: React.FC = () => {
             )}
 
             <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
-              <Button variant="secondary" size="sm" onClick={() => setEditingApp(null)}>
+              <Button variant="secondary" size="md" onClick={() => setEditingApp(null)}>
                 Cancel
               </Button>
-              <Button variant="primary" size="sm" type="submit" isLoading={isUpdating}>
+              <Button variant="primary" size="md" type="submit" isLoading={isUpdating}>
                 Save Changes
               </Button>
             </div>
@@ -475,13 +578,13 @@ export const ApplicationsPage: React.FC = () => {
       >
         <form onSubmit={handleCreateApplication} className="space-y-4">
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-[12px] font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 mb-1.5">
               Select Discovered Job
             </label>
             <select
               value={selectedJobId}
               onChange={(e) => setSelectedJobId(Number(e.target.value))}
-              className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-[13.5px] text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
             >
               {availableJobs.map((j) => (
                 <option key={j.id} value={j.id}>
@@ -492,13 +595,13 @@ export const ApplicationsPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-[12px] font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 mb-1.5">
               Initial Stage
             </label>
             <select
               value={createStatus}
               onChange={(e) => setCreateStatus(e.target.value)}
-              className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-[13.5px] text-slate-900 dark:text-slate-100 focus:outline-none focus:border-indigo-500"
             >
               <option value="drafted">Saved / Draft</option>
               <option value="applied">Applied</option>
@@ -508,7 +611,7 @@ export const ApplicationsPage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-400 mb-1.5">
+            <label className="block text-[12px] font-semibold uppercase tracking-wider text-slate-700 dark:text-slate-400 mb-1.5">
               Initial Notes
             </label>
             <textarea
@@ -516,15 +619,15 @@ export const ApplicationsPage: React.FC = () => {
               placeholder="e.g. Applied directly on company career portal..."
               value={createNotes}
               onChange={(e) => setCreateNotes(e.target.value)}
-              className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
+              className="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-700 rounded-xl px-3.5 py-2 text-[13.5px] text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-none focus:border-indigo-500"
             />
           </div>
 
           <div className="flex justify-end gap-2.5 pt-3 border-t border-slate-200 dark:border-slate-800">
-            <Button variant="secondary" size="sm" onClick={() => setIsCreateModalOpen(false)}>
+            <Button variant="secondary" size="md" onClick={() => setIsCreateModalOpen(false)}>
               Cancel
             </Button>
-            <Button variant="primary" size="sm" type="submit" isLoading={isCreating}>
+            <Button variant="primary" size="md" type="submit" isLoading={isCreating}>
               Add to Pipeline
             </Button>
           </div>

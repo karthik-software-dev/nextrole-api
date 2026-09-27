@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 
 interface ModalProps {
@@ -47,17 +48,17 @@ export const Modal: React.FC<ModalProps> = ({
     '3xl': 'max-w-3xl',
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm transition-opacity"
+        className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm backdrop-fade"
         onClick={onClose}
       />
 
       {/* Modal Dialog */}
       <div
-        className={`relative w-full ${maxWidths[maxWidth]} rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl transition-all duration-200 z-10 overflow-hidden flex flex-col max-h-[90vh]`}
+        className={`relative w-full ${maxWidths[maxWidth]} rounded-2xl bg-white dark:bg-[#111726] border border-slate-200/80 dark:border-slate-800 shadow-2xl modal-enter z-10 overflow-hidden flex flex-col max-h-[90vh]`}
         role="dialog"
         aria-modal="true"
       >
@@ -66,12 +67,12 @@ export const Modal: React.FC<ModalProps> = ({
           <div className="flex items-start justify-between border-b border-slate-200 dark:border-slate-800 px-6 py-4">
             <div>
               {typeof title === 'string' ? (
-                <h3 className="text-base font-semibold text-slate-900 dark:text-slate-100">{title}</h3>
+                <h3 className="text-[17px] font-bold tracking-tight text-slate-900 dark:text-white">{title}</h3>
               ) : (
                 title
               )}
               {description && (
-                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">{description}</p>
+                <p className="mt-1 text-[13px] text-slate-600 dark:text-slate-400">{description}</p>
               )}
             </div>
             <button
@@ -86,6 +87,7 @@ export const Modal: React.FC<ModalProps> = ({
         {/* Content */}
         <div className="flex-1 overflow-y-auto px-6 py-4">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

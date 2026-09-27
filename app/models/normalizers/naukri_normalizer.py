@@ -5,6 +5,8 @@ from typing import Any
 
 from models.job import Job
 from models.normalizers.experience_parser import extract_experience
+from models.normalizers.salary_parser import parse_salary
+from processing.deduplication import clean_job_title
 
 
 def _strip_html(text: str) -> str:
@@ -30,7 +32,7 @@ def normalize_naukri_job(item: dict[str, Any]) -> Job:
         job_id = f"naukri_{hashlib.md5(key_str.encode('utf-8')).hexdigest()[:12]}"
 
     # 2. Title & Company
-    title = (jd.get("title") or "Unknown Position").strip()
+    title = clean_job_title((jd.get("title") or "Unknown Position").strip())
     company_detail = jd.get("companyDetail")
     if isinstance(company_detail, dict) and company_detail.get("name"):
         company = company_detail["name"].strip()
@@ -67,6 +69,8 @@ def normalize_naukri_job(item: dict[str, Any]) -> Job:
     elif isinstance(salary_detail, str) and salary_detail.lower() != "not disclosed":
         salary_raw = salary_detail.strip()
 
+    salary_min, salary_max, salary_currency = parse_salary(salary_raw)
+
     # 5. Description
     raw_desc = jd.get("description") or jd.get("shortDescription") or ""
     description = _strip_html(raw_desc)
@@ -95,7 +99,7 @@ def normalize_naukri_job(item: dict[str, Any]) -> Job:
 
     # 7. URLs (Discovery vs Apply)
     discovery_url = jd.get("staticUrl") or None
-    apply_url = jd.get("applyRedirectUrl") or None
+    apply_url = jd.get("applyRedirectUrl") or jd.get("staticUrl") or discovery_url
 
     # 8. Posted At
     posted_at = jd.get("createdDate")
@@ -110,6 +114,9 @@ def normalize_naukri_job(item: dict[str, Any]) -> Job:
         location=location,
         is_remote=is_remote,
         salary_raw=salary_raw,
+        salary_min=salary_min,
+        salary_max=salary_max,
+        salary_currency=salary_currency,
         description=description,
         discovery_url=discovery_url,
         apply_url=apply_url,

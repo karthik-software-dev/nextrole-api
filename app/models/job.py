@@ -13,6 +13,9 @@ class Job:
     location: str | None = None
     is_remote: bool = False
     salary_raw: str | None = None
+    salary_min: float | None = None
+    salary_max: float | None = None
+    salary_currency: str = "INR"
     description: str | None = None
     discovery_url: str | None = None
     apply_url: str | None = None

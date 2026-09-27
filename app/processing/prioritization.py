@@ -20,10 +20,31 @@ CORE_DATABASES = {
     "DB Design", "DB Indexing", "Alembic", "Pydantic", "Redis", "pgvector"
 }
 
+FOREIGN_LOCATIONS = [
+    "london", "united kingdom", "uk",
+    "new york", "ny", "united states", "usa", "san francisco", "california",
+    "seattle", "washington", "toronto", "canada", "berlin", "germany",
+    "sydney", "australia", "singapore", "dubai", "uae"
+]
+
 
 def get_location_bucket(job: Job) -> str:
-    """Classifies a job's location into BANGALORE, CHENNAI, or OTHER."""
+    """Classifies a job's location into BANGALORE, CHENNAI, OTHER, or FOREIGN."""
     loc = (job.location or "").lower()
+
+    # Check for non-remote foreign location
+    if not job.is_remote:
+        is_foreign = any(f in loc for f in FOREIGN_LOCATIONS)
+        has_india = any(
+            ind in loc
+            for ind in [
+                "india", "bengaluru", "bangalore", "chennai", "hyderabad",
+                "pune", "mumbai", "delhi", "noida", "gurgaon", "karnataka", "tamil nadu"
+            ]
+        )
+        if is_foreign and not has_india:
+            return "FOREIGN"
+
     if any(k in loc for k in ["bengaluru", "bangalore", "karnataka"]):
         return "BANGALORE"
     elif any(k in loc for k in ["chennai", "tamil nadu"]):
@@ -125,16 +146,18 @@ def calculate_priority_score(job: Job) -> tuple[float, str]:
 
 def select_by_location_quota(jobs: list[Job], target_total: int = 100) -> list[Job]:
     """Selects jobs respecting the 80% Bangalore / 15% Chennai / 5% Other distribution.
+    Excludes non-remote foreign jobs.
 
     If Chennai or Other has fewer qualified jobs than its quota, slots smoothly roll over
     to Bangalore (primary focus).
     """
-    if len(jobs) <= target_total:
-        return jobs
+    valid_jobs = [j for j in jobs if get_location_bucket(j) != "FOREIGN"]
+    if len(valid_jobs) <= target_total:
+        return valid_jobs
 
-    blr_jobs = [j for j in jobs if get_location_bucket(j) == "BANGALORE"]
-    maa_jobs = [j for j in jobs if get_location_bucket(j) == "CHENNAI"]
-    other_jobs = [j for j in jobs if get_location_bucket(j) == "OTHER"]
+    blr_jobs = [j for j in valid_jobs if get_location_bucket(j) == "BANGALORE"]
+    maa_jobs = [j for j in valid_jobs if get_location_bucket(j) == "CHENNAI"]
+    other_jobs = [j for j in valid_jobs if get_location_bucket(j) == "OTHER"]
 
     target_blr = int(target_total * 0.80)  # 80 jobs (80%)
     target_maa = int(target_total * 0.15)  # 15 jobs (15%)
@@ -151,7 +174,7 @@ def select_by_location_quota(jobs: list[Job], target_total: int = 100) -> list[J
     selected = selected_blr + selected_maa + selected_other
     if len(selected) < target_total:
         used_ids = {j.id for j in selected}
-        remaining_pool = [j for j in jobs if j.id not in used_ids]
+        remaining_pool = [j for j in valid_jobs if j.id not in used_ids]
         selected.extend(remaining_pool[: target_total - len(selected)])
 
     selected.sort(

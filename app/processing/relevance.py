@@ -43,6 +43,20 @@ HARD_EXCLUDE_TITLE_KEYWORDS = [
     "trainer",
     "learning specialist",
     "gtm engineer",
+    "deal desk",
+    "revenue services",
+    "revenue operations",
+    "revops",
+    "sales operations",
+    "sales ops",
+    "business operations",
+    "sales associate",
+    "account executive",
+    "account manager",
+    "procurement",
+    "talent acquisition",
+    "recruiter",
+    "financial analyst",
     # Enterprise ERP & Non-Target Consulting
     "oracle cloud",
     "oracle stack",
@@ -54,9 +68,17 @@ HARD_EXCLUDE_TITLE_KEYWORDS = [
     "support engineer",
     "technical support",
     "network engineer",
-    # Pure Machine Learning / Data Science
+    # Pure Machine Learning / Data Science / Computer Vision
     "ml engineer",
     "machine learning engineer",
+    "computer vision",
+    # Developer Tooling & Productivity (Internal DevEx)
+    "dev accelerator",
+    "developer productivity",
+    "developer experience",
+    "devex",
+    "developer tooling",
+    "build engineer",
     # Early Career / Trainee
     "intern",
     "internship",
@@ -138,6 +160,18 @@ GENERIC_TITLE_KEYWORDS = [
     "application development engineer",
 ]
 
+# Conflicting primary backend languages (when Python is absent from title)
+CONFLICTING_TITLE_LANGUAGES = [
+    "java", "core java", "c++", "c#", ".net", "ruby", "php", "golang", "rust"
+]
+
+# Dedicated QA/Testing titles to exclude
+QA_PRIMARY_TITLES = [
+    "qa engineer", "quality engineer", "quality assurance engineer",
+    "sdet", "software development engineer in test", "software engineer in test",
+    "test automation engineer", "qa automation engineer", "test engineer"
+]
+
 # Concrete Technical Backend Skills for Generic Evidence Verification
 # Excludes broad/boilerplate words like 'system design', generic 'api', generic 'database'
 CONCRETE_BACKEND_SIGNALS = [
@@ -145,8 +179,10 @@ CONCRETE_BACKEND_SIGNALS = [
     "fastapi", "flask", "django", "django rest framework", "drf",
     # Databases & Storage
     "postgresql", "postgres", "mysql", "sql", "sqlalchemy", "redis", "mongodb", "orm", "alembic",
+    "data access layer", "data layer",
     # Architecture, APIs & Queues
     "rest api", "rest apis", "restful api", "restful apis", "restful",
+    "api development", "api design", "apis", "api", "backend services", "server-side",
     "microservices", "distributed systems", "rabbitmq", "celery", "kafka",
     "grpc", "asyncio", "websocket", "websockets", "event-driven", "event driven",
 ]
@@ -345,35 +381,81 @@ def calculate_relevance_score(job: Job) -> tuple[float, list[str]]:
     full_text = f"{title} {description}"
     matched_skills: list[str] = []
 
-    # 1. Hard Disqualification Filter
+    # 1. Hard Disqualification Filter (Executive, Sales, Non-SWE)
     for exclude_word in HARD_EXCLUDE_TITLE_KEYWORDS:
         if _has_keyword(exclude_word, title):
             return -100.0, []
 
-    # 2. Strict Seniority & Experience Disqualifications (> 5 yrs min is disqualified)
-    if job.experience_min is not None and job.experience_min > 5:
+    # 2. Refined Rule C: QA / Testing Title Exclusions & QE Context Protection
+    for qa_title in QA_PRIMARY_TITLES:
+        if _has_keyword(qa_title, title):
+            return -100.0, []
+
+    if _has_keyword("quality engineering", title) or _has_keyword("quality engineer", title):
+        is_software_eng = any(_has_keyword(k, title) for k in [
+            "ai engineer", "backend engineer", "software engineer", "full stack", "developer"
+        ])
+        qa_signals_count = sum(1 for k in ["selenium", "cypress", "test cases", "manual testing", "test plan", "test automation"] if _has_keyword(k, description))
+        sw_signals_count = sum(1 for k in ["python", "apis", "rest", "backend", "docker", "llm", "mcp", "relational databases"] if _has_keyword(k, description))
+        if not is_software_eng or qa_signals_count > sw_signals_count:
+            return -100.0, []
+
+    # 3. Refined Rule B: Specialized Engineering Disciplines (Data, SRE, AppSec)
+    is_hybrid_backend_or_python = any(_has_keyword(k, title) for k in ["backend", "back-end", "python"])
+    if not is_hybrid_backend_or_python:
+        if _has_keyword("data engineer", title) or _has_keyword("data engineering", title):
+            return -100.0, []
+        if any(_has_keyword(k, title) for k in ["sre", "site reliability engineer", "site reliability engineering", "site reliability"]):
+            return -100.0, []
+        if any(_has_keyword(k, title) for k in ["application security engineer", "application security", "appsec", "security engineer"]):
+            return -100.0, []
+        if _has_keyword("computer vision", title):
+            return -100.0, []
+
+    # 4. Refined Rule A: Conflicting Primary Language in Title (when Python is absent from title)
+    title_has_python = _has_keyword("python", title)
+    if not title_has_python:
+        for lang in CONFLICTING_TITLE_LANGUAGES:
+            if _has_keyword(lang, title):
+                return -100.0, []
+
+    # 5. Refined Rule D: Strict Seniority & Experience Disqualifications (min >= 5 yrs)
+    from models.normalizers.experience_parser import extract_experience
+    p_min, p_max, _ = extract_experience(full_text)
+    effective_min = p_min if p_min is not None else job.experience_min
+    effective_max = p_max if p_max is not None else job.experience_max
+
+    if effective_min is not None and effective_min >= 5:
         return -100.0, []
 
-    high_exp_pattern = r"\b(?:minimum|at\s+least|min)?\s*([6-9]|[1-2][0-9])\+\s*(?:years?|yrs?)"
-    if re.search(high_exp_pattern, full_text, re.IGNORECASE):
-        return -100.0, []
+    # Text search fallback: look for 5+ or 5-10 yrs ONLY IF effective_min was not determined or >= 5
+    if effective_min is None or effective_min >= 5:
+        senior_min_pattern = r"\b(?:minimum|at\s+least|min)\s*([5-9]|[1-2][0-9])\+?\s*(?:years?|yrs?)"
+        senior_plus_pattern = r"\b([5-9]|[1-2][0-9])\+\s*(?:years?|yrs?)"
+        senior_range_pattern = r"\b([5-9]|[1-2][0-9])\s*[-–]\s*(?:[6-9]|[1-2][0-9])\s*(?:years?|yrs?)"
+        if (
+            re.search(senior_min_pattern, full_text, re.IGNORECASE)
+            or re.search(senior_plus_pattern, full_text, re.IGNORECASE)
+            or re.search(senior_range_pattern, full_text, re.IGNORECASE)
+        ):
+            return -100.0, []
 
-    # 3. Must-Have Baseline
-    has_python = _has_keyword("python", title) or _has_keyword("python", description)
-    has_backend = any(_has_keyword(k, full_text) for k in [
-        "backend", "back-end", "api", "fastapi", "flask", "django", "microservices", "distributed systems"
-    ])
-    if not (has_python or has_backend):
+    # 6. Refined Rule A: Must-Have Python Ecosystem Signal
+    has_python_ecosystem = any(_has_keyword(k, full_text) for k in ["python", "fastapi", "django", "flask"])
+    if not has_python_ecosystem:
         return 0.0, []
 
-    # 3b. Generic & Full Stack Role Evidence Check
+    # 7. Refined Rule E: Generic & Full Stack Role Evidence Check
     is_primary_or_strong = any(_has_keyword(k, title) for k in PRIMARY_TITLE_KEYWORDS + STRONG_TITLE_KEYWORDS)
     is_generic_role = (not is_primary_or_strong) and any(_has_keyword(k, title) for k in GENERIC_TITLE_KEYWORDS)
 
+    has_backend_signal = any(_has_keyword(k, full_text) for k in CONCRETE_BACKEND_SIGNALS)
+    if not has_backend_signal:
+        return 0.0, []
+
     if is_generic_role:
-        # Require Python AND at least 1 concrete backend skill (Framework, DB/ORM, or API/Distributed Architecture)
         matched_backend_signals = [k for k in CONCRETE_BACKEND_SIGNALS if _has_keyword(k, description)]
-        if not has_python or len(matched_backend_signals) < 1:
+        if len(matched_backend_signals) < 1:
             return 0.0, []
 
     score = 0.0
@@ -408,39 +490,39 @@ def calculate_relevance_score(job: Job) -> tuple[float, list[str]]:
     # 6. Multi-Stack Synergy Bonuses
     has_fe = any(k in seen_canonical_concepts for k in ["react", "javascript", "typescript", "nextjs"])
     has_ai = any(k in seen_canonical_concepts for k in ["llm", "rag", "langchain", "vector_db", "ai_agents", "mcp"])
-    if has_fe and (has_python or has_backend):
+    if has_fe and (has_python_ecosystem or has_backend_signal):
         score += 2.0
         matched_skills.append("Full-Stack Synergy")
-    if has_ai and has_python:
+    if has_ai and has_python_ecosystem:
         score += 2.0
         matched_skills.append("AI-Backend Synergy")
 
     # 7. Experience Curve Scoring & Penalties (Target: 1-5 Years)
-    if job.experience_min is not None:
-        if job.experience_min <= 3 and (job.experience_max is not None and job.experience_max <= 3):
+    if effective_min is not None:
+        if effective_min <= 3 and (effective_max is not None and effective_max <= 3):
             score += 3.0
             matched_skills.append("Sweet-Spot Exp (1-3 Yrs)")
-        elif job.experience_min <= 3 and (job.experience_max is None or job.experience_max <= 5):
+        elif effective_min <= 3 and (effective_max is None or effective_max <= 5):
             score += 2.0
             matched_skills.append("Sweet-Spot Exp (1-5 Yrs)")
-        elif job.experience_min == 4 and (job.experience_max is not None and job.experience_max <= 5):
+        elif effective_min == 4 and (effective_max is not None and effective_max <= 5):
             pass  # Neutral: acceptable 4-5 yrs
-        elif job.experience_min >= 4 and job.experience_max is None:
+        elif effective_min >= 4 and effective_max is None:
             # 4+ Yrs without upper bound leans senior
             score -= 3.0
             matched_skills.append("Senior Exp (4+ Yrs)")
-        elif job.experience_max is not None and job.experience_max >= 6:
+        elif effective_max is not None and effective_max >= 6:
             # Over-wide senior range (e.g. 2-7, 3-6, 4-9 yrs)
             score -= 4.0
             matched_skills.append("Senior Range Penalty")
-        elif job.experience_min >= 5:
+        elif effective_min >= 5:
             score -= 6.0
             matched_skills.append("High Exp Penalty")
 
     # 8. Senior Title Negative Penalty (Roles titled 'Senior' or 'Sr.')
     is_senior_title = bool(re.search(r"\b(?:senior|sr\.?)\b", title, re.IGNORECASE))
     if is_senior_title:
-        if job.experience_min is not None and job.experience_min >= 5:
+        if effective_min is not None and effective_min >= 5:
             return -100.0, []  # Disqualify senior title with 5+ yrs
         score -= 5.0
         matched_skills.append("Senior Role Penalty")
@@ -449,7 +531,8 @@ def calculate_relevance_score(job: Job) -> tuple[float, list[str]]:
     sde_keywords = [
         "sde 1", "sde i", "sde 2", "sde ii", "sde-1", "sde-2", "sde1", "sde2",
         "software engineer 1", "software engineer i",
-        "software engineer 2", "software engineer ii", "associate",
+        "software engineer 2", "software engineer ii",
+        "associate software engineer", "associate engineer", "associate developer", "associate sde",
     ]
     if any(_has_keyword(k, title) for k in sde_keywords):
         score += 2.0

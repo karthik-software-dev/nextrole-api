@@ -5,9 +5,11 @@ from .wellfound_normalizer import normalize_wellfound_job, normalize_wellfound_j
 from .google_jobs_normalizer import normalize_google_job, normalize_google_jobs
 from .ats_normalizer import normalize_ats_job, normalize_ats_jobs
 from .experience_parser import extract_experience
+from .salary_parser import parse_salary
 
 __all__ = [
     "extract_experience",
+    "parse_salary",
     "normalize_indeed_job",
     "normalize_indeed_jobs",
     "normalize_naukri_job",

@@ -182,13 +182,57 @@ class TestFastAPIBackend(unittest.TestCase):
         self.assertIn("location_breakdown", data)
         self.assertIn("application_breakdown", data)
 
-    def test_discovery_status_endpoint(self):
-        """Tests GET /api/v1/discovery/status returns runner status."""
-        response = self.client.get("/api/v1/discovery/status")
+    def test_analytics_summary_endpoint(self):
+        """Tests GET /api/v1/analytics/summary aggregates KPIs, job intelligence, applications, and performance."""
+        response = self.client.get("/api/v1/analytics/summary?range=30d")
         self.assertEqual(response.status_code, 200)
         data = response.json()
-        self.assertIn("is_running", data)
-        self.assertIn("last_status", data)
+        self.assertIn("kpis", data)
+        self.assertIn("job_intelligence", data)
+        self.assertIn("application_analytics", data)
+        self.assertIn("agent_performance", data)
+        self.assertIn("applications", data["kpis"])
+        self.assertIn("interviews", data["kpis"])
+        self.assertIn("match_scores", data["job_intelligence"])
+        self.assertIn("top_skills", data["job_intelligence"])
+        self.assertIn("salary_distribution", data["job_intelligence"])
+        self.assertIn("funnel", data["application_analytics"])
+        self.assertIn("filtering_efficiency_pct", data["agent_performance"])
+
+    def test_settings_endpoints(self):
+        """Tests GET and PUT /api/v1/settings for profile and scoring preferences."""
+        # 1. Test GET /api/v1/settings
+        get_res = self.client.get("/api/v1/settings")
+        self.assertEqual(get_res.status_code, 200)
+        data = get_res.json()
+        self.assertIn("profile", data)
+        self.assertIn("scoring", data)
+        self.assertIn("name", data["profile"])
+        self.assertIn("min_experience", data["scoring"])
+        self.assertIn("min_score", data["scoring"])
+
+        # 2. Test PUT /api/v1/settings
+        update_payload = {
+            "profile": {
+                "name": "Karthik Software Dev",
+                "email": "karthik.dev@test.local",
+                "target_role": "Senior Python Backend Engineer",
+            },
+            "scoring": {
+                "min_experience": 2,
+                "max_experience": 6,
+                "min_score": 10.5,
+                "target_locations": ["Bangalore", "Chennai", "Remote", "Hyderabad"],
+            },
+        }
+        put_res = self.client.put("/api/v1/settings", json=update_payload)
+        self.assertEqual(put_res.status_code, 200)
+        updated_data = put_res.json()
+        self.assertEqual(updated_data["profile"]["name"], "Karthik Software Dev")
+        self.assertEqual(updated_data["profile"]["target_role"], "Senior Python Backend Engineer")
+        self.assertEqual(updated_data["scoring"]["min_experience"], 2)
+        self.assertEqual(updated_data["scoring"]["min_score"], 10.5)
+        self.assertIn("Hyderabad", updated_data["scoring"]["target_locations"])
 
 
 if __name__ == "__main__":

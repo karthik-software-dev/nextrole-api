@@ -48,6 +48,9 @@ class JobSummaryOut(BaseModel):
     experience_max: int | None = None
     experience_raw: str | None = None
     salary_raw: str | None = None
+    salary_min: float | None = None
+    salary_max: float | None = None
+    currency: str = "INR"
     canonical_apply_url: str | None = None
     apply_type: str = "UNKNOWN"
     ats_provider: str | None = None

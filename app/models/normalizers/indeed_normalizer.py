@@ -4,6 +4,8 @@ from typing import Any
 
 from models.job import Job
 from models.normalizers.experience_parser import extract_experience
+from models.normalizers.salary_parser import parse_salary
+from processing.deduplication import clean_job_title
 
 
 def _extract_job_id(item: dict[str, Any], url: str | None) -> str:
@@ -28,11 +30,11 @@ def _extract_job_id(item: dict[str, Any], url: str | None) -> str:
 
 def normalize_indeed_job(item: dict[str, Any]) -> Job:
     """Normalizes a raw Indeed scraper dictionary into a canonical Job model."""
-    title = (item.get("positionName") or item.get("title") or "Unknown Position").strip()
+    title = clean_job_title((item.get("positionName") or item.get("title") or "Unknown Position").strip())
     company = (item.get("company") or "Unknown Company").strip()
     location = (item.get("location") or "").strip() or None
     discovery_url = item.get("url") or None
-    apply_url = item.get("externalApplyLink") or None
+    apply_url = item.get("externalApplyLink") or item.get("url") or discovery_url
 
     job_id = _extract_job_id(item, discovery_url)
 
@@ -52,6 +54,8 @@ def normalize_indeed_job(item: dict[str, Any]) -> Job:
     elif salary_raw and not isinstance(salary_raw, str):
         salary_raw = str(salary_raw)
 
+    salary_min, salary_max, salary_currency = parse_salary(salary_raw)
+
     description = item.get("description") or item.get("descriptionText") or ""
     if isinstance(description, str):
         description = description.strip()
@@ -70,6 +74,9 @@ def normalize_indeed_job(item: dict[str, Any]) -> Job:
         location=location,
         is_remote=is_remote,
         salary_raw=salary_raw,
+        salary_min=salary_min,
+        salary_max=salary_max,
+        salary_currency=salary_currency,
         description=description,
         discovery_url=discovery_url,
         apply_url=apply_url,

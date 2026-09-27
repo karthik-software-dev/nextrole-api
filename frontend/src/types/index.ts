@@ -44,6 +44,9 @@ export interface JobSummary {
   experience_max: number | null;
   experience_raw: string | null;
   salary_raw: string | null;
+  salary_min?: number | null;
+  salary_max?: number | null;
+  currency?: string | null;
   canonical_apply_url: string | null;
   apply_type: string;
   ats_provider: string | null;
@@ -110,6 +113,24 @@ export interface Application {
   updated_at: string;
 }
 
+export interface DiscoveryTrendItem {
+  date: string;
+  count: number;
+}
+
+export interface LocationStatItem {
+  name: string;
+  count: number;
+}
+
+export interface RecentActivityItem {
+  id: string;
+  title: string;
+  description?: string | null;
+  timestamp: string;
+  activity_type: string;
+}
+
 export interface DashboardSummary {
   total_jobs: number;
   active_jobs: number;
@@ -136,6 +157,10 @@ export interface DashboardSummary {
     name: string;
     count: number;
   }>;
+  new_jobs?: number;
+  discovery_trend?: DiscoveryTrendItem[];
+  locations_breakdown?: LocationStatItem[];
+  recent_activities?: RecentActivityItem[];
 }
 
 export interface DiscoveryStatus {
@@ -146,3 +171,23 @@ export interface DiscoveryStatus {
   last_jobs_synced: number;
   last_error: string | null;
 }
+
+export interface NotificationItem {
+  id: number;
+  title: string;
+  message: string;
+  type: 'discovery' | 'job' | 'application' | 'system' | string;
+  is_read: boolean;
+  link: string | null;
+  created_at: string;
+}
+
+export interface NotificationListResponse {
+  items: NotificationItem[];
+  unread_count: number;
+}
+
+export * from './analytics';
+export * from './settings';
+
+

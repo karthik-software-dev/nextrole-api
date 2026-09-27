@@ -46,7 +46,7 @@ class TestIndeedNormalizer(unittest.TestCase):
         self.assertIsNone(job.location)
         self.assertFalse(job.is_remote)
         self.assertIsNone(job.salary_raw)
-        self.assertIsNone(job.apply_url)
+        self.assertEqual(job.apply_url, "https://in.indeed.com/viewjob?jk=acme999&from=serp")
         self.assertEqual(job.discovery_url, "https://in.indeed.com/viewjob?jk=acme999&from=serp")
 
     def test_fallback_id_generation(self):

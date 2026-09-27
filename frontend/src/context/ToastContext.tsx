@@ -44,13 +44,13 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const showToast = useCallback(
-    (message: string, type: ToastType = 'success', durationMs = 1800) => {
+    (message: string, type: ToastType = 'success', durationMs = 2800) => {
       const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const newToast: Toast = { id, message, type, isExiting: false };
 
       setToasts((prev) => [...prev, newToast]);
 
-      // Auto dismiss after 1-2 seconds (default 1800ms)
+      // Auto dismiss after 2.8s (or custom duration)
       const timeoutId = window.setTimeout(() => {
         removeToast(id);
       }, durationMs);
@@ -61,35 +61,46 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   const toastHelpers = {
-    success: (msg: string, dur?: number) => showToast(msg, 'success', dur),
-    error: (msg: string, dur?: number) => showToast(msg, 'error', dur),
-    info: (msg: string, dur?: number) => showToast(msg, 'info', dur),
-    warning: (msg: string, dur?: number) => showToast(msg, 'warning', dur),
+    success: (msg: string, dur = 2800) => showToast(msg, 'success', dur),
+    error: (msg: string, dur = 3500) => showToast(msg, 'error', dur),
+    info: (msg: string, dur = 2800) => showToast(msg, 'info', dur),
+    warning: (msg: string, dur = 3200) => showToast(msg, 'warning', dur),
   };
 
-  const getIcon = (type: ToastType) => {
+  const getTypeStyles = (type: ToastType) => {
     switch (type) {
       case 'success':
-        return <CheckCircle2 className="h-4 w-4 text-emerald-400 shrink-0" />;
+        return {
+          title: 'Success',
+          border: 'border-emerald-200 dark:border-emerald-800/80',
+          iconBox: 'bg-emerald-50 dark:bg-emerald-950/70 text-emerald-600 dark:text-emerald-400 ring-1 ring-inset ring-emerald-600/20',
+          titleColor: 'text-emerald-600 dark:text-emerald-400',
+          icon: <CheckCircle2 className="h-5 w-5" />,
+        };
       case 'error':
-        return <AlertCircle className="h-4 w-4 text-rose-400 shrink-0" />;
+        return {
+          title: 'Error',
+          border: 'border-rose-200 dark:border-rose-800/80',
+          iconBox: 'bg-rose-50 dark:bg-rose-950/70 text-rose-600 dark:text-rose-400 ring-1 ring-inset ring-rose-600/20',
+          titleColor: 'text-rose-600 dark:text-rose-400',
+          icon: <AlertCircle className="h-5 w-5" />,
+        };
       case 'warning':
-        return <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />;
+        return {
+          title: 'Attention',
+          border: 'border-amber-200 dark:border-amber-800/80',
+          iconBox: 'bg-amber-50 dark:bg-amber-950/70 text-amber-600 dark:text-amber-400 ring-1 ring-inset ring-amber-600/20',
+          titleColor: 'text-amber-600 dark:text-amber-400',
+          icon: <AlertTriangle className="h-5 w-5" />,
+        };
       default:
-        return <Info className="h-4 w-4 text-indigo-400 shrink-0" />;
-    }
-  };
-
-  const getBorderColor = (type: ToastType) => {
-    switch (type) {
-      case 'success':
-        return 'border-emerald-500/30';
-      case 'error':
-        return 'border-rose-500/30';
-      case 'warning':
-        return 'border-amber-500/30';
-      default:
-        return 'border-indigo-500/30';
+        return {
+          title: 'Notice',
+          border: 'border-indigo-200 dark:border-indigo-800/80',
+          iconBox: 'bg-indigo-50 dark:bg-indigo-950/70 text-indigo-600 dark:text-indigo-400 ring-1 ring-inset ring-indigo-600/20',
+          titleColor: 'text-indigo-600 dark:text-indigo-400',
+          icon: <Info className="h-5 w-5" />,
+        };
     }
   };
 
@@ -97,34 +108,48 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     <ToastContext.Provider value={{ showToast, toast: toastHelpers }}>
       {children}
 
-      {/* Floating Snackbar Container (Bottom-Right) */}
+      {/* Floating Top-Right SaaS Toast Container */}
       <div
-        className="fixed bottom-6 right-6 z-50 flex flex-col gap-2.5 max-w-sm pointer-events-none"
+        className="fixed top-6 right-6 z-50 flex flex-col gap-3 w-full max-w-[390px] pointer-events-none"
         aria-live="polite"
       >
-        {toasts.map((item) => (
-          <div
-            key={item.id}
-            className={`pointer-events-auto flex items-center justify-between gap-3 px-4 py-3 rounded-xl bg-slate-900/95 dark:bg-[#111827]/95 backdrop-blur-md text-white text-xs font-medium shadow-2xl border ${getBorderColor(
-              item.type
-            )} transform transition-all duration-300 ease-out ${
-              item.isExiting
-                ? 'opacity-0 translate-y-2 scale-95'
-                : 'opacity-100 translate-y-0 scale-100'
-            }`}
-          >
-            <div className="flex items-center gap-2.5 min-w-0">
-              {getIcon(item.type)}
-              <span className="truncate text-slate-100">{item.message}</span>
-            </div>
-            <button
-              onClick={() => removeToast(item.id)}
-              className="text-slate-400 hover:text-white p-0.5 rounded transition-colors shrink-0 cursor-pointer"
+        {toasts.map((item) => {
+          const cfg = getTypeStyles(item.type);
+          return (
+            <div
+              key={item.id}
+              className={`pointer-events-auto flex items-start gap-3.5 p-4 rounded-2xl bg-white dark:bg-[#111726] shadow-[0_12px_36px_-6px_rgba(0,0,0,0.12),0_4px_14px_-2px_rgba(0,0,0,0.06)] border ${cfg.border} transform transition-all duration-300 ease-out ${
+                item.isExiting
+                  ? 'opacity-0 -translate-y-3 scale-95'
+                  : 'opacity-100 translate-y-0 scale-100'
+              }`}
             >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        ))}
+              {/* Left Soft Tint Icon Container */}
+              <div className={`h-9 w-9 rounded-xl flex items-center justify-center shrink-0 shadow-xs ${cfg.iconBox}`}>
+                {cfg.icon}
+              </div>
+
+              {/* Message Content */}
+              <div className="flex-1 min-w-0 pt-0.5">
+                <span className={`block text-[11.5px] font-bold uppercase tracking-wider mb-0.5 ${cfg.titleColor}`}>
+                  {cfg.title}
+                </span>
+                <p className="text-[13.5px] font-semibold text-slate-800 dark:text-slate-100 leading-snug break-words">
+                  {item.message}
+                </p>
+              </div>
+
+              {/* Close Button */}
+              <button
+                onClick={() => removeToast(item.id)}
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer -mr-1 -mt-1"
+                title="Dismiss"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+          );
+        })}
       </div>
     </ToastContext.Provider>
   );

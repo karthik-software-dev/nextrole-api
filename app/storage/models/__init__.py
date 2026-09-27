@@ -4,6 +4,7 @@ from storage.models.base import ActiveMixin, Base, TimestampMixin
 from storage.models.company import Company
 from storage.models.job import Job
 from storage.models.job_source import JobSource
+from storage.models.notification import Notification
 from storage.models.user import User
 
 __all__ = [
@@ -16,4 +17,5 @@ __all__ = [
     "User",
     "Application",
     "ApplicationHistory",
+    "Notification",
 ]

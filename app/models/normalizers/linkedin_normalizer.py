@@ -5,6 +5,8 @@ from typing import Any
 
 from models.job import Job
 from models.normalizers.experience_parser import extract_experience
+from models.normalizers.salary_parser import parse_salary
+from processing.deduplication import clean_job_title
 
 
 def _strip_html(text: str) -> str:
@@ -27,7 +29,7 @@ def normalize_linkedin_job(item: dict[str, Any]) -> Job:
         job_id = f"linkedin_{hashlib.md5(key_str.encode('utf-8')).hexdigest()[:12]}"
 
     # 2. Title & Company
-    title = (item.get("title") or "Unknown Position").strip()
+    title = clean_job_title((item.get("title") or "Unknown Position").strip())
     company = (item.get("company") or "Unknown Company").strip()
 
     # 3. Location & Remote
@@ -48,6 +50,8 @@ def normalize_linkedin_job(item: dict[str, Any]) -> Job:
     if salary_val and str(salary_val).strip():
         salary_raw = str(salary_val).strip()
 
+    salary_min, salary_max, salary_currency = parse_salary(salary_raw)
+
     # 5. Description
     raw_desc = item.get("descriptionText") or item.get("descriptionHtml") or ""
     description = _strip_html(raw_desc)
@@ -60,7 +64,7 @@ def normalize_linkedin_job(item: dict[str, Any]) -> Job:
     else:
         discovery_url = item.get("jobUrl") or None
 
-    apply_url = None
+    apply_url = item.get("applyUrl") or item.get("jobUrl") or discovery_url
 
     # 7. Posted At
     posted_at = item.get("postedAt")
@@ -75,6 +79,9 @@ def normalize_linkedin_job(item: dict[str, Any]) -> Job:
         location=location,
         is_remote=is_remote,
         salary_raw=salary_raw,
+        salary_min=salary_min,
+        salary_max=salary_max,
+        salary_currency=salary_currency,
         description=description,
         discovery_url=discovery_url,
         apply_url=apply_url,

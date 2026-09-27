@@ -19,13 +19,15 @@ class TestLinkedInNormalizer(unittest.TestCase):
 
         job = normalize_linkedin_job(sample_item)
         self.assertEqual(job.id, "linkedin_4460260022")
-        self.assertEqual(job.title, "Senior Backend Engineer – Python")
+        self.assertEqual(job.title, "Senior Backend Engineer - Python")
         self.assertEqual(job.company, "GlobalLogic")
         self.assertEqual(job.source, "linkedin")
         self.assertEqual(job.location, "Bengaluru, Karnataka, India")
         self.assertEqual(job.salary_raw, "₹800,000.00/yr - ₹1,200,000.00/yr")
+        self.assertEqual(job.salary_min, 800000.0)
+        self.assertEqual(job.salary_max, 1200000.0)
         self.assertEqual(job.discovery_url, "https://www.linkedin.com/jobs/view/4460260022")
-        self.assertIsNone(job.apply_url)
+        self.assertEqual(job.apply_url, "https://www.linkedin.com/jobs-guest/jobs/api/jobPosting/4460260022")
         self.assertEqual(job.posted_at, "2 weeks ago")
         self.assertIn("FastAPI and Django systems", job.description)
 

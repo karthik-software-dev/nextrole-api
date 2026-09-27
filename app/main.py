@@ -98,6 +98,7 @@ def main():
     print(f"\nTotal jobs collected & normalized: {len(jobs)} ({sources_summary})")
 
     relevant_jobs = filter_relevant_jobs(jobs)
+    irrelevant_jobs = [j for j in jobs if j.relevance_score < 8.0]
     unique_jobs = deduplicate_jobs(relevant_jobs)
     validated_jobs = validate_job_urls(unique_jobs)
     prioritized_jobs = prioritize_jobs(validated_jobs)
@@ -195,6 +196,13 @@ def main():
     try:
         if init_db():
             with get_db() as session:
+                for job in irrelevant_jobs:
+                    try:
+                        with session.begin_nested():
+                            JobRepository.deactivate_irrelevant_job(session, job)
+                    except Exception:
+                        pass
+
                 synced_count = 0
                 for job in prioritized_jobs:
                     try:

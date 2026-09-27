@@ -20,12 +20,12 @@ export const Button: React.FC<ButtonProps> = ({
   disabled,
   ...props
 }) => {
-  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed select-none cursor-pointer';
+  const baseStyles = 'inline-flex items-center justify-center font-medium rounded-xl transition-[background-color,border-color,color,box-shadow,transform] duration-150 ease-out active:scale-[0.98] focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed disabled:active:scale-100 select-none cursor-pointer';
 
   const sizeStyles = {
-    sm: 'px-2.5 py-1.5 text-xs gap-1.5',
-    md: 'px-3.5 py-2 text-sm gap-2',
-    lg: 'px-4 py-2.5 text-base gap-2.5',
+    sm: 'px-3 py-1.5 text-[13px] font-semibold gap-1.5',
+    md: 'px-4 py-2 text-[14px] font-semibold gap-2',
+    lg: 'px-5 py-2.5 text-[15px] font-semibold gap-2.5',
   };
 
   const variantStyles = {

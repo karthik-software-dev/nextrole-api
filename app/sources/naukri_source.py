@@ -5,7 +5,7 @@ from typing import Any
 
 from apify_client import ApifyClient
 
-from config import APIFY_API_TOKEN
+from config import extract_apify_dataset_id, get_apify_token
 from models.job import Job
 from models.normalizers.naukri_normalizer import normalize_naukri_jobs
 
@@ -34,8 +34,9 @@ def fetch_naukri_jobs(use_cache: bool = False, cache_file: Path | None = None) -
             print(f"[WARN] Failed to read Naukri cache ({e}), falling back to live Apify fetch...")
 
     # 2. Check Apify Token
-    if not APIFY_API_TOKEN:
-        print("[WARN] APIFY_API_TOKEN not configured in environment.")
+    token = get_apify_token()
+    if not token:
+        print("[WARN] APIFY_API_TOKEN not configured in environment or settings.")
         if target_cache.exists():
             print(f"[FALLBACK] Using existing cache {target_cache.name}.")
             with open(target_cache, "r", encoding="utf-8") as f:
@@ -45,24 +46,41 @@ def fetch_naukri_jobs(use_cache: bool = False, cache_file: Path | None = None) -
 
     # 3. Live fetch via Apify Client
     print("[APIFY] Connecting to Apify to scrape Naukri jobs...")
-    client = ApifyClient(APIFY_API_TOKEN)
+    client = ApifyClient(token)
 
-    run_input = {
-        "searchUrl": "https://www.naukri.com/python-backend-engineer-jobs-in-bengaluru-chennai-hyderabad",
-        "maxJobs": 50,
-        "fetchDetails": True,
-        "sortBy": "relevance",
-    }
+    search_configs = [
+        {
+            "searchUrl": "https://www.naukri.com/python-backend-engineer-jobs-in-bengaluru",
+            "maxJobs": 50,
+            "fetchDetails": True,
+            "sortBy": "date",
+            "freshness": "7",
+        },
+        {
+            "searchUrl": "https://www.naukri.com/python-backend-developer-jobs-in-chennai",
+            "maxJobs": 50,
+            "fetchDetails": True,
+            "sortBy": "date",
+            "freshness": "7",
+        },
+    ]
 
+    raw_items: list[dict[str, Any]] = []
     try:
-        run = client.actor(ACTOR_ID).call(run_input=run_input)
-        dataset_id = run.get("defaultDatasetId")
-        if not dataset_id:
-            raise RuntimeError(f"Naukri run finished without a defaultDatasetId: {run}")
+        for cfg in search_configs:
+            url_slug = cfg["searchUrl"].split("/")[-1]
+            print(f"[APIFY: Naukri] Scraping {url_slug} (max {cfg['maxJobs']}, freshness {cfg.get('freshness', 'all')}d)...")
+            run = client.actor(ACTOR_ID).call(run_input=cfg)
+            dataset_id = extract_apify_dataset_id(run)
+            if not dataset_id:
+                print(f"[WARN] Naukri run finished without datasetId: {run}")
+                continue
+            batch = list(client.dataset(dataset_id).iterate_items())
+            print(f"[APIFY: Naukri] Fetched {len(batch)} items for {url_slug}.")
+            raw_items.extend(batch)
 
-        raw_items: list[dict[str, Any]] = list(
-            client.dataset(dataset_id).iterate_items()
-        )
+        if not raw_items:
+            raise RuntimeError("Naukri scraper returned zero items across all locations.")
     except Exception as e:
         print(f"[ERROR] Failed to fetch from Naukri via Apify: {e}")
         if target_cache.exists():

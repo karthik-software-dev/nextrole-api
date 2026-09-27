@@ -3,7 +3,7 @@ import logging
 from typing import Any
 
 from processing.deduplication import deduplicate_jobs
-from processing.prioritization import prioritize_jobs, select_by_location_quota
+from processing.prioritization import get_location_bucket, prioritize_jobs, select_by_location_quota
 from processing.relevance import filter_relevant_jobs
 from processing.url_validator import validate_job_urls
 from schemas.discovery import DiscoveryStatusOut
@@ -60,6 +60,13 @@ class DiscoveryService:
 
         try:
             logger.info(f"Starting discovery run (source={source}, location={location}, cache={use_cache})")
+            from services.notification_service import NotificationService
+            NotificationService.create_notification(
+                title="Job Discovery Started",
+                message=f"Pipeline initiated for source '{source}' ({location}).",
+                type="discovery",
+                link="/discovery",
+            )
             jobs = []
 
             source_fetchers = [
@@ -82,20 +89,32 @@ class DiscoveryService:
 
             cls._last_jobs_found = len(jobs)
 
-            # Processing pipeline
+            # Processing pipeline: partition into relevant and irrelevant
             relevant_jobs = filter_relevant_jobs(jobs)
+            irrelevant_jobs = [j for j in jobs if j.relevance_score < 8.0]
+
+            # Deactivate any existing DB records that have become irrelevant (never inserts new irrelevant jobs)
+            with get_db() as session:
+                for job in irrelevant_jobs:
+                    try:
+                        with session.begin_nested():
+                            JobRepository.deactivate_irrelevant_job(session, job)
+                    except Exception as deact_err:
+                        logger.warning(f"Failed to check/deactivate job '{job.title}' ({job.id}): {deact_err}")
+
             unique_jobs = deduplicate_jobs(relevant_jobs)
             validated_jobs = validate_job_urls(unique_jobs)
             prioritized_jobs = prioritize_jobs(validated_jobs)
 
-            # Location filtering or quota
+            # Location filtering or quota (excluding non-remote foreign jobs)
+            prioritized_jobs = [j for j in prioritized_jobs if get_location_bucket(j) != "FOREIGN"]
             loc_lower = location.lower()
             if loc_lower in ("bangalore", "bengaluru", "blr"):
-                prioritized_jobs = [j for j in prioritized_jobs if any(k in (j.location or "").lower() for k in ["bengaluru", "bangalore", "karnataka"])]
+                prioritized_jobs = [j for j in prioritized_jobs if get_location_bucket(j) == "BANGALORE"]
             elif loc_lower in ("chennai", "maa"):
-                prioritized_jobs = [j for j in prioritized_jobs if any(k in (j.location or "").lower() for k in ["chennai", "tamil nadu"])]
+                prioritized_jobs = [j for j in prioritized_jobs if get_location_bucket(j) == "CHENNAI"]
             elif loc_lower in ("other", "remote", "hyd", "hyderabad", "pune"):
-                prioritized_jobs = [j for j in prioritized_jobs if not any(k in (j.location or "").lower() for k in ["bengaluru", "bangalore", "karnataka", "chennai"])]
+                prioritized_jobs = [j for j in prioritized_jobs if get_location_bucket(j) == "OTHER"]
             else:
                 prioritized_jobs = select_by_location_quota(prioritized_jobs, target_total=100)
 
@@ -114,10 +133,24 @@ class DiscoveryService:
             cls._last_run_at = datetime.now(timezone.utc)
             cls._last_status = "completed"
             logger.info(f"Discovery completed successfully. Synced {synced_count} jobs.")
+            from services.notification_service import NotificationService
+            NotificationService.create_notification(
+                title="Job Discovery Completed",
+                message=f"Successfully synced {synced_count} engineering jobs to your feed.",
+                type="discovery",
+                link="/jobs",
+            )
 
         except Exception as e:
             cls._last_status = "failed"
             cls._last_error = str(e)
             logger.error(f"Discovery pipeline failed: {e}", exc_info=True)
+            from services.notification_service import NotificationService
+            NotificationService.create_notification(
+                title="Job Discovery Alert",
+                message=f"Pipeline error: {str(e)[:120]}",
+                type="discovery",
+                link="/discovery",
+            )
         finally:
             cls._is_running = False

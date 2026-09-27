@@ -46,7 +46,7 @@ class TestNaukriNormalizer(unittest.TestCase):
 
         job = normalize_naukri_job(sample_native)
         self.assertEqual(job.id, "naukri_999888777")
-        self.assertIsNone(job.apply_url)
+        self.assertEqual(job.apply_url, "https://www.naukri.com/job-listings-python-dev-999888777")
         self.assertEqual(job.discovery_url, "https://www.naukri.com/job-listings-python-dev-999888777")
         self.assertIsNone(job.salary_raw)
 

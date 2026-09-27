@@ -114,6 +114,10 @@ def init_db() -> bool:
     try:
         ensure_database_exists(DATABASE_URL)
         Base.metadata.create_all(bind=engine)
+        if not DATABASE_URL.startswith("sqlite"):
+            from sqlalchemy import text
+            with engine.begin() as conn:
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences_json JSONB DEFAULT '{}'::jsonb;"))
         with get_db() as session:
             seed_default_user(session)
         print(f"[DATABASE] Connected & schema verified on '{DATABASE_URL.split('/')[-1]}'")

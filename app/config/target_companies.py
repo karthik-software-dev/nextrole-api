@@ -165,7 +165,7 @@ TARGET_COMPANIES: list[TargetCompany] = [
         career_url="https://www.palantir.com/careers/",
         enabled=True,
         keywords=["python", "backend"],
-        location_filter=None,
+        location_filter="India",
     ),
 ]
 

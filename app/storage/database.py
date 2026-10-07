@@ -53,12 +53,19 @@ def ensure_database_exists(db_url: str = DATABASE_URL) -> None:
         logger.warning(f"Could not verify/create database '{target_db}' via maintenance connection: {e}")
 
 
+# Helper to normalize URL scheme for SQLAlchemy compatibility
+def _get_sqlalchemy_url(url: str) -> str:
+    if url.startswith("postgres://"):
+        return url.replace("postgres://", "postgresql://", 1)
+    return url
+
+
 # Create SQLAlchemy Engine safely based on dialect
 if DATABASE_URL.startswith("sqlite"):
     engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 else:
     engine = create_engine(
-        DATABASE_URL,
+        _get_sqlalchemy_url(DATABASE_URL),
         pool_pre_ping=True,
         pool_size=5,
         max_overflow=10,

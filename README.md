@@ -1,6 +1,19 @@
-# Job Agent - Autonomous Job Discovery Engine
+# NextRole - Autonomous Job Discovery Engine & Platform
 
-An automated job discovery and relevance filtering agent designed to find, evaluate, and score relevant tech roles (e.g., Python Backend Engineering) across job platforms.
+NextRole is an intelligent job discovery, matching, and application tracking platform designed to discover, evaluate, and track high-relevance tech roles across targeted companies.
+
+---
+
+## 🌐 Live Deployments & Repositories
+
+### Live Application
+- **Frontend App (Netlify)**: [https://nextrole-app.netlify.app](https://nextrole-app.netlify.app)
+- **Backend API Docs (Render)**: [https://nextrole-api-vyzp.onrender.com/docs](https://nextrole-api-vyzp.onrender.com/docs)
+- **Backend API Base**: `https://nextrole-api-vyzp.onrender.com/api/v1`
+
+### Standalone GitLab Repositories
+- **Frontend UI**: [https://gitlab.com/karthik-software-dev/nextrole-ui](https://gitlab.com/karthik-software-dev/nextrole-ui)
+- **Backend API**: [https://gitlab.com/karthik-software-dev/nextrole-api](https://gitlab.com/karthik-software-dev/nextrole-api)
 
 ---
 
@@ -16,35 +29,32 @@ This repository adheres to a structured Git flow:
 
 ### 1. Prerequisites
 - Python 3.10+
-- Apify Account & API Token
+- Node.js 20+
+- PostgreSQL database (or local SQLite)
 
-### 2. Setup Virtual Environment
+### 2. Backend Setup
 ```bash
-# From job-agent directory
+# Setup virtual environment
 python -m venv env
-# On Windows PowerShell:
 .\env\Scripts\Activate.ps1
-```
 
-### 3. Install Dependencies
-```bash
+# Install backend dependencies
 pip install -r app/requirements.txt
+
+# Run FastAPI backend
+python -m uvicorn --app-dir app server:app --reload --port 8000
 ```
 
-### 4. Configure Environment
-Copy `.env.example` to `.env` inside `app/`:
+### 3. Frontend Setup
 ```bash
-cp app/.env.example app/.env
-```
-Add your Apify API token in `app/.env`:
-```env
-APIFY_API_TOKEN=your_apify_api_token_here
-```
+# Navigate to frontend directory
+cd frontend
 
-### 5. Run the Agent
-```bash
-cd app
-python main.py
+# Install frontend dependencies
+npm install
+
+# Run Vite development server
+npm run dev
 ```
 
 ---
@@ -55,13 +65,19 @@ python main.py
 job-agent/
 ├── .gitignore
 ├── README.md
-├── app/
-│   ├── .env.example
-│   ├── config.py             # Environment configuration & token validation
-│   ├── main.py               # Orchestrator CLI entrypoint
-│   ├── requirements.txt      # Project dependencies
-│   ├── processing/
-│   │   └── relevance.py      # Heuristic scoring & filtering engine
-│   └── sources/
-│       └── indeed_source.py  # Apify Indeed scraper integration
+├── app/                      # FastAPI Backend
+│   ├── api/v1/               # REST API endpoints & route handlers
+│   ├── config/               # Environment configuration & constants
+│   ├── schemas/              # Pydantic request/response schemas
+│   ├── services/             # Discovery engines & business logic
+│   ├── storage/              # SQLAlchemy database models & sessions
+│   ├── requirements.txt      # Python dependencies
+│   └── server.py             # FastAPI entrypoint
+└── frontend/                 # React 19 + Vite Frontend
+    ├── src/
+    │   ├── api/              # Axios API clients & interceptors
+    │   ├── components/       # UI & Dashboard components
+    │   ├── pages/            # Page views (Dashboard, Jobs, Analytics)
+    │   └── context/          # State management providers
+    └── package.json
 ```

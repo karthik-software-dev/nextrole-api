@@ -44,13 +44,13 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   }, []);
 
   const showToast = useCallback(
-    (message: string, type: ToastType = 'success', durationMs = 2800) => {
+    (message: string, type: ToastType = 'success', durationMs = 10000) => {
       const id = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
       const newToast: Toast = { id, message, type, isExiting: false };
 
       setToasts((prev) => [...prev, newToast]);
 
-      // Auto dismiss after 2.8s (or custom duration)
+      // Auto dismiss after 10s (or custom duration)
       const timeoutId = window.setTimeout(() => {
         removeToast(id);
       }, durationMs);
@@ -61,10 +61,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   );
 
   const toastHelpers = {
-    success: (msg: string, dur = 2800) => showToast(msg, 'success', dur),
-    error: (msg: string, dur = 3500) => showToast(msg, 'error', dur),
-    info: (msg: string, dur = 2800) => showToast(msg, 'info', dur),
-    warning: (msg: string, dur = 3200) => showToast(msg, 'warning', dur),
+    success: (msg: string, dur = 10000) => showToast(msg, 'success', dur),
+    error: (msg: string, dur = 10000) => showToast(msg, 'error', dur),
+    info: (msg: string, dur = 10000) => showToast(msg, 'info', dur),
+    warning: (msg: string, dur = 10000) => showToast(msg, 'warning', dur),
   };
 
   const getTypeStyles = (type: ToastType) => {
@@ -118,9 +118,9 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
           return (
             <div
               key={item.id}
-              className={`pointer-events-auto flex items-start gap-3.5 p-4 rounded-2xl bg-white dark:bg-[#111726] shadow-[0_12px_36px_-6px_rgba(0,0,0,0.12),0_4px_14px_-2px_rgba(0,0,0,0.06)] border ${cfg.border} transform transition-all duration-300 ease-out ${
+              className={`pointer-events-auto flex items-start gap-3.5 p-4 rounded-2xl bg-white dark:bg-[#111726] shadow-[0_12px_36px_-6px_rgba(0,0,0,0.12),0_4px_14px_-2px_rgba(0,0,0,0.06)] border ${cfg.border} transform transition-all duration-180 ease-[cubic-bezier(0.16,1,0.3,1)] ${
                 item.isExiting
-                  ? 'opacity-0 -translate-y-3 scale-95'
+                  ? 'opacity-0 -translate-y-2 scale-95'
                   : 'opacity-100 translate-y-0 scale-100'
               }`}
             >
@@ -142,7 +142,7 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
               {/* Close Button */}
               <button
                 onClick={() => removeToast(item.id)}
-                className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0 cursor-pointer -mr-1 -mt-1"
+                className="text-slate-400 hover:text-slate-700 dark:hover:text-white p-1 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active-pop shrink-0 cursor-pointer -mr-1 -mt-1"
                 title="Dismiss"
               >
                 <X className="h-4 w-4" />

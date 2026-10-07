@@ -8,7 +8,7 @@ import json
 import os
 import unittest
 from models.job import Job
-from models.normalizers.experience_parser import extract_experience
+from processing.experience_parser import extract_experience
 from processing.relevance import calculate_relevance_score
 
 RELEVANCE_THRESHOLD = 8.0
@@ -353,6 +353,123 @@ class TestBenchmarkRegressionJobs(unittest.TestCase):
                 "NOT_RELEVANT",
                 f"Expected {jid} to be NOT_RELEVANT, got {classification} (score: {score:.1f})"
             )
+
+class TestAiBackendAndFrontendExclusionRules(unittest.TestCase):
+    """Verifies RAG/AI backend qualification, AI automation title preservation, and pure frontend rejection."""
+
+    def test_accepts_llm_rag_engineer(self):
+        job = Job(
+            id="test_rag_eng",
+            title="LLM / RAG Engineer",
+            company="Balusen Technologies",
+            description=(
+                "Implement and tune RAG stacks (ingestion, indexing, reranking, evaluation). "
+                "3-4 years backend or ML engineering with shipped LLM features. "
+                "Solid grasp of embeddings, hybrid search, and vector databases. "
+                "ATS keywords: RAG, Pinecone, ChromaDB, Python, Evaluation, Embeddings."
+            ),
+            experience_min=3,
+            experience_max=4,
+        )
+        score, matched = calculate_relevance_score(job)
+        self.assertGreaterEqual(score, RELEVANCE_THRESHOLD, f"Expected RAG role to score >= 8.0, got {score}")
+        self.assertIn("RAG", matched)
+        self.assertIn("Python", matched)
+
+    def test_accepts_ai_automation_engineer(self):
+        job = Job(
+            id="test_ai_auto",
+            title="AI Automation Engineer",
+            company="Balusen Technologies",
+            description=(
+                "Build n8n, LangChain and LLM automations and workflows. "
+                "3-4 years experience. Python, API integrations, and prompt boundaries."
+            ),
+            experience_min=3,
+            experience_max=4,
+        )
+        score, _ = calculate_relevance_score(job)
+        self.assertGreaterEqual(score, RELEVANCE_THRESHOLD, f"Expected AI Automation Engineer to score >= 8.0, got {score}")
+
+    def test_rejects_pure_frontend_with_incidental_python(self):
+        job = Job(
+            id="test_fe_mrmed",
+            title="Junior Software Engineer - Frontend & AI",
+            company="MrMed",
+            description=(
+                "Strong working knowledge of React.js, Next.js, JavaScript/TypeScript, HTML, CSS. "
+                "Knowledge of backend technologies is a plus. Experience with Python or REST APIs is useful but not mandatory. "
+                "1-2 years experience."
+            ),
+            experience_min=1,
+            experience_max=2,
+        )
+        score, _ = calculate_relevance_score(job)
+        self.assertEqual(score, 0.0, f"Expected pure frontend role to score 0.0, got {score}")
+
+
+class TestEnhancedArchitectureAndDsaSkills(unittest.TestCase):
+    """Unit tests verifying recognition of DSA, System Design, Scalability, RabbitMQ, and Clean Code."""
+
+    def test_rabbitmq_and_scalability_synergy(self):
+        job = Job(
+            id="test_rmq_scale",
+            title="Backend Engineer",
+            company="FintechScale",
+            source="indeed",
+            description=(
+                "We are hiring a Backend Engineer to build high-throughput systems. "
+                "Requirements: 2-4 years experience. Core Python, RabbitMQ message queues, Celery workers, "
+                "System Design, Scalability, high availability, and horizontal scaling. PostgreSQL database."
+            ),
+            experience_min=2,
+            experience_max=4,
+        )
+        score, matched = calculate_relevance_score(job)
+        self.assertGreaterEqual(score, 20.0)
+        self.assertIn("RabbitMQ", matched)
+        self.assertIn("System Design", matched)
+        self.assertIn("Scalability", matched)
+        self.assertIn("Scalable Backend Synergy", matched)
+
+    def test_dsa_and_clean_code_recognition(self):
+        job = Job(
+            id="test_dsa_clean",
+            title="Python Developer",
+            company="CraftCode",
+            source="indeed",
+            description=(
+                "Seeking a Python Developer to build backend services and REST APIs with strong problem solving and data structures and algorithms skills. "
+                "Experience with sliding window, time complexity, space complexity, and linear data structures. "
+                "Must write readable code following clean code and SOLID principles. Pytest unit testing."
+            ),
+            experience_min=1,
+            experience_max=3,
+        )
+        score, matched = calculate_relevance_score(job)
+        self.assertGreaterEqual(score, 18.0)
+        self.assertIn("Data Structures & Algorithms", matched)
+        self.assertIn("Clean Code", matched)
+        self.assertIn("SOLID", matched)
+
+    def test_lld_and_hld_recognition(self):
+        job = Job(
+            id="test_lld_hld",
+            title="Python Backend Developer",
+            company="ArchTech",
+            source="indeed",
+            description=(
+                "Looking for a Python Backend Developer skilled in low-level design (LLD) and high-level design (HLD). "
+                "Knowledge of fault tolerance, microservices, and FastAPI."
+            ),
+            experience_min=2,
+            experience_max=4,
+        )
+        score, matched = calculate_relevance_score(job)
+        self.assertGreaterEqual(score, 20.0)
+        self.assertIn("Low-Level Design (LLD)", matched)
+        self.assertIn("High-Level Design (HLD)", matched)
+        self.assertIn("Fault Tolerance", matched)
 
 
 if __name__ == "__main__":

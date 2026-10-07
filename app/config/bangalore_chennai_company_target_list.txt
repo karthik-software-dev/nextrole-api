@@ -1,0 +1,898 @@
+BANGALORE + CHENNAI — SOFTWARE COMPANY TARGET LIST
+
+Purpose:
+Target companies for a 2-year Python Backend / Full Stack / AI-oriented software engineer.
+Includes large companies, product companies, SaaS, fintech, GCCs, startups, and small/mid-sized companies similar in scale to Factana.
+
+========================
+BANGALORE
+========================
+
+Large / Product / Tech
+Amazon
+Microsoft
+Google
+Walmart Global Tech
+Atlassian
+Adobe
+Salesforce
+Oracle
+SAP
+Cisco
+Intel
+Qualcomm
+NVIDIA
+Uber
+LinkedIn
+PhonePe
+Flipkart
+Myntra
+Swiggy
+Zomato
+Meesho
+Zepto
+Blinkit
+BigBasket
+Lenskart
+Razorpay
+Groww
+CRED
+Zerodha
+Dream11
+
+SaaS / Product / Developer Tools
+BrowserStack
+Postman
+Atlan
+Hasura
+Chargebee
+Whatfix
+CleverTap
+MoEngage
+Gupshup
+Wingify
+Druva
+Mindtickle
+HighRadius
+Capillary Technologies
+Exotel
+SaaS Labs
+Sprinto
+Hiver
+Plum
+SuperOps
+Rocketlane
+Klenty
+Spendflo
+Vymo
+Darwinbox
+Uniphore
+Yellow.ai
+Observe.AI
+Nanonets
+Pixis
+
+Fintech / Financial Technology
+PhonePe
+Razorpay
+Groww
+CRED
+Zeta
+Slice
+Navi
+Jupiter
+Fi
+BharatPe
+Cashfree Payments
+Pine Labs
+PayU
+Upstox
+Angel One
+CoinDCX
+MobiKwik
+Policybazaar
+Acko
+Smallcase
+Khatabook
+Juspay
+Setu
+Yubi
+M2P Fintech
+Open Financial Technologies
+Rupeek
+Jar
+
+Consumer / Mobility / Logistics
+Rapido
+Porter
+BlackBuck
+Ather Energy
+Yulu
+Bounce
+Ola
+NoBroker
+Urban Company
+Apna
+Pocket FM
+OfBusiness
+Moglix
+WayCool
+Delhivery
+Shiprocket
+Nykaa
+AJIO
+
+AI / Data / Deep Tech
+Sarvam AI
+Krutrim
+Ema
+Uniphore
+Observe.AI
+Yellow.ai
+Mad Street Den
+Nanonets
+Pixis
+Gnani.ai
+Haptik
+Qure.ai
+Fractal
+SigTuple
+Niramai
+Detect Technologies
+Skyroot Aerospace
+AgniKul Cosmos
+GalaxEye
+e-con Systems
+
+Small / Mid-size / Startup-oriented
+Factana
+Sigtuple
+Hiver
+Sprinto
+HyperVerge
+Plum
+Vahan
+BetterPlace
+Detect Technologies
+Facilio
+SuperOps
+SaaS Labs
+Spendflo
+Rocketlane
+Klenty
+CloudSEK
+HighLevel
+Ather Energy
+Yulu
+Vymo
+Rupeek
+Capillary Technologies
+Exotel
+Gupshup
+Juspay
+Setu
+Smallcase
+Khatabook
+Mindtickle
+Whatfix
+Wingify
+Kovai.co
+
+
+========================
+CHENNAI
+========================
+
+Large / Product / Tech
+Amazon
+Microsoft
+Google
+Walmart Global Tech
+Freshworks
+Zoho
+Cognizant
+TCS
+Infosys
+Wipro
+Accenture
+HCLTech
+Deloitte
+PayPal
+Ford
+Standard Chartered
+Barclays
+BNP Paribas
+HSBC
+Citi
+Societe Generale
+Wells Fargo
+
+SaaS / Product
+Freshworks
+Zoho
+Chargebee
+Kissflow
+SurveySparrow
+Kovai.co
+SuperOps
+Facilio
+WayCool
+Ramco Systems
+Matrimony.com
+Agilysys
+CloudCherry
+Vuram
+Indium Software
+Guvi
+Rocketlane
+Klenty
+Spendflo
+Uniphore
+Yubi
+M2P Fintech
+
+Fintech / Financial Technology
+M2P Fintech
+Yubi
+BankBazaar
+CreditMantri
+Vivriti Capital
+Kaleidofin
+Perfios
+FSS
+Equitas
+Ramco Systems
+PayPal
+Standard Chartered
+Barclays
+BNP Paribas
+HSBC
+Citi
+Societe Generale
+Wells Fargo
+
+AI / Data / Deep Tech
+Uniphore
+Detect Technologies
+LatentView Analytics
+Tiger Analytics
+Data Patterns
+AgniKul Cosmos
+GalaxEye
+Garuda Aerospace
+e-con Systems
+Qure.ai
+SigTuple
+Niramai
+DeepTech startups at IIT Madras Research Park
+
+Small / Mid-size / Startup-oriented
+Factana
+SurveySparrow
+Kovai.co
+SuperOps
+Facilio
+Spendflo
+Rocketlane
+Klenty
+CloudSEK
+Detect Technologies
+WayCool
+Vuram
+Indium Software
+Guvi
+BankBazaar
+CreditMantri
+Kaleidofin
+Vivriti Capital
+M2P Fintech
+Yubi
+Ramco Systems
+Matrimony.com
+Agilysys
+LatentView Analytics
+Tiger Analytics
+Data Patterns
+e-con Systems
+
+
+========================
+TARGET ROLE KEYWORDS
+========================
+
+Python Backend Engineer
+Python Software Engineer
+Backend Engineer
+Python API Engineer
+FastAPI Engineer
+Django Engineer
+Python Full Stack Engineer
+Full Stack Engineer
+Software Engineer
+Software Engineer - Backend
+Software Engineer - Full Stack
+API Engineer
+Microservices Engineer
+Platform Engineer
+Cloud Engineer
+AI Backend Engineer
+AI Engineer
+LLM Engineer
+GenAI Engineer
+AI Platform Engineer
+
+
+========================
+PRIORITY
+========================
+
+A+ = Strong target for 2-year experience
+A  = Good target
+B  = Worth monitoring
+C  = Opportunistic / role-dependent
+
+Important:
+Do not exclude small or mid-sized companies purely because of company size.
+A company hiring 1–3 years experience with Python/backend technologies can be a higher-value opportunity than a large company hiring only senior engineers.
+
+========================
+MORE SMALL / MID-SIZE COMPANIES
+========================
+
+BANGALORE — Additional Small / Mid-size
+
+Athera Ventures
+Acko
+Acko Tech
+Acko General Insurance
+Aasaanjobs
+Aibased
+Akaunting
+Airtel Digital
+Appsmith
+Arzooo
+Avail Finance
+Awign
+BharatX
+BlueStone
+Bombay Shaving Company
+ByteLearn
+Cashfree Payments
+Chalo
+CREDA
+Darwinbox
+DeepRooted
+Dozee
+EnKash
+Even Healthcare
+Exotel
+Fibe
+Flock
+Fyle
+Games24x7
+GoKwik
+HackerEarth
+Haptik
+HashedIn
+HyperVerge
+InVideo
+Jumbotail
+Khatabook
+Koo
+LeadSquared
+Moglix
+Mswipe
+Observe.AI
+Open
+Orange Health
+Park+
+Pocket FM
+Practo
+PriceLabs
+Quizizz
+Razorpay
+Rebel Foods
+Refyne
+Scaler
+ShareChat
+Shipsy
+Slice
+Smallcase
+Smytten
+Soroco
+Springworks
+StockGro
+Streak
+Suki
+Swiggy Instamart
+Tekion
+The Good Glamm Group
+Thence
+Truecaller India
+Unacademy
+Uniphore
+Urban Company
+Udaan
+Vahan
+VerSe Innovation
+Vymo
+Wakefit
+Whatfix
+Yellow.ai
+Yulu
+Zetwerk
+Zeta
+Zopper
+
+
+CHENNAI — Additional Small / Mid-size
+
+Agnikul Cosmos
+BankBazaar
+Chargebee
+CloudCherry
+CloudSEK
+CreditMantri
+Detect Technologies
+Disprz
+Dhiway
+e-con Systems
+Eminence
+Flutura
+Fullife Healthcare
+GoBumpr
+Guvi
+Indium Software
+Kissflow
+Kovai.co
+Kryptos
+LatentView Analytics
+Lentra
+M2P Fintech
+Matrimony.com
+MatrimonyBazaar
+Maveric Systems
+Mocdoc
+Neeyamo
+Netmeds
+Ozonetel
+PickYourTrail
+Prodapt
+Ramco Systems
+Rapidor
+Razorpay
+Rocketlane
+SaaS Labs
+SurveySparrow
+SuperOps
+Tiger Analytics
+Uniphore
+Vuram
+WayCool
+Yubi
+Zuper
+
+
+========================
+FACTANA-SIZE / ENGINEERING SERVICES / B2B TECH
+========================
+
+These companies are especially useful for the target profile because they can provide
+practical backend/API/cloud experience even when they are not household-name companies.
+
+Factana
+Ideas2IT
+Aspire Systems
+Indium Software
+Kovai.co
+Vuram
+Prodapt
+Maveric Systems
+Sedin Technologies
+Solartis Technology Services
+Kissflow
+Zuci Systems
+F22 Labs
+Kissflow
+Suyati
+Encora
+Incedo
+Marlabs
+Movate
+Noventiq
+Calsoft
+Sify Technologies
+L&T Technology Services
+e-con Systems
+Kaar Technologies
+Vee Technologies
+Avasoft
+ThinkPalm
+Tringapps
+Contus
+Ideas2IT
+Agnito
+Aalpha Information Systems
+Manjrasoft
+Spericorn
+Zensark
+Ahex Technologies
+Clarion Technologies
+GoodWorkLabs
+Simform
+TatvaSoft
+Radixweb
+Bacancy
+Persistent Systems
+Coforge
+Mphasis
+Virtusa
+
+
+========================
+STARTUP / SCALE-UP SEARCH TERMS
+========================
+
+Founding Engineer
+Software Engineer - Early Stage
+Backend Engineer - Startup
+Python Backend Engineer - Startup
+Python Developer - SaaS
+Backend Engineer - SaaS
+Product Engineer
+Software Engineer - Product
+Python API Developer
+Python Microservices Engineer
+Backend Engineer - Platform
+Software Engineer - Platform
+Full Stack Engineer - Python
+Python + React Developer
+Python FastAPI Developer
+Python Django Developer
+AI Backend Engineer
+AI Software Engineer
+LLM Application Engineer
+GenAI Backend Engineer
+
+
+========================
+IMPORTANT FOR JOB AGENT
+========================
+
+Do not rank companies only by brand size.
+
+For small and mid-size companies, increase relevance when:
+- Experience requirement is 1–3 years or 2–4 years
+- Python is a primary backend language
+- FastAPI / Flask / Django is mentioned
+- PostgreSQL / MySQL is mentioned
+- REST / API / Microservices is mentioned
+- Docker / Kubernetes / AWS / Azure is mentioned
+- Celery / RabbitMQ / Kafka is mentioned
+- React is mentioned for full-stack roles
+- The role is based in Bangalore or Chennai
+- The company is actively hiring multiple engineering roles
+
+A small company with a strong technology match and 2-year experience requirement
+should be allowed to outrank a famous company whose opening requires 5+ years.
+
+========================
+WEB-RESEARCHED SMALL STARTUP LAYER — OCTOBER 2026
+========================
+
+These companies were identified through current 2026 startup/job/company sources.
+They are intentionally included because the target pool should not stop at large
+companies. Employee counts and hiring status can change, so the Job Agent should
+verify an active opening before scoring a company as an immediate opportunity.
+
+BANGALORE — 1–10 / 11–50 / 51–200 style targets
+------------------------------------------------
+
+New Street Technologies
+Bindbee
+OnArrival Travel
+Smart Audit
+Intempt Technologies
+Brandie
+DataBrain
+Simplismart
+genieX
+Maxim AI
+KloudMate
+AiPrise
+AlgoUniversity
+Vahan
+Cyble
+Emergent
+Cardboard
+Ressl AI
+Tsenta
+Samora AI
+Lab0
+Cozmo AI
+GroMo
+GoSats
+ParallelDots
+OnFinance
+AviaryAI India
+Infer
+Asteria Aerospace
+Agnikul Bangalore operations
+Ariveguru Technology Solutions
+Fyle
+Appsmith
+Springworks
+Soroco
+HyperVerge
+HashedIn
+Smytten
+GoKwik
+EnKash
+Even Healthcare
+DeepRooted
+PriceLabs
+Park+
+StockGro
+Streak
+Tekion
+Thence
+Zopper
+SaaS Labs
+Hiver
+Vahan
+Athera / early-stage technology ventures
+
+
+CHENNAI — 1–10 / 11–50 / 51–200 style targets
+------------------------------------------------
+
+Thias AI
+Revyn Labs
+Antangle
+Zeroagent
+Clarix
+SeaportAI
+Maaya Software Solutions
+Cybermind Works
+iedeo
+QuantumDesk
+Valura.AI
+Madhi AI
+DataBrain
+ParallelDots
+CultureMonkey
+CodeDTX Solutions
+Paperflite
+SaaSAnt
+Skcript
+Zuper
+Wondersoft
+Vaeto Technologies
+BLive
+Forelius Technologies
+Riyadvi Software Technologies
+Eagle Hi-Tech Softclou
+Mocdoc
+Ozonetel
+Disprz
+Flutura
+Lentra
+Sedin Technologies
+Solartis Technology Services
+Zuci Systems
+ThinkPalm
+Avasoft
+Tringapps
+Contus
+Agnito
+Aalpha Information Systems
+Manjrasoft
+Spericorn
+Zensark
+Ahex Technologies
+GoodWorkLabs
+Simform
+Bacancy
+Clarion Technologies
+Suyati
+F22 Labs
+Everstage
+FourKites
+Platform Science
+CloudCherry
+Facilio
+Rocketlane
+Spendflo
+Klenty
+Kovai.co
+SuperOps
+SurveySparrow
+Detect Technologies
+Vuram
+M2P Fintech
+Yubi
+
+
+========================
+VERY SMALL STARTUPS — 1–10 PEOPLE
+========================
+
+Keep a separate low-size category instead of removing these companies.
+
+CHENNAI
+Thias AI
+Revyn Labs
+Antangle
+Zeroagent
+QuantumDesk
+iedeo
+Madhi AI
+Valura.AI
+
+BANGALORE
+Early-stage YC startups
+Tsenta
+Ressl AI
+Lab0
+Samora AI
+Cozmo AI
+Cardboard
+Smart Audit
+genieX
+Maxim AI
+KloudMate
+
+
+========================
+CURRENT HIRING SIGNALS FOUND DURING RESEARCH
+========================
+
+New Street Technologies
+- Bengaluru
+- Backend Software Engineer
+- Python
+- 1–2 years
+- Explicitly early-career
+
+AiPrise
+- Bengaluru
+- Software Engineer I
+- Full Stack
+- Current YC listing
+- ₹15L–₹30L range shown on the current listing
+
+AlgoUniversity
+- Bengaluru
+- Software Engineer (Fullstack/AI)
+- Current YC listing
+- ₹10L–₹25L range shown
+
+Emergent
+- Bengaluru
+- Backend Engineer / Senior Backend Engineer
+- Current YC listings
+
+Cardboard
+- Bengaluru
+- Backend Engineer / Fullstack Engineer
+- Current YC listings
+
+OnArrival Travel
+- Bengaluru
+- 11–50 employees
+- Backend engineering
+- Kafka / event-driven systems / AWS in the role description
+
+Bindbee
+- Bengaluru
+- 11–50 employees
+- Python / PostgreSQL / API and integration engineering
+
+DataBrain
+- Chennai
+- 11–50 employees
+- SaaS / analytics
+- Current engineering openings shown on Wellfound
+
+ParallelDots
+- Chennai
+- Current engineering openings shown on Wellfound
+
+Valura.AI
+- Chennai / GIFT City / Remote
+- Python backend work
+- APIs / data pipelines / reconciliation systems
+
+IMPORTANT:
+A company appearing in this section does NOT mean it currently has a suitable
+2-year role. The Job Agent must still fetch current jobs and apply the existing
+experience + technology + location + relevance scoring.
+
+
+========================
+RECOMMENDED COMPANY-SIZE BUCKETS
+========================
+
+1–10       = Micro startup
+11–50      = Small startup
+51–200     = Mid-size startup / scale-up
+201–500    = Growth company
+501–2000   = Established product company
+2000+      = Large company / enterprise
+
+Do not exclude 1–50 employee companies.
+
+For the user's 2-year backend profile, a 11–50 or 51–200 company can receive
+a positive company-fit bonus when the job asks for 1–3 or 2–4 years and matches
+Python + FastAPI/Flask/Django + PostgreSQL + APIs + microservices.
+
+A 1–10 company should be treated as an opportunity-discovery category:
+check carefully for legitimacy, active hiring, role clarity, compensation,
+employment type, and technical relevance before recommending it.
+
+
+========================
+WEB RESEARCH NOTES
+========================
+
+Current sources show:
+- Bengaluru has active YC startup software-engineering hiring, including
+  Emergent, AiPrise, Cardboard and other early-stage companies.
+- Wellfound currently shows Bengaluru SaaS startups in the 11–50 and 51–200
+  employee ranges.
+- Chennai has a large long tail of SaaS startups. Current 2026 datasets show
+  dozens of Chennai SaaS startups, with 11–50 employees as a common company size.
+- Current Chennai startup sources identify OMR, Guindy, Taramani, Perungudi,
+  Anna Nagar and nearby technology clusters as important startup areas.
+
+The purpose of this layer is discovery breadth, not claiming that every company
+has an open role today.
+
+
+========================
+ADDITIONAL COMPANY NAMES
+========================
+
+
+Cult.fit
+
+
+
+Blusmart
+CodeWave
+Solartis
+
+
+========================
+WEB-RESEARCHED BANGALORE MICRO / SMALL / MID-SIZE COMPANIES
+========================
+Zethic
+GCOAM Software
+Oliv AI
+Distill
+Kommunicate
+SciSpace
+Commutatus
+nunify
+KoreVity
+Gyrus.AI
+Decentro
+Zenskar
+Forward Networks
+LaunchDarkly
+Motive
+Six Degrees Consulting
+Broccoli AI
+Intempt
+ImageKit
+Sorcero
+
+
+========================
+WEB-RESEARCHED CHENNAI MICRO / SMALL / MID-SIZE COMPANIES
+========================
+Enegma
+Exaful
+Wiates Technologies
+AVE-Promagne Business Solutions
+Neoware Technology Solutions

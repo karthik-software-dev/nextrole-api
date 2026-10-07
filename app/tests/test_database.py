@@ -197,11 +197,27 @@ class TestPostgresDatabase(unittest.TestCase):
             JobRepository.upsert_job(session, blr_job)
             JobRepository.upsert_job(session, maa_job)
 
-            blr_results = JobRepository.get_active_jobs(session, location_bucket="BANGALORE")
-            maa_results = JobRepository.get_active_jobs(session, location_bucket="CHENNAI")
+            blr_results = JobRepository.get_active_jobs(session, limit=1000, location_bucket="BANGALORE")
+            maa_results = JobRepository.get_active_jobs(session, limit=1000, location_bucket="CHENNAI")
 
             self.assertTrue(any(f"TestPhonePe_{test_uid}" in j.company.name for j in blr_results))
             self.assertTrue(any(f"TestZoho_{test_uid}" in j.company.name for j in maa_results))
+
+    @classmethod
+    def tearDownClass(cls):
+        """Purges any test records created during test execution."""
+        with get_db() as session:
+            test_comps = session.query(Company).filter(
+                Company.name.ilike('%Test%') | Company.name.ilike('%AppIntegrity%') | Company.name.ilike('%InHouseTest%')
+            ).all()
+            comp_ids = [c.id for c in test_comps]
+            if comp_ids:
+                jobs = session.query(Job).filter(Job.company_id.in_(comp_ids)).all()
+                for j in jobs:
+                    session.delete(j)
+                for c in test_comps:
+                    session.delete(c)
+                session.commit()
 
 
 if __name__ == "__main__":

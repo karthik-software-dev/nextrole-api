@@ -126,7 +126,12 @@ export const ApplicationsPage: React.FC = () => {
 
   // Filter applications by tab & search query
   const filteredApps = applications.filter((app) => {
-    const matchesTab = selectedTab === 'all' || app.status.toLowerCase() === selectedTab.toLowerCase();
+    const statusLower = app.status.toLowerCase();
+    const matchesTab =
+      selectedTab === 'all' ||
+      (selectedTab === 'drafted'
+        ? statusLower === 'drafted' || statusLower === 'saved' || statusLower === 'draft'
+        : statusLower === selectedTab.toLowerCase());
     if (!matchesTab) return false;
     if (!searchQuery.trim()) return true;
     const q = searchQuery.toLowerCase();
@@ -146,7 +151,14 @@ export const ApplicationsPage: React.FC = () => {
 
   const statusTabs = [
     { label: 'All', value: 'all', count: applications.length },
-    { label: 'Saved / Draft', value: 'drafted', count: applications.filter((a) => a.status === 'drafted').length },
+    {
+      label: 'Saved / Draft',
+      value: 'drafted',
+      count: applications.filter((a) => {
+        const s = a.status.toLowerCase();
+        return s === 'drafted' || s === 'saved' || s === 'draft';
+      }).length,
+    },
     { label: 'Applied', value: 'applied', count: applications.filter((a) => a.status === 'applied').length },
     { label: 'Under Review', value: 'under_review', count: applications.filter((a) => a.status === 'under_review').length },
     { label: 'Interviewing', value: 'interviewing', count: applications.filter((a) => a.status === 'interviewing').length },
@@ -329,27 +341,29 @@ export const ApplicationsPage: React.FC = () => {
         </div>
       ) : filteredApps.length === 0 ? (
         <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#111726] shadow-sm overflow-hidden flex flex-col">
-          <table className="w-full text-left border-separate border-spacing-0">
-            <thead>
-              <tr className="bg-slate-50/95 dark:bg-[#151c2e]/95 backdrop-blur-md shadow-[0_2px_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.35)]">
-                <th className="px-6 py-4 w-[42%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold border-b border-slate-200/90 dark:border-slate-800">
-                  Company & Role
-                </th>
-                <th className="px-6 py-4 w-[18%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
-                  Status
-                </th>
-                <th className="px-6 py-4 w-[18%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
-                  Applied Date
-                </th>
-                <th className="px-6 py-4 w-[14%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
-                  Portal / Source
-                </th>
-                <th className="px-6 py-4 w-[8%] text-right text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
-                  Actions
-                </th>
-              </tr>
-            </thead>
-          </table>
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[700px] text-left border-separate border-spacing-0">
+              <thead>
+                <tr className="bg-slate-50/95 dark:bg-[#151c2e]/95 backdrop-blur-md shadow-[0_2px_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.35)]">
+                  <th className="px-6 py-4 w-[42%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold border-b border-slate-200/90 dark:border-slate-800">
+                    Company & Role
+                  </th>
+                  <th className="px-6 py-4 w-[18%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
+                    Status
+                  </th>
+                  <th className="px-6 py-4 w-[18%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
+                    Applied Date
+                  </th>
+                  <th className="px-6 py-4 w-[14%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
+                    Portal / Source
+                  </th>
+                  <th className="px-6 py-4 w-[8%] text-right text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold whitespace-nowrap border-b border-slate-200/90 dark:border-slate-800">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+            </table>
+          </div>
           <div className="flex flex-col items-center justify-center p-16 text-center min-h-[360px]">
             <p className="text-[15px] font-semibold text-slate-800 dark:text-slate-200">
               No applications match your current filters.
@@ -371,8 +385,8 @@ export const ApplicationsPage: React.FC = () => {
         /* God-Tier Enterprise Fixed-Header Vertical Scrollable Table */
         <div className="rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#111726] shadow-sm overflow-hidden flex flex-col">
           {/* Scrollable Viewport with Fixed Sticky Header */}
-          <div className="overflow-y-auto max-h-[520px] scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
-            <table className="w-full text-left border-separate border-spacing-0">
+          <div className="overflow-x-auto overflow-y-auto max-h-[520px] scrollbar-thin scrollbar-thumb-slate-300 dark:scrollbar-thumb-slate-700">
+            <table className="w-full min-w-[700px] text-left border-separate border-spacing-0">
               <thead className="sticky top-0 z-20">
                 <tr className="bg-slate-50/95 dark:bg-[#151c2e]/95 backdrop-blur-md shadow-[0_2px_8px_-2px_rgba(0,0,0,0.06)] dark:shadow-[0_2px_8px_-2px_rgba(0,0,0,0.35)]">
                   <th className="px-6 py-4 w-[42%] text-slate-900 dark:text-white uppercase tracking-wider text-[12.5px] font-bold border-b border-slate-200/90 dark:border-slate-800">

@@ -1,3 +1,5 @@
+import type { ExperienceDistribution, SalaryDistribution } from './analytics';
+
 export interface PaginationMeta {
   total: number;
   page: number;
@@ -54,12 +56,28 @@ export interface JobSummary {
   matched_skills: string[];
   priority_score: number;
   priority_tier: string;
+  match_percentage?: number;
   status: string;
+  application_status?: string | null;
   source_count: number;
   is_active: boolean;
   tags: string[];
+  description_snippet?: string | null;
   first_seen_at: string;
   last_seen_at: string;
+}
+
+export interface FilterCountItem {
+  key: string;
+  label: string;
+  count: number;
+}
+
+export interface FilterCounts {
+  work_modes: FilterCountItem[];
+  locations: FilterCountItem[];
+  experience_buckets: FilterCountItem[];
+  salary_buckets: FilterCountItem[];
 }
 
 export interface JobDetail extends JobSummary {
@@ -143,6 +161,7 @@ export interface DashboardSummary {
     bangalore: number;
     chennai: number;
     remote?: number;
+    abroad?: number;
     other: number;
   };
   application_breakdown: {
@@ -161,6 +180,8 @@ export interface DashboardSummary {
   discovery_trend?: DiscoveryTrendItem[];
   locations_breakdown?: LocationStatItem[];
   recent_activities?: RecentActivityItem[];
+  experience_distribution?: ExperienceDistribution[];
+  salary_distribution?: SalaryDistribution[];
 }
 
 export interface DiscoveryStatus {
@@ -170,6 +191,24 @@ export interface DiscoveryStatus {
   last_jobs_found: number;
   last_jobs_synced: number;
   last_error: string | null;
+  last_duration_seconds?: number;
+  total_runs?: number;
+}
+
+export interface DiscoverySource {
+  id: number;
+  name: string;
+  slug: string;
+  engine_type: string;
+  status: 'Active' | 'Integrated' | 'Standby' | 'Blocked' | string;
+  last_yield: number;
+  latency: string;
+  ats_detection: string;
+  enabled: boolean;
+  priority: string;
+  total_scraped?: number;
+  tier1_count?: number;
+  last_synced_at?: string | null;
 }
 
 export interface NotificationItem {

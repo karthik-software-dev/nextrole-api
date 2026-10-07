@@ -246,3 +246,21 @@ class TestRelevancePersistenceLifecycle(unittest.TestCase):
             self.assertEqual(rec1.id, rec2.id)
             self.assertEqual(rec2.source_count, 2)
             self.assertTrue(rec2.is_active)
+
+    @classmethod
+    def tearDownClass(cls):
+        """Purges any test records created during test execution."""
+        from storage.models.company import Company
+        with get_db() as session:
+            test_comps = session.query(Company).filter(
+                Company.name.ilike('%TestCo_%')
+            ).all()
+            comp_ids = [c.id for c in test_comps]
+            if comp_ids:
+                jobs = session.query(Job).filter(Job.company_id.in_(comp_ids)).all()
+                for j in jobs:
+                    session.delete(j)
+                for c in test_comps:
+                    session.delete(c)
+                session.commit()
+

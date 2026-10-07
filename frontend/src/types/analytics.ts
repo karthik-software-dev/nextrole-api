@@ -38,11 +38,52 @@ export interface SalaryDistribution {
   count: number;
 }
 
+export interface ApplyChannelItem {
+  channel: string;
+  count: number;
+  percentage: number;
+  description: string;
+}
+
+export interface TopHiringCompany {
+  name: string;
+  active_jobs: number;
+}
+
+export interface LocationStatItem {
+  name: string;
+  count: number;
+}
+
+export interface JobTitleStat {
+  title: string;
+  count: number;
+}
+
+export interface WorkModeStat {
+  mode: string;
+  count: number;
+  percentage: number;
+}
+
+export interface TechStackPairStat {
+  pair: string;
+  skill: string;
+  count: number;
+  percentage: number;
+}
+
 export interface JobIntelligence {
   match_scores: MatchScoreBucket[];
   top_skills: SkillFrequency[];
-  experience_distribution: ExperienceDistribution[];
-  salary_distribution: SalaryDistribution[];
+  experience_distribution?: ExperienceDistribution[];
+  salary_distribution?: SalaryDistribution[];
+  apply_channels?: ApplyChannelItem[];
+  top_hiring_companies?: TopHiringCompany[];
+  locations?: LocationStatItem[];
+  top_job_titles?: JobTitleStat[];
+  work_modes?: WorkModeStat[];
+  tech_stack_pairs?: TechStackPairStat[];
 }
 
 export interface ApplicationTimelineItem {
@@ -63,13 +104,43 @@ export interface ApplicationFunnelStep {
   conversion_rate: number;
 }
 
+export interface ChannelYield {
+  portal: string;
+  applied: number;
+  interviews: number;
+  conversion_rate: number;
+}
+
 export interface ApplicationAnalytics {
   applications_over_time: ApplicationTimelineItem[];
   status_distribution: ApplicationStatusItem[];
   funnel: ApplicationFunnelStep[];
+  channel_yield?: ChannelYield[];
+  stale_applications_count?: number;
 }
 
-export interface AgentPerformance {
+export interface SourceContributionItem {
+  source: string;
+  count: number;
+  percentage: number;
+}
+
+export interface TierTriageItem {
+  tier: string;
+  label: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+export interface ApplyGatewayItem {
+  gateway: string;
+  count: number;
+  percentage: number;
+  color: string;
+}
+
+export interface PipelineAnalytics {
   jobs_collected: number;
   jobs_normalized: number;
   duplicates_removed: number;
@@ -79,11 +150,18 @@ export interface AgentPerformance {
   filter_out_pct: number;
   relevance_rate_pct?: number;
   actionable_rate_pct?: number;
+  dedup_ratio?: number;
+  sources_breakdown?: SourceContributionItem[];
+  tier_breakdown?: TierTriageItem[];
+  gateways_breakdown?: ApplyGatewayItem[];
 }
+
+export type AgentPerformance = PipelineAnalytics;
 
 export interface AnalyticsSummary {
   kpis: AnalyticsKpiData;
   job_intelligence: JobIntelligence;
   application_analytics: ApplicationAnalytics;
-  agent_performance: AgentPerformance;
+  agent_performance: PipelineAnalytics;
+  pipeline_analytics?: PipelineAnalytics;
 }

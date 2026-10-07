@@ -27,16 +27,9 @@ export const JobsDiscoveredChart: React.FC<JobsDiscoveredChartProps> = ({ data }
         <h3 className="text-[17px] font-bold tracking-tight text-slate-900 dark:text-white">
           Jobs Discovered
         </h3>
-        <div className="flex items-center gap-2">
-          {isConcentratedRecently && (
-            <span className="hidden sm:inline-flex items-center rounded-md bg-violet-50 dark:bg-violet-950/60 px-2 py-0.5 text-[10px] font-semibold text-violet-700 dark:text-violet-300">
-              Most jobs discovered today
-            </span>
-          )}
-          <span className="text-[12.5px] font-medium text-slate-700 dark:text-slate-400">
-            {totalInPeriod} total in period
-          </span>
-        </div>
+        <span className="text-[12.5px] font-medium text-slate-700 dark:text-slate-400">
+          {totalInPeriod} total this period
+        </span>
       </div>
 
       {/* Chart */}

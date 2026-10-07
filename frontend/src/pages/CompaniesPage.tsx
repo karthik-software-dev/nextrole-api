@@ -10,6 +10,8 @@ import {
   Loader2,
   CheckCircle2,
   X,
+  MapPin,
+  Plane,
 } from 'lucide-react';
 import { getCompanies, getCompanyById } from '../api';
 import type { Company, CompanyDetail } from '../types';
@@ -24,6 +26,7 @@ export const CompaniesPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [targetOnly, setTargetOnly] = useState(false);
+  const [locationFilter, setLocationFilter] = useState<'all' | 'INDIA' | 'ABROAD'>('all');
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -37,7 +40,7 @@ export const CompaniesPage: React.FC = () => {
 
   useEffect(() => {
     fetchCompanies();
-  }, [currentPage, pageSize, targetOnly, searchQuery]);
+  }, [currentPage, pageSize, targetOnly, searchQuery, locationFilter]);
 
   const fetchCompanies = async () => {
     try {
@@ -48,6 +51,7 @@ export const CompaniesPage: React.FC = () => {
       };
       if (targetOnly) params.is_target = true;
       if (searchQuery.trim()) params.search = searchQuery.trim();
+      if (locationFilter !== 'all') params.location = locationFilter;
       const res = await getCompanies(params);
       setCompanies(res.items);
       setTotalCompanies(res.meta.total);
@@ -116,20 +120,72 @@ export const CompaniesPage: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
+        <div className="flex flex-wrap items-center gap-2.5 w-full sm:w-auto">
+          {/* Location Segmented Filter Pills */}
+          <div className="inline-flex p-1 rounded-xl bg-slate-100 dark:bg-slate-800/80 border border-slate-200/80 dark:border-slate-700/60 shadow-2xs">
+            <button
+              type="button"
+              onClick={() => {
+                setLocationFilter('all');
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-1.5 ${
+                locationFilter === 'all'
+                  ? 'bg-white dark:bg-slate-700 text-slate-900 dark:text-white shadow-2xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Globe className="h-3.5 w-3.5" />
+              <span>All</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setLocationFilter('INDIA');
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-1.5 ${
+                locationFilter === 'INDIA'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-2xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <MapPin className="h-3.5 w-3.5" />
+              <span>India</span>
+            </button>
+
+            <button
+              type="button"
+              onClick={() => {
+                setLocationFilter('ABROAD');
+                setCurrentPage(1);
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all duration-150 cursor-pointer flex items-center gap-1.5 ${
+                locationFilter === 'ABROAD'
+                  ? 'bg-white dark:bg-slate-700 text-indigo-600 dark:text-indigo-400 shadow-2xs font-bold'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Plane className="h-3.5 w-3.5" />
+              <span>Abroad</span>
+            </button>
+          </div>
+
+          {/* Target Filter Button */}
           <button
             onClick={() => {
               setTargetOnly(!targetOnly);
               setCurrentPage(1);
             }}
-            className={`h-11 px-4 text-[13.5px] font-medium rounded-xl flex items-center gap-2 transition-all cursor-pointer ${
+            className={`h-9 px-3.5 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
               targetOnly
                 ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-800 shadow-xs'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
             }`}
           >
-            <Star className={`h-4 w-4 ${targetOnly ? 'fill-amber-500 text-amber-500' : ''}`} />
-            <span>Target Companies Only</span>
+            <Star className={`h-3.5 w-3.5 ${targetOnly ? 'fill-amber-500 text-amber-500' : ''}`} />
+            <span>Target Only</span>
           </button>
         </div>
       </div>

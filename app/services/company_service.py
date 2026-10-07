@@ -1,5 +1,5 @@
 import math
-from sqlalchemy import func, select
+from sqlalchemy import func, or_, select
 from sqlalchemy.orm import Session, selectinload
 
 from schemas.common import PaginatedResponse, PaginationMeta
@@ -19,6 +19,7 @@ class CompanyService:
         page_size: int = 20,
         is_target: bool | None = None,
         search: str | None = None,
+        location: str | None = None,
     ) -> PaginatedResponse[CompanyOut]:
         """Fetches a paginated directory of companies with open active jobs count."""
         page = max(1, page)
@@ -41,11 +42,59 @@ class CompanyService:
             .where(Company.is_active.is_(True))
         )
 
+        from config.target_companies import TARGET_COMPANIES
+        target_names_set = {c.name.strip().lower() for c in TARGET_COMPANIES}
+
         if is_target is not None:
-            stmt = stmt.where(Company.is_target.is_(is_target))
+            if is_target:
+                stmt = stmt.where(
+                    or_(
+                        Company.is_target.is_(True),
+                        func.lower(Company.name).in_(target_names_set) if target_names_set else False,
+                    )
+                )
+            else:
+                stmt = stmt.where(
+                    Company.is_target.is_(False),
+                    ~func.lower(Company.name).in_(target_names_set) if target_names_set else True,
+                )
 
         if search:
             stmt = stmt.where(Company.name.ilike(f"%{search.strip()}%"))
+
+        if location:
+            loc_upper = location.strip().upper()
+            if loc_upper == "ABROAD":
+                abroad_sub = (
+                    select(Job.company_id)
+                    .where(Job.is_active.is_(True), Job.location_bucket == "ABROAD")
+                    .distinct()
+                    .subquery()
+                )
+                abroad_target_names = [c.name.lower() for c in TARGET_COMPANIES if getattr(c, "category", "india") == "abroad"]
+                stmt = stmt.where(
+                    or_(
+                        Company.id.in_(select(abroad_sub.c.company_id)),
+                        func.lower(Company.name).in_(abroad_target_names) if abroad_target_names else False
+                    )
+                )
+            elif loc_upper == "INDIA":
+                india_sub = (
+                    select(Job.company_id)
+                    .where(
+                        Job.is_active.is_(True),
+                        Job.location_bucket.in_(("BANGALORE", "CHENNAI", "REMOTE_INDIA", "OTHER"))
+                    )
+                    .distinct()
+                    .subquery()
+                )
+                india_target_names = [c.name.lower() for c in TARGET_COMPANIES if getattr(c, "category", "india") == "india"]
+                stmt = stmt.where(
+                    or_(
+                        Company.id.in_(select(india_sub.c.company_id)),
+                        func.lower(Company.name).in_(india_target_names) if india_target_names else False
+                    )
+                )
 
         count_stmt = select(func.count()).select_from(stmt.subquery())
         total = session.scalar(count_stmt) or 0
@@ -67,7 +116,7 @@ class CompanyService:
                 website=co.website,
                 career_url=co.career_url,
                 ats_provider=co.ats_provider,
-                is_target=co.is_target,
+                is_target=co.is_target or (co.name.strip().lower() in target_names_set),
                 is_active=co.is_active,
                 active_jobs_count=job_count,
                 created_at=co.created_at,

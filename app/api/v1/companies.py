@@ -19,6 +19,7 @@ def list_companies(
     page_size: int = Query(20, ge=1, le=100, description="Items per page"),
     is_target: bool | None = Query(None, description="Filter for target enterprise companies"),
     search: str | None = Query(None, description="Search company by name"),
+    location: str | None = Query(None, description="Filter companies by location/region ('INDIA' or 'ABROAD')"),
     db: Session = Depends(get_db_session),
 ) -> PaginatedResponse[CompanyOut]:
     """Retrieves directory of employers with open active positions count."""
@@ -28,6 +29,7 @@ def list_companies(
         page_size=page_size,
         is_target=is_target,
         search=search,
+        location=location,
     )
 
 

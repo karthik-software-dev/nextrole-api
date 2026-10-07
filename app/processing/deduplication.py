@@ -21,6 +21,44 @@ TRACKING_PARAMS_EXACT = {
     "locale",
 }
 
+ATS_DOMAINS = (
+    "myworkdayjobs.com",
+    "greenhouse.io",
+    "lever.co",
+    "smartrecruiters.com",
+    "ashbyhq.com",
+    "icims.com",
+    "taleo.net",
+    "brassring.com",
+    "jobvite.com",
+    "workable.com",
+    "bamboohr.com",
+    "rippling.com",
+    "recruitee.com",
+    "teamtailor.com",
+    "personio.com",
+    "breezy.hr",
+    "careers.",
+    "jobs.",
+)
+
+AGGREGATOR_DOMAINS = (
+    "indeed.com",
+    "indeed.co.in",
+    "naukri.com",
+    "linkedin.com",
+)
+
+
+def is_direct_ats_url(url: str | None) -> bool:
+    """Returns True if the URL points to a direct company ATS portal rather than a job aggregator."""
+    if not url:
+        return False
+    u = url.lower()
+    if any(agg in u for agg in AGGREGATOR_DOMAINS):
+        return False
+    return any(ats in u for ats in ATS_DOMAINS)
+
 
 def canonicalize_url(url: str | None) -> str | None:
     """Strips marketing/tracking query parameters and normalizes the URL.
@@ -181,14 +219,31 @@ def deduplicate_jobs(jobs: list[Job]) -> list[Job]:
             existing.duplicate_count += 1
 
             # Prioritize official ATS application URLs over aggregator links
-            if job.source == "ats" and job.apply_url:
+            new_is_ats = (
+                is_direct_ats_url(job.apply_url)
+                or job.apply_type in ("DIRECT_ATS", "COMPANY_CAREERS")
+                or job.source in ("ats", "greenhouse", "lever", "ashby", "workday", "smartrecruiters", "recruitee", "workable", "teamtailor")
+            )
+            exist_is_ats = (
+                is_direct_ats_url(existing.apply_url)
+                or existing.apply_type in ("DIRECT_ATS", "COMPANY_CAREERS")
+            )
+
+            if new_is_ats and not exist_is_ats and job.apply_url:
                 existing.apply_url = job.apply_url
-                if "ats" not in existing.source:
-                    existing.source = f"{existing.source}+ats"
+                existing.apply_type = job.apply_type if job.apply_type != "UNKNOWN" else "DIRECT_ATS"
+                if job.ats_provider:
+                    existing.ats_provider = job.ats_provider
             elif not existing.apply_url and job.apply_url:
                 existing.apply_url = job.apply_url
-            elif job.source not in existing.source:
-                existing.source = f"{existing.source}+{job.source}"
+                if job.apply_type != "UNKNOWN":
+                    existing.apply_type = job.apply_type
+                if job.ats_provider:
+                    existing.ats_provider = job.ats_provider
+
+            existing_sources = set(existing.source.split("+"))
+            if job.source not in existing_sources:
+                existing.source = "+".join(sorted(existing_sources | {job.source}))
 
             # Keep the higher relevance score
             if job.relevance_score > existing.relevance_score:

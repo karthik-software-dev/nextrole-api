@@ -58,12 +58,28 @@ class JobSummaryOut(BaseModel):
     matched_skills: list[str] = Field(default_factory=list)
     priority_score: float = 0.0
     priority_tier: str = "TIER 3"
+    match_percentage: int = 50
     status: str = "discovered"
+    application_status: str | None = None
     source_count: int = 1
     is_active: bool = True
     tags: list[str] = Field(default_factory=list)
+    description_snippet: str | None = None
     first_seen_at: datetime
     last_seen_at: datetime
+
+
+class FilterCountItem(BaseModel):
+    key: str
+    label: str
+    count: int
+
+
+class FilterCountsOut(BaseModel):
+    work_modes: list[FilterCountItem]
+    locations: list[FilterCountItem]
+    experience_buckets: list[FilterCountItem]
+    salary_buckets: list[FilterCountItem]
 
 
 class JobDetailOut(JobSummaryOut):

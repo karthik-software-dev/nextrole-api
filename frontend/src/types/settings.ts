@@ -3,6 +3,7 @@ export interface UserProfile {
   name: string;
   email: string;
   target_role: string;
+  skills?: string[];
 }
 
 export interface SearchScoring {
@@ -34,6 +35,7 @@ export interface UpdateSettingsPayload {
     name?: string;
     email?: string;
     target_role?: string;
+    skills?: string[];
   };
   scoring?: {
     min_experience?: number;

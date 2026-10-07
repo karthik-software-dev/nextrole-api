@@ -1,6 +1,6 @@
 from fastapi import APIRouter, BackgroundTasks, status
 
-from schemas.discovery import DiscoveryRunIn, DiscoveryStatusOut
+from schemas.discovery import DiscoveryRunIn, DiscoverySourceOut, DiscoveryStatusOut
 from services.discovery_service import DiscoveryService
 
 router = APIRouter(prefix="/discovery", tags=["Discovery"])
@@ -14,6 +14,17 @@ router = APIRouter(prefix="/discovery", tags=["Discovery"])
 def get_discovery_status() -> DiscoveryStatusOut:
     """Returns whether scrapers are running, last run timestamp, jobs found, and errors."""
     return DiscoveryService.get_status()
+
+
+@router.get(
+    "/sources",
+    response_model=list[DiscoverySourceOut],
+    summary="Get all 30 tracked source engines and live metrics",
+)
+def get_discovery_sources() -> list[DiscoverySourceOut]:
+    """Returns the complete catalog of 30 sources with real-time database yield metrics."""
+    return DiscoveryService.get_sources()
+
 
 
 @router.post(

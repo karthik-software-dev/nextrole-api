@@ -5,7 +5,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from models.job import Job as JobDataclass
-from models.normalizers import parse_salary
+from processing.salary_parser import parse_salary
 from processing.deduplication import (
     canonicalize_url,
     clean_job_title,
@@ -58,6 +58,12 @@ class JobRepository:
     """Data access repository for canonical Jobs and JobSources."""
 
     @staticmethod
+    def get_latest_sync_timestamp(session: Session) -> datetime | None:
+        """Returns the timestamp of the most recently updated job in the database."""
+        stmt = select(func.max(Job.updated_at))
+        return session.scalar(stmt)
+
+    @staticmethod
     def upsert_job(session: Session, job_dc: JobDataclass) -> tuple[Job, bool]:
         """Upserts a canonical job and its source posting.
 
@@ -79,13 +85,27 @@ class JobRepository:
         existing_job = session.scalar(stmt)
 
         now = datetime.now(timezone.utc)
-        clean_apply_url = canonicalize_url(job_dc.apply_url or job_dc.discovery_url)
+        raw_apply_url = job_dc.apply_url or job_dc.discovery_url
+        clean_apply_url = canonicalize_url(raw_apply_url) if raw_apply_url else None
+        if clean_apply_url and len(clean_apply_url) > 2000:
+            clean_apply_url = clean_apply_url[:2000]
+
+        discovery_url = job_dc.discovery_url[:2000] if job_dc.discovery_url else None
         clean_title = clean_job_title(job_dc.title)
+        if clean_title and len(clean_title) > 300:
+            clean_title = clean_title[:300]
+
+        safe_location = (job_dc.location[:250] + "...") if job_dc.location and len(job_dc.location) > 255 else job_dc.location
+        safe_salary_raw = (job_dc.salary_raw[:495] + "...") if job_dc.salary_raw and len(job_dc.salary_raw) > 500 else job_dc.salary_raw
+        safe_exp_raw = (job_dc.experience_raw[:250] + "...") if job_dc.experience_raw and len(job_dc.experience_raw) > 255 else job_dc.experience_raw
+        safe_source_id = str(job_dc.id)[:255] if job_dc.id else None
+        safe_source_name = str(job_dc.source)[:50] if job_dc.source else "UNKNOWN"
+        safe_ats_provider = str(job_dc.ats_provider)[:100] if job_dc.ats_provider else None
 
         if job_dc.salary_min is not None or job_dc.salary_max is not None:
             sal_min, sal_max, sal_currency = job_dc.salary_min, job_dc.salary_max, job_dc.salary_currency
         else:
-            sal_min, sal_max, sal_currency = parse_salary(job_dc.salary_raw)
+            sal_min, sal_max, sal_currency = parse_salary(safe_salary_raw)
 
         if existing_job:
             # Update existing canonical job
@@ -97,14 +117,14 @@ class JobRepository:
             if job_dc.apply_type in ("DIRECT_ATS", "COMPANY_CAREERS") and existing_job.apply_type not in ("DIRECT_ATS", "COMPANY_CAREERS"):
                 existing_job.canonical_apply_url = clean_apply_url
                 existing_job.apply_type = job_dc.apply_type
-                existing_job.ats_provider = job_dc.ats_provider
+                existing_job.ats_provider = safe_ats_provider
             elif not existing_job.canonical_apply_url and clean_apply_url:
                 existing_job.canonical_apply_url = clean_apply_url
 
             # Title clean update if current title has raw artifacts
             if clean_title and existing_job.title != clean_title:
                 existing_job.title = clean_title
-                existing_job.normalized_title = normalize_title(clean_title)
+                existing_job.normalized_title = normalize_title(clean_title)[:300]
 
             # Salary numeric backfill if existing is null
             if (existing_job.salary_min is None and existing_job.salary_max is None) and (sal_min is not None or sal_max is not None):
@@ -129,8 +149,8 @@ class JobRepository:
             # Record / Update JobSource
             source_stmt = select(JobSource).where(
                 JobSource.job_id == existing_job.id,
-                JobSource.source_name == job_dc.source,
-                JobSource.source_job_id == job_dc.id,
+                JobSource.source_name == safe_source_name,
+                JobSource.source_job_id == safe_source_id,
             )
             existing_source = session.scalar(source_stmt)
             if existing_source:
@@ -138,11 +158,11 @@ class JobRepository:
             else:
                 new_source = JobSource(
                     job_id=existing_job.id,
-                    source_name=job_dc.source,
-                    source_job_id=job_dc.id,
-                    discovery_url=job_dc.discovery_url,
+                    source_name=safe_source_name,
+                    source_job_id=safe_source_id,
+                    discovery_url=discovery_url,
                     source_apply_url=clean_apply_url,
-                    source_posted_at=job_dc.posted_at,
+                    source_posted_at=str(job_dc.posted_at)[:100] if job_dc.posted_at else None,
                     raw_payload=job_dc.raw_data if isinstance(job_dc.raw_data, dict) else {},
                     first_seen_at=now,
                     last_seen_at=now,
@@ -156,31 +176,32 @@ class JobRepository:
         # 3. Create New Canonical Job
         loc_bucket = get_location_bucket(job_dc)
         city = extract_city(job_dc.location)
+        safe_city = (city[:95] + "...") if city and len(city) > 100 else city
 
         new_job = Job(
             company_id=company.id,
             title=clean_title,
-            normalized_title=normalize_title(clean_title),
+            normalized_title=normalize_title(clean_title)[:300],
             dedup_hash=dedup_hash,
-            location=job_dc.location,
-            city=city,
-            location_bucket=loc_bucket,
+            location=safe_location,
+            city=safe_city,
+            location_bucket=loc_bucket[:20] if loc_bucket else "OTHER",
             is_remote=job_dc.is_remote,
             experience_min=job_dc.experience_min,
             experience_max=job_dc.experience_max,
-            experience_raw=job_dc.experience_raw,
-            salary_raw=job_dc.salary_raw,
+            experience_raw=safe_exp_raw,
+            salary_raw=safe_salary_raw,
             salary_min=sal_min,
             salary_max=sal_max,
-            currency=sal_currency,
+            currency=sal_currency[:10] if sal_currency else "INR",
             description=job_dc.description,
             canonical_apply_url=clean_apply_url,
-            apply_type=job_dc.apply_type,
-            ats_provider=job_dc.ats_provider,
+            apply_type=job_dc.apply_type[:30] if job_dc.apply_type else "UNKNOWN",
+            ats_provider=safe_ats_provider,
             relevance_score=job_dc.relevance_score,
             matched_skills=job_dc.matched_skills,
             priority_score=job_dc.priority_score,
-            priority_tier=job_dc.priority_tier,
+            priority_tier=job_dc.priority_tier[:40] if job_dc.priority_tier else "TIER 3",
             status="discovered",
             source_count=1,
             is_active=True,
@@ -195,11 +216,11 @@ class JobRepository:
         # Add initial JobSource
         new_source = JobSource(
             job_id=new_job.id,
-            source_name=job_dc.source,
-            source_job_id=job_dc.id,
-            discovery_url=job_dc.discovery_url,
+            source_name=safe_source_name,
+            source_job_id=safe_source_id,
+            discovery_url=discovery_url,
             source_apply_url=clean_apply_url,
-            source_posted_at=job_dc.posted_at,
+            source_posted_at=str(job_dc.posted_at)[:100] if job_dc.posted_at else None,
             raw_payload=job_dc.raw_data if isinstance(job_dc.raw_data, dict) else {},
             first_seen_at=now,
             last_seen_at=now,
@@ -270,33 +291,79 @@ class JobRepository:
 
         blr_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "BANGALORE")) or 0
         maa_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "CHENNAI")) or 0
-        remote_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.is_remote.is_(True))) or 0
+        remote_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.is_remote.is_(True), Job.location_bucket.notin_(("ABROAD", "FOREIGN")))) or 0
+        abroad_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket.in_(("ABROAD", "FOREIGN")))) or 0
         other_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "OTHER")) or 0
 
-        # Group sources
+        # Group sources: distinguish aggregators and specific ATS scrapers
         raw_sources = session.execute(
-            select(JobSource.source_name, func.count(JobSource.id))
-            .group_by(JobSource.source_name)
+            select(JobSource.id, JobSource.source_name, Job.ats_provider)
+            .outerjoin(Job, JobSource.job_id == Job.id)
         ).all()
-        normalized_counts: dict[str, int] = {
-            "LinkedIn": 0,
-            "Naukri": 0,
-            "Indeed": 0,
-            "Wellfound": 0,
-            "Company Sites": 0,
-        }
-        for s_name, s_count in raw_sources:
+        normalized_counts: dict[str, int] = {}
+        for _, s_name, ats_prov in raw_sources:
             norm = (s_name or "").lower()
             if "linkedin" in norm:
-                normalized_counts["LinkedIn"] += s_count
-            elif "naukri" in norm:
-                normalized_counts["Naukri"] += s_count
+                key = "LinkedIn"
             elif "indeed" in norm:
-                normalized_counts["Indeed"] += s_count
+                key = "Indeed"
+            elif "naukri" in norm:
+                key = "Naukri"
+            elif "cutshort" in norm:
+                key = "Cutshort"
+            elif "hirist" in norm:
+                key = "Hirist"
             elif "wellfound" in norm:
-                normalized_counts["Wellfound"] += s_count
+                key = "Wellfound"
+            elif "shine" in norm:
+                key = "Shine"
+            elif "timesjobs" in norm:
+                key = "TimesJobs"
+            elif "internshala" in norm:
+                key = "Internshala"
+            elif "apna" in norm:
+                key = "Apna"
+            elif "freshersworld" in norm:
+                key = "Freshersworld"
+            elif "google" in norm:
+                key = "Google Jobs"
+            elif norm == "ats" or "direct" in norm or "careers" in norm:
+                prov = (ats_prov or "").lower()
+                if "smartrecruiters" in prov:
+                    key = "SmartRecruiters"
+                elif "greenhouse" in prov:
+                    key = "Greenhouse"
+                elif "workday" in prov:
+                    key = "Workday"
+                elif "lever" in prov:
+                    key = "Lever"
+                elif "ashby" in prov:
+                    key = "Ashby"
+                elif "bamboohr" in prov:
+                    key = "BambooHR"
+                elif "personio" in prov:
+                    key = "Personio"
+                elif "recruitee" in prov:
+                    key = "Recruitee"
+                elif "workable" in prov:
+                    key = "Workable"
+                elif "teamtailor" in prov:
+                    key = "Teamtailor"
+                elif "breezy" in prov:
+                    key = "Breezy HR"
+                elif "keka" in prov:
+                    key = "Keka"
+                elif "zoho" in prov:
+                    key = "Zoho Recruit"
+                elif "freshteam" in prov:
+                    key = "Freshteam"
+                elif "pyjamahr" in prov:
+                    key = "PyjamaHR"
+                else:
+                    key = "Company Careers"
             else:
-                normalized_counts["Company Sites"] += s_count
+                key = s_name.strip() if s_name else "Other"
+            normalized_counts[key] = normalized_counts.get(key, 0) + 1
 
         sources_breakdown = [
             {"name": k, "count": v}
@@ -315,6 +382,7 @@ class JobRepository:
             "bangalore_jobs": blr_jobs,
             "chennai_jobs": maa_jobs,
             "remote_jobs": remote_jobs,
+            "abroad_jobs": abroad_jobs,
             "other_jobs": other_jobs,
             "sources_breakdown": sources_breakdown,
         }

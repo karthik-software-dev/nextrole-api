@@ -83,3 +83,18 @@ def update_application(
             detail=f"Application with ID {application_id} was not found.",
         )
     return updated
+
+
+@router.delete(
+    "/job/{job_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary="Delete or unsave application for a job",
+)
+def delete_application_by_job(
+    job_id: int,
+    user_id: int = Query(1, description="User ID"),
+    db: Session = Depends(get_db_session),
+):
+    """Deletes or un-saves a job application (primarily for drafted/saved opportunities)."""
+    ApplicationService.delete_application_by_job_id(session=db, job_id=job_id, user_id=user_id)
+    return None

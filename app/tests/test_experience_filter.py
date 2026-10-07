@@ -1,7 +1,7 @@
 import unittest
 
 from models.job import Job
-from models.normalizers.experience_parser import extract_experience
+from processing.experience_parser import extract_experience
 from processing.relevance import calculate_relevance_score, filter_relevant_jobs
 
 

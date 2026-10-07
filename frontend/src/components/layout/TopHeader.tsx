@@ -6,6 +6,8 @@ import {
   Moon,
   Bell,
   Play,
+  Pause,
+  Clock,
   Loader2,
   ChevronDown,
   X,
@@ -15,6 +17,7 @@ import {
   CheckSquare,
   Sparkles,
   ArrowRight,
+  Menu,
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useDiscovery } from '../../context/DiscoveryContext';
@@ -24,11 +27,21 @@ import type { NotificationItem } from '../../types';
 
 interface TopHeaderProps {
   onSearch?: (term: string) => void;
+  onToggleMobileNav?: () => void;
 }
 
-export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch }) => {
+export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNav }) => {
   const { theme, toggleTheme } = useTheme();
-  const { isDiscovering, discoveryStatusText, runDiscovery, lastRunAt, useCache } = useDiscovery();
+  const {
+    isDiscovering,
+    isPaused,
+    pauseDiscovery,
+    resumeDiscovery,
+    runDiscovery,
+    lastRunAt,
+    useCache,
+    setIsModalOpen,
+  } = useDiscovery();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -106,8 +119,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch }) => {
   };
 
   const handleRunDiscovery = () => {
-    navigate('/discovery');
-    runDiscovery();
+    runDiscovery(undefined, undefined, true);
   };
 
   const handleMarkAllRead = async () => {
@@ -185,75 +197,159 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch }) => {
   };
 
   return (
-    <header className="h-16 shrink-0 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B0F17] px-6 flex items-center justify-between sticky top-0 z-30 transition-colors">
-      {/* Search Input (around 400px) */}
-      <div className="w-full max-w-[400px]">
-        <form onSubmit={handleSearchSubmit} className="relative">
-          <div className="group relative flex items-center p-0.5 rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-900/50 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600 focus-within:border-indigo-500 dark:focus-within:border-indigo-500 focus-within:bg-white dark:focus-within:bg-[#0f1422] focus-within:ring-4 focus-within:ring-indigo-500/15 focus-within:shadow-md focus-within:shadow-indigo-500/5 transition-all duration-300 ease-out">
-            <Search className="h-4 w-4 ml-2.5 text-slate-600 dark:text-slate-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400 group-focus-within:scale-110 transition-all duration-300 ease-out shrink-0" />
-            <input
-              type="text"
-              placeholder="Search jobs, companies..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full h-8 bg-transparent border-0 px-2.5 text-[13.5px] text-slate-900 dark:text-slate-100 placeholder:text-slate-700 dark:placeholder:text-slate-300 font-medium focus:outline-none focus:ring-0 leading-normal"
-            />
-            {searchTerm && (
-              <button
-                type="button"
-                onClick={() => setSearchTerm('')}
-                className="p-1 mr-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer animate-in fade-in zoom-in-90"
-                title="Clear search"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-        </form>
+    <header className="sticky top-0 z-30 h-16 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0B0F17] pl-1.5 pr-2.5 sm:px-6 flex items-center justify-between transition-colors gap-2 sm:gap-3 w-full">
+      {/* Left: Mobile Menu Toggle + Mobile Brand Mark + Search Bar */}
+      <div className="flex items-center gap-0.5 sm:gap-2 flex-1 min-w-0">
+        {/* Hamburger Menu (Mobile <md) */}
+        <button
+          type="button"
+          onClick={onToggleMobileNav}
+          className="md:hidden h-9 w-9 -ml-1 rounded-xl flex items-center justify-center text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors active-pop cursor-pointer shrink-0"
+          aria-label="Open mobile navigation menu"
+          title="Open menu"
+        >
+          <Menu className="h-5 w-5" />
+        </button>
+
+        {/* Mobile Brand Wordmark (<md only) */}
+        <div
+          onClick={() => navigate('/')}
+          className="md:hidden flex items-center gap-1.5 shrink-0 cursor-pointer select-none"
+        >
+          <img
+            src="/nextrole-icon.png"
+            alt="NextRole"
+            className="h-[32px] w-[32px] object-contain rounded-xl shrink-0"
+            style={{ width: '32px', height: '32px' }}
+          />
+          <span className="text-[22px] font-bold tracking-tight leading-none flex items-center whitespace-nowrap select-none">
+            <span className="text-slate-900 dark:text-white">Next</span>
+            <span className="bg-gradient-to-r from-indigo-600 to-violet-600 dark:from-indigo-400 dark:to-violet-400 bg-clip-text text-transparent">Role</span>
+          </span>
+        </div>
+
+        {/* Search Input (Desktop only >=md, giving room for mobile brand & actions) */}
+        <div className="hidden md:block w-full max-w-[400px]">
+          <form onSubmit={handleSearchSubmit} className="relative">
+            <div className="group relative flex items-center p-0.5 rounded-xl border border-slate-200/90 dark:border-slate-700/80 bg-slate-50/70 dark:bg-slate-900/50 shadow-2xs hover:border-slate-300 dark:hover:border-slate-600 focus-within:border-indigo-500 dark:focus-within:border-indigo-500 focus-within:bg-white dark:focus-within:bg-[#0f1422] focus-within:ring-4 focus-within:ring-indigo-500/15 focus-within:shadow-md focus-within:shadow-indigo-500/5 transition-all duration-300 ease-out">
+              <Search className="h-4 w-4 ml-2.5 text-slate-600 dark:text-slate-300 group-focus-within:text-indigo-600 dark:group-focus-within:text-indigo-400 group-focus-within:scale-110 transition-all duration-300 ease-out shrink-0" />
+              <input
+                type="text"
+                placeholder="Search jobs, companies..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full h-8 bg-transparent border-0 px-2.5 text-[13.5px] text-slate-900 dark:text-slate-100 placeholder:text-slate-700 dark:placeholder:text-slate-300 font-medium focus:outline-none focus:ring-0 leading-normal"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm('')}
+                  className="p-1 mr-1 rounded-md text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200/60 dark:hover:bg-slate-800 transition-colors cursor-pointer animate-in fade-in zoom-in-90"
+                  title="Clear search"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
 
       {/* Right Controls & Profile */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
-        {/* Run Discovery Action */}
-        <button
-          onClick={handleRunDiscovery}
-          disabled={isDiscovering}
-          className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 text-[12.5px] font-semibold rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-800/80 shadow-2xs hover:shadow-xs transition-all disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer shrink-0"
-          title={
-            isDiscovering
-              ? 'Discovery is in progress...'
-              : `Run discovery pipeline (${useCache ? 'Test Cache Mode' : 'Real-Time Live Mode'})`
-          }
-        >
-          {isDiscovering ? (
-            <Loader2 className="h-3.5 w-3.5 animate-spin" />
-          ) : (
-            <Play className="h-3.5 w-3.5 fill-indigo-600 text-indigo-600 dark:fill-indigo-400 dark:text-indigo-400" />
-          )}
-          <span>{isDiscovering ? (discoveryStatusText || 'Discovering...') : 'Run Discovery'}</span>
-
-          {!isDiscovering && (
-            <span
-              className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-extrabold tracking-wide uppercase transition-colors ${
-                useCache
-                  ? 'bg-amber-100/90 text-amber-800 dark:bg-amber-950/80 dark:text-amber-300 border border-amber-300/80 dark:border-amber-800/60'
-                  : 'bg-emerald-100/90 text-emerald-800 dark:bg-emerald-950/80 dark:text-emerald-300 border border-emerald-300/80 dark:border-emerald-800/60'
-              }`}
-            >
-              <span
-                className={`h-1.5 w-1.5 rounded-full ${
-                  useCache ? 'bg-amber-500' : 'bg-emerald-500 animate-pulse'
-                }`}
-              />
-              {useCache ? 'Cache' : 'Live'}
+      <div className="flex items-center gap-1 sm:gap-3 shrink-0">
+        {/* Last Executed Time Indicator */}
+        {lastRunAt && (
+          <div
+            className="hidden md:flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-slate-100/80 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 text-[11.5px] font-medium border border-slate-200/60 dark:border-slate-800/80 shrink-0"
+            title={`Last discovery run: ${lastRunAt}`}
+          >
+            <Clock className="h-3 w-3 text-slate-400 dark:text-slate-500" />
+            <span className="truncate">
+              Last sync: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{lastRunAt}</strong>
             </span>
-          )}
-        </button>
+          </div>
+        )}
 
-        {/* Theme Toggle */}
+        {/* Unwrapped Standalone Live/Cache Status Dot Indicator */}
+        <div
+          className="hidden lg:flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11px] font-semibold text-slate-600 dark:text-slate-300 bg-slate-100/70 dark:bg-slate-800/50 border border-slate-200/60 dark:border-slate-800 shrink-0"
+          title={`Active discovery mode: ${useCache ? 'Snapshot Cache Mode' : 'Real-Time Live Web Crawl'}`}
+        >
+          <span className="relative flex h-2 w-2">
+            {!useCache && (
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+            )}
+            <span
+              className={`relative inline-flex rounded-full h-2 w-2 ${useCache ? 'bg-amber-500' : 'bg-emerald-500'
+                }`}
+            />
+          </span>
+          <span>{useCache ? 'Cache' : 'Live'}</span>
+        </div>
+
+        {/* Clean Run Discovery Button (or Pause/Resume when active) */}
+        {isDiscovering ? (
+          <div className="flex items-center gap-1.5 shrink-0">
+            {/* Mobile syncing indicator button (<sm) */}
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="sm:hidden inline-flex items-center gap-1.5 px-2.5 py-1.5 text-[11.5px] font-semibold rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-800/80 transition-all active-pop cursor-pointer shadow-2xs"
+              title="Click to view discovery popup"
+            >
+              <Loader2 className="h-3 w-3 animate-spin text-indigo-600 dark:text-indigo-400" />
+              <span>Syncing</span>
+            </button>
+
+            {/* Desktop syncing button (>=sm) */}
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="hidden sm:inline-flex items-center gap-2 px-3 py-1.5 text-[12px] font-semibold rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 border border-indigo-200/80 dark:border-indigo-800/80 transition-all cursor-pointer shadow-2xs"
+              title="Click to view discovery popup"
+            >
+              <div className="relative flex items-center justify-center">
+                <span className="absolute h-3.5 w-3.5 rounded-full bg-indigo-500/40 animate-ping" />
+                <Loader2 className="h-3.5 w-3.5 animate-spin relative text-indigo-600 dark:text-indigo-400" />
+              </div>
+              <span>{isPaused ? 'Paused' : 'Syncing...'}</span>
+            </button>
+
+            {/* Quick Pause / Resume Control */}
+            <button
+              onClick={isPaused ? resumeDiscovery : pauseDiscovery}
+              className="p-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 border border-slate-200/80 dark:border-slate-700 transition-colors cursor-pointer shrink-0"
+              title={isPaused ? 'Resume syncing' : 'Pause syncing'}
+            >
+              {isPaused ? <Play className="h-3.5 w-3.5 fill-current" /> : <Pause className="h-3.5 w-3.5" />}
+            </button>
+          </div>
+        ) : (
+          <>
+            {/* Mobile Run Discovery Button (<sm) */}
+            <button
+              onClick={handleRunDiscovery}
+              className="sm:hidden inline-flex items-center gap-1 px-2.5 py-1.5 text-[11.5px] font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-xs transition-all cursor-pointer shrink-0"
+              title={`Run discovery pipeline (${useCache ? 'Snapshot Cache' : 'Live Crawl'})`}
+            >
+              <Play className="h-3 w-3 fill-white text-white" />
+              <span>Run</span>
+            </button>
+
+            {/* Desktop Run Discovery Button (>=sm) */}
+            <button
+              onClick={handleRunDiscovery}
+              className="hidden sm:inline-flex items-center gap-2 px-3.5 py-1.5 text-[12.5px] font-semibold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs hover:shadow-indigo-500/25 transition-all active-pop cursor-pointer shrink-0"
+              title={`Run discovery pipeline (${useCache ? 'Snapshot Cache' : 'Live Crawl'})`}
+            >
+              <Play className="h-3.5 w-3.5 fill-white text-white" />
+              <span>Run Discovery</span>
+            </button>
+          </>
+        )}
+
+        {/* Theme Toggle (Hidden on mobile <sm, visible on desktop >=sm) */}
         <button
           onClick={toggleTheme}
-          className="h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer shrink-0"
+          className="hidden sm:flex h-9 w-9 rounded-xl items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors active-pop cursor-pointer shrink-0"
           aria-label="Toggle theme"
         >
           {theme === 'dark' ? <Sun className="h-4 w-4 text-amber-400" /> : <Moon className="h-4 w-4 text-slate-500" />}
@@ -266,7 +362,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch }) => {
               setIsNotifOpen(!isNotifOpen);
               if (!isNotifOpen) fetchNotifs();
             }}
-            className="h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer relative shrink-0"
+            className="h-9 w-9 rounded-xl flex items-center justify-center text-slate-500 hover:text-slate-800 dark:text-slate-400 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors active-pop cursor-pointer relative shrink-0"
             title="Notifications"
             aria-label="Notifications"
           >
@@ -280,7 +376,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch }) => {
 
           {/* Premium Notifications Popover */}
           {isNotifOpen && (
-            <div className="absolute right-0 mt-2.5 w-[380px] sm:w-[420px] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-white/95 dark:bg-[#0f1422]/95 backdrop-blur-xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15),0_8px_24px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5),0_8px_24px_-4px_rgba(0,0,0,0.3)] z-50 overflow-hidden menu-reveal">
+            <div className="absolute right-0 mt-2.5 w-[320px] sm:w-[420px] max-w-[calc(100vw-1.5rem)] rounded-2xl border border-slate-200/80 dark:border-slate-700/60 bg-white/95 dark:bg-[#0f1422]/95 backdrop-blur-xl shadow-[0_20px_60px_-10px_rgba(0,0,0,0.15),0_8px_24px_-4px_rgba(0,0,0,0.08)] dark:shadow-[0_20px_60px_-10px_rgba(0,0,0,0.5),0_8px_24px_-4px_rgba(0,0,0,0.3)] z-50 overflow-hidden menu-reveal">
 
               {/* Popover Header */}
               <div className="px-5 py-4 border-b border-slate-100 dark:border-slate-800/70 flex items-center justify-between bg-gradient-to-r from-slate-50/80 to-white/60 dark:from-slate-900/60 dark:to-slate-900/30">
@@ -333,11 +429,10 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch }) => {
                     <div
                       key={item.id}
                       onClick={() => handleNotificationClick(item)}
-                      className={`relative flex items-start gap-3.5 p-3.5 rounded-xl cursor-pointer group transition-all duration-150 ${
-                        !item.is_read
-                          ? 'bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100/80 dark:border-indigo-800/40 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:border-indigo-200 dark:hover:border-indigo-700/60'
-                          : 'hover:bg-slate-50/90 dark:hover:bg-slate-800/50 border border-transparent hover:border-slate-200/60 dark:hover:border-slate-700/50'
-                      }`}
+                      className={`relative flex items-start gap-3.5 p-3.5 rounded-xl cursor-pointer group transition-all duration-150 ${!item.is_read
+                        ? 'bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100/80 dark:border-indigo-800/40 hover:bg-indigo-50 dark:hover:bg-indigo-950/50 hover:border-indigo-200 dark:hover:border-indigo-700/60'
+                        : 'hover:bg-slate-50/90 dark:hover:bg-slate-800/50 border border-transparent hover:border-slate-200/60 dark:hover:border-slate-700/50'
+                        }`}
                     >
                       {/* Unread left accent bar */}
                       {!item.is_read && (
@@ -348,9 +443,8 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch }) => {
 
                       <div className="flex-1 min-w-0 pt-0.5">
                         <div className="flex items-start justify-between gap-2">
-                          <p className={`text-[13.5px] font-bold leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate ${
-                            !item.is_read ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-200'
-                          }`}>
+                          <p className={`text-[13.5px] font-bold leading-snug group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate ${!item.is_read ? 'text-slate-900 dark:text-white' : 'text-slate-800 dark:text-slate-200'
+                            }`}>
                             {item.title}
                           </p>
                           <span className="text-[11px] font-medium text-slate-400 dark:text-slate-500 shrink-0 mt-0.5">
@@ -392,14 +486,14 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch }) => {
         {/* User Profile */}
         <div
           onClick={() => navigate('/settings')}
-          className="flex items-center gap-2 cursor-pointer select-none shrink-0 pl-1 group"
+          className="flex items-center gap-2 cursor-pointer select-none shrink-0 pl-0 sm:pl-1 group"
           title="Account Settings"
         >
           <div className="h-[30px] w-[30px] rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold text-[12px] flex items-center justify-center border border-indigo-200/80 dark:border-indigo-800/60 shadow-2xs shrink-0">
             {userName ? userName.charAt(0).toUpperCase() : 'U'}
           </div>
-          <span className="text-[14.5px] font-bold text-slate-900 dark:text-slate-100 hidden md:inline-block leading-none tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-            {userName}
+          <span className="text-[14px] font-bold text-slate-900 dark:text-slate-100 hidden md:inline-block leading-none tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+            {userName ? userName.split(' ')[0] : 'Karthik'}
           </span>
           <ChevronDown className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors shrink-0 hidden md:inline-block" />
         </div>

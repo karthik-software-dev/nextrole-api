@@ -8,17 +8,28 @@ from sqlalchemy.orm import Session
 
 from schemas.analytics import (
     AgentPerformanceOut,
+    PipelineAnalyticsOut,
     AnalyticsKpiData,
     AnalyticsSummaryOut,
     ApplicationAnalyticsOut,
     ApplicationFunnelStepOut,
     ApplicationStatusItemOut,
     ApplicationTimelineItemOut,
+    ApplyChannelItemOut,
+    ApplyGatewayItemOut,
+    ChannelYieldOut,
     ExperienceDistributionOut,
     JobIntelligenceOut,
+    JobTitleStatOut,
+    LocationStatItemOut,
     MatchScoreBucketOut,
     SalaryDistributionOut,
     SkillFrequencyOut,
+    SourceContributionItemOut,
+    TierTriageItemOut,
+    TopHiringCompanyOut,
+    TechStackPairStatOut,
+    WorkModeStatOut,
 )
 from storage.models.application import Application
 from storage.models.job import Job
@@ -41,6 +52,21 @@ STATUS_DISPLAY_NAMES = {
     "rejected": "Rejected",
 }
 
+SOURCE_DISPLAY_MAP = {
+    "ats": "Direct ATS",
+    "indeed": "Indeed",
+    "linkedin": "LinkedIn",
+    "naukri": "Naukri",
+    "apna": "Apna",
+    "freshersworld": "Freshersworld",
+    "hirist": "Hirist",
+    "cutshort": "Cutshort",
+    "wellfound": "Wellfound",
+    "shine": "Shine",
+    "internshala": "Internshala",
+    "google_jobs": "Google Jobs",
+}
+
 EXCLUDED_HEURISTIC_TAGS = {
     "Full-Stack Synergy",
     "AI-Backend Synergy",
@@ -51,26 +77,29 @@ EXCLUDED_HEURISTIC_TAGS = {
     "High Exp Penalty",
     "Senior Role Penalty",
     "SDE-1/2 Target Role",
+    "Posted < 24h",
+    "Posted < 3d",
+    "Posted < 7d",
+    "Target Comp (5-15 LPA)",
+    "Target Comp (7-15 LPA)",
+    "High Comp (15+ LPA)",
+    "High Comp (12+ LPA)",
+    "Comp Disclosed (4-5 LPA)",
+    "Comp Disclosed (5-7 LPA)",
+    "Comp Disclosed (Global)",
+    "Comp Disclosed",
+    "Below 4 LPA Floor",
+    "Below 5 LPA Floor",
+    "Global Remote",
+    "Visa Sponsor / Relocation",
+    "Remote (India)",
 }
 
 
-def parse_salary_lpa(raw: str | None) -> float | None:
-    """Parses raw salary string into midpoint Lakhs per Annum (LPA)."""
-    if not raw:
-        return None
-    cleaned = raw.replace("\u20b9", "").replace("INR", "").replace(",", "").strip()
-    numbers = [float(n) for n in re.findall(r"\b\d+(?:\.\d+)?\b", cleaned)]
-    if not numbers:
-        return None
-    lpa_numbers = []
-    for n in numbers:
-        if n >= 100000:
-            lpa_numbers.append(n / 100000.0)
-        elif n < 200:
-            lpa_numbers.append(n)
-    if not lpa_numbers:
-        return None
-    return sum(lpa_numbers) / len(lpa_numbers)
+from processing.salary_parser import parse_salary, parse_salary_lpa
+from processing.prioritization import calculate_match_percentage
+
+
 
 
 class AnalyticsService:
@@ -262,7 +291,7 @@ class AnalyticsService:
 
         total_int_jobs = len(jobs_in_window)
 
-        # Match Scores
+        # Match Scores (Normalizing priority score to 0-100% candidate match score)
         score_90_100 = 0
         score_80_89 = 0
         score_70_79 = 0
@@ -270,14 +299,14 @@ class AnalyticsService:
         score_under_60 = 0
 
         for j in jobs_in_window:
-            sc = float(j.relevance_score or 0.0)
-            if sc >= 90.0:
+            mp = calculate_match_percentage(float(j.priority_score or j.relevance_score or 0.0))
+            if mp >= 90:
                 score_90_100 += 1
-            elif sc >= 80.0:
+            elif mp >= 80:
                 score_80_89 += 1
-            elif sc >= 70.0:
+            elif mp >= 70:
                 score_70_79 += 1
-            elif sc >= 60.0:
+            elif mp >= 60:
                 score_60_69 += 1
             else:
                 score_under_60 += 1
@@ -293,10 +322,11 @@ class AnalyticsService:
             MatchScoreBucketOut(range_label="<60%", count=score_under_60, percentage=pct(score_under_60)),
         ]
 
-        # Top Skills extracted from relevant jobs requirements (relevance_score >= 70)
+        # Top Skills extracted from relevant jobs requirements (Match >= 70%)
         skills_counter: Counter[str] = Counter()
         for j in jobs_in_window:
-            if float(j.relevance_score or 0.0) >= 70.0 and j.matched_skills:
+            mp = calculate_match_percentage(float(j.priority_score or j.relevance_score or 0.0))
+            if mp >= 70 and j.matched_skills:
                 for s in j.matched_skills:
                     if s not in EXCLUDED_HEURISTIC_TAGS:
                         skills_counter[s] += 1
@@ -343,7 +373,7 @@ class AnalyticsService:
         sal_22_plus = 0
 
         for j in jobs_in_window:
-            lpa = parse_salary_lpa(j.salary_raw)
+            lpa = parse_salary_lpa(j)
             if lpa is not None:
                 if lpa < 8.0:
                     sal_under_8 += 1
@@ -364,11 +394,141 @@ class AnalyticsService:
             SalaryDistributionOut(bracket="22+ LPA", count=sal_22_plus),
         ]
 
+        # Application Channels & ATS Friction
+        chan_counter: Counter[str] = Counter()
+        for j in jobs_in_window:
+            atype = (j.apply_type or "OTHER").upper()
+            if atype == "DIRECT_ATS":
+                chan_counter["Direct ATS"] += 1
+            elif atype == "COMPANY_CAREERS":
+                chan_counter["Company Careers Portal"] += 1
+            elif atype in ("AGGREGATOR_REDIRECT", "INDEED_REDIRECT"):
+                chan_counter["Aggregator Redirect"] += 1
+            else:
+                chan_counter["Other Channels"] += 1
+
+        chan_desc = {
+            "Direct ATS": "Fastest 1-click apply via Greenhouse, Ashby, Lever",
+            "Company Careers Portal": "Direct application on employer careers site",
+            "Aggregator Redirect": "Redirected via job aggregator platforms",
+            "Other Channels": "External listings or custom portals",
+        }
+
+        apply_channels = [
+            ApplyChannelItemOut(
+                channel=c,
+                count=cnt,
+                percentage=round((cnt / total_int_jobs * 100), 1) if total_int_jobs > 0 else 0.0,
+                description=chan_desc.get(c, ""),
+            )
+            for c, cnt in chan_counter.most_common()
+        ]
+
+        # Top Hiring Companies in window
+        comp_counter: Counter[str] = Counter()
+        for j in jobs_in_window:
+            if j.company and j.company.name:
+                comp_counter[j.company.name] += 1
+
+        top_hiring_companies = [
+            TopHiringCompanyOut(name=c, active_jobs=cnt)
+            for c, cnt in comp_counter.most_common(5)
+        ]
+
+        # Locations in window
+        loc_map: dict[str, int] = {
+            "Bangalore": 0,
+            "Chennai": 0,
+            "Remote": 0,
+            "Abroad": 0,
+            "Others": 0,
+        }
+        for j in jobs_in_window:
+            bucket = (j.location_bucket or "").upper()
+            if bucket in ("ABROAD", "FOREIGN"):
+                loc_map["Abroad"] += 1
+            elif j.is_remote:
+                loc_map["Remote"] += 1
+            elif bucket == "BANGALORE":
+                loc_map["Bangalore"] += 1
+            elif bucket == "CHENNAI":
+                loc_map["Chennai"] += 1
+            else:
+                loc_map["Others"] += 1
+
+        locations = [
+            LocationStatItemOut(name=k, count=v)
+            for k, v in loc_map.items()
+            if v > 0
+        ]
+        locations.sort(key=lambda x: x.count, reverse=True)
+
+        # Top Trending Job Titles in window
+        title_counter: Counter[str] = Counter()
+        for j in jobs_in_window:
+            raw_title = j.normalized_title or j.title
+            if raw_title:
+                clean_t = " ".join(word.capitalize() for word in raw_title.strip().split())
+                title_counter[clean_t] += 1
+
+        top_job_titles = [
+            JobTitleStatOut(title=t, count=cnt)
+            for t, cnt in title_counter.most_common(5)
+        ]
+
+        # Work Mode Distribution (3-Way: In-Office / Onsite, Remote, Hybrid)
+        hybrid_count = 0
+        remote_count = 0
+        onsite_count = 0
+        for j in jobs_in_window:
+            loc = (j.location or "").lower()
+            desc_start = (j.description or "").lower()[:200]
+            if "hybrid" in loc or "hybrid" in desc_start:
+                hybrid_count += 1
+            elif j.is_remote or "remote" in loc:
+                remote_count += 1
+            else:
+                onsite_count += 1
+
+        onsite_pct = round((onsite_count / total_int_jobs * 100), 1) if total_int_jobs > 0 else 0.0
+        remote_pct = round((remote_count / total_int_jobs * 100), 1) if total_int_jobs > 0 else 0.0
+        hybrid_pct = round((hybrid_count / total_int_jobs * 100), 1) if total_int_jobs > 0 else 0.0
+
+        work_modes = [
+            WorkModeStatOut(mode="In-Office / Onsite", count=onsite_count, percentage=onsite_pct),
+            WorkModeStatOut(mode="Remote", count=remote_count, percentage=remote_pct),
+            WorkModeStatOut(mode="Hybrid (Flex Remote + Office)", count=hybrid_count, percentage=hybrid_pct),
+        ]
+
+        # Tech Stack Pairs (Skills frequently required alongside Python)
+        pair_counter: Counter[str] = Counter()
+        for j in jobs_in_window:
+            skills = set(j.matched_skills or [])
+            for s in skills:
+                if s not in EXCLUDED_HEURISTIC_TAGS and "python" not in s.lower():
+                    pair_counter[s] += 1
+
+        tech_stack_pairs = [
+            TechStackPairStatOut(
+                pair=f"Python + {s}",
+                skill=s,
+                count=cnt,
+                percentage=round((cnt / total_int_jobs * 100), 1) if total_int_jobs > 0 else 0.0,
+            )
+            for s, cnt in pair_counter.most_common(5)
+        ]
+
         job_intelligence = JobIntelligenceOut(
             match_scores=match_scores,
             top_skills=top_skills,
             experience_distribution=experience_distribution,
             salary_distribution=salary_distribution,
+            apply_channels=apply_channels,
+            top_hiring_companies=top_hiring_companies,
+            locations=locations,
+            top_job_titles=top_job_titles,
+            work_modes=work_modes,
+            tech_stack_pairs=tech_stack_pairs,
         )
 
         # ------------------------------------------------------------------
@@ -447,10 +607,38 @@ class AnalyticsService:
             ),
         ]
 
+        # Channel Yield & Stale Applications
+        channel_applied: Counter[str] = Counter()
+        channel_interviews: Counter[str] = Counter()
+        stale_count = 0
+        seven_days_ago = datetime.now(timezone.utc) - timedelta(days=7)
+
+        for a in curr_apps:
+            portal = a.portal_type or "Direct ATS"
+            channel_applied[portal] += 1
+            if a.status in ("interviewing", "offered"):
+                channel_interviews[portal] += 1
+            if a.status in ("applied", "under_review"):
+                app_time = a.applied_at or a.created_at
+                if app_time and app_time < seven_days_ago:
+                    stale_count += 1
+
+        channel_yield = [
+            ChannelYieldOut(
+                portal=p,
+                applied=cnt,
+                interviews=channel_interviews[p],
+                conversion_rate=round((channel_interviews[p] / cnt * 100), 1) if cnt > 0 else 0.0,
+            )
+            for p, cnt in channel_applied.most_common()
+        ]
+
         application_analytics = ApplicationAnalyticsOut(
             applications_over_time=applications_over_time,
             status_distribution=status_distribution,
             funnel=funnel,
+            channel_yield=channel_yield,
+            stale_applications_count=stale_count,
         )
 
         # ------------------------------------------------------------------
@@ -483,41 +671,17 @@ class AnalyticsService:
         total_collected = max(int(postings_collected), jobs_count)
         duplicates_removed = max(0, total_collected - jobs_count)
 
-        relevant_jobs_count = (
-            session.query(func.count(Job.id))
-            .filter(
-                Job.first_seen_at >= curr_start,
-                Job.first_seen_at <= curr_end,
-                Job.relevance_score >= 70.0,
-            )
-            .scalar()
-            or 0
-        )
-        if relevant_jobs_count == 0:
-            relevant_jobs_count = (
-                session.query(func.count(Job.id))
-                .filter(Job.relevance_score >= 70.0)
-                .scalar()
-                or 0
-            )
+        target_pipe_jobs = jobs_in_window if len(jobs_in_window) > 0 else session.query(Job).all()
 
-        actionable_jobs_count = (
-            session.query(func.count(Job.id))
-            .filter(
-                Job.first_seen_at >= curr_start,
-                Job.first_seen_at <= curr_end,
-                Job.priority_tier.in_(["Tier 1", "TIER 1"]),
-            )
-            .scalar()
-            or 0
+        relevant_jobs_count = sum(
+            1 for j in target_pipe_jobs
+            if calculate_match_percentage(float(j.priority_score or j.relevance_score or 0.0)) >= 70
         )
-        if actionable_jobs_count == 0:
-            actionable_jobs_count = (
-                session.query(func.count(Job.id))
-                .filter(Job.priority_tier.in_(["Tier 1", "TIER 1"]))
-                .scalar()
-                or 0
-            )
+
+        actionable_jobs_count = sum(
+            1 for j in target_pipe_jobs
+            if j.priority_tier and "tier 1" in j.priority_tier.lower()
+        )
 
         filtering_efficiency_pct = (
             round((actionable_jobs_count / jobs_count * 100), 1) if jobs_count > 0 else 0.0
@@ -534,7 +698,86 @@ class AnalyticsService:
             round((actionable_jobs_count / jobs_count * 100), 1) if jobs_count > 0 else 0.0
         )
 
-        agent_performance = AgentPerformanceOut(
+        # Ingestion sources breakdown
+        source_records = (
+            session.query(JobSource.source_name, func.count(JobSource.id))
+            .group_by(JobSource.source_name)
+            .order_by(func.count(JobSource.id).desc())
+            .all()
+        )
+        total_source_sightings = sum(cnt for _, cnt in source_records) or 1
+        sources_breakdown = [
+            SourceContributionItemOut(
+                source=SOURCE_DISPLAY_MAP.get(src.lower(), src.capitalize()),
+                count=cnt,
+                percentage=round((cnt / total_source_sightings * 100), 1),
+            )
+            for src, cnt in source_records
+        ]
+
+        # Tier triage breakdown
+        t1_count = sum(1 for j in target_pipe_jobs if j.priority_tier and "tier 1" in j.priority_tier.lower())
+        t2_count = sum(1 for j in target_pipe_jobs if j.priority_tier and "tier 2" in j.priority_tier.lower())
+        t3_count = sum(1 for j in target_pipe_jobs if j.priority_tier and "tier 3" in j.priority_tier.lower())
+        tier_tot = max(jobs_count, 1)
+
+        tier_breakdown = [
+            TierTriageItemOut(
+                tier="Tier 1",
+                label="High Priority",
+                count=t1_count,
+                percentage=round((t1_count / tier_tot * 100), 1),
+                color="#8B5CF6",
+            ),
+            TierTriageItemOut(
+                tier="Tier 2",
+                label="Solid Match",
+                count=t2_count,
+                percentage=round((t2_count / tier_tot * 100), 1),
+                color="#3B82F6",
+            ),
+            TierTriageItemOut(
+                tier="Tier 3",
+                label="Standard",
+                count=t3_count,
+                percentage=round((t3_count / tier_tot * 100), 1),
+                color="#64748B",
+            ),
+        ]
+
+        dedup_ratio = round(total_collected / max(jobs_count, 1), 1)
+
+        # Ingestion Apply Gateways breakdown
+        gw_counter: Counter[str] = Counter()
+        for j in target_pipe_jobs:
+            atype = (j.apply_type or "OTHER").upper()
+            if atype == "COMPANY_CAREERS":
+                gw_counter["Company Careers"] += 1
+            elif atype == "DIRECT_ATS":
+                gw_counter["Direct ATS"] += 1
+            elif atype in ("AGGREGATOR_REDIRECT", "INDEED_REDIRECT"):
+                gw_counter["Aggregator Redirect"] += 1
+            else:
+                gw_counter["Direct / Other"] += 1
+
+        gw_colors = {
+            "Company Careers": "#3B82F6",
+            "Aggregator Redirect": "#8B5CF6",
+            "Direct ATS": "#10B981",
+            "Direct / Other": "#94A3B8",
+        }
+
+        gateways_breakdown = [
+            ApplyGatewayItemOut(
+                gateway=gw,
+                count=cnt,
+                percentage=round((cnt / jobs_count * 100), 1) if jobs_count > 0 else 0.0,
+                color=gw_colors.get(gw, "#64748B"),
+            )
+            for gw, cnt in gw_counter.most_common()
+        ]
+
+        pipeline_analytics = PipelineAnalyticsOut(
             jobs_collected=total_collected,
             jobs_normalized=jobs_count,
             duplicates_removed=duplicates_removed,
@@ -544,11 +787,16 @@ class AnalyticsService:
             filter_out_pct=filter_out_pct,
             relevance_rate_pct=relevance_rate_pct,
             actionable_rate_pct=actionable_rate_pct,
+            dedup_ratio=dedup_ratio,
+            sources_breakdown=sources_breakdown,
+            tier_breakdown=tier_breakdown,
+            gateways_breakdown=gateways_breakdown,
         )
 
         return AnalyticsSummaryOut(
             kpis=kpis,
             job_intelligence=job_intelligence,
             application_analytics=application_analytics,
-            agent_performance=agent_performance,
+            agent_performance=pipeline_analytics,
+            pipeline_analytics=pipeline_analytics,
         )

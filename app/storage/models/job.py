@@ -64,13 +64,13 @@ class Job(Base, TimestampMixin, ActiveMixin):
     # Experience Requirements
     experience_min: Mapped[int | None] = mapped_column(SmallInteger, index=True, nullable=True)
     experience_max: Mapped[int | None] = mapped_column(SmallInteger, nullable=True)
-    experience_raw: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    experience_raw: Mapped[str | None] = mapped_column(String(255), nullable=True)
 
     # Compensation
     salary_min: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     salary_max: Mapped[float | None] = mapped_column(Numeric(10, 2), nullable=True)
     currency: Mapped[str] = mapped_column(String(10), default="INR", nullable=False)
-    salary_raw: Mapped[str | None] = mapped_column(String(150), nullable=True)
+    salary_raw: Mapped[str | None] = mapped_column(String(500), nullable=True)
 
     # Description & Content
     description: Mapped[str | None] = mapped_column(Text, nullable=True)

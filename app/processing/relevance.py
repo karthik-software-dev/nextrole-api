@@ -29,13 +29,15 @@ HARD_EXCLUDE_TITLE_KEYWORDS = [
     # QA & Testing
     "qa",
     "quality engineer",
-    "test",
     "tester",
     "testing",
     "sdet",
     "verification engineer",
     "verification",
-    "automation engineer",
+    "qa automation engineer",
+    "test automation engineer",
+    "qa automation",
+    "test automation",
     "selenium",
     # Sales, Pre-sales, GTM & Training
     "solution engineer",
@@ -113,6 +115,25 @@ PRIMARY_TITLE_KEYWORDS = [
     "sde - backend",
     "sde ii - backend",
     "backend leaning",
+    "python ai engineer",
+    "python ai backend",
+    "ai backend engineer",
+    "ai backend developer",
+    "llm backend engineer",
+    "rag engineer",
+    "rag developer",
+    # Early-Stage Startup & Founding Team Roles
+    "founding backend engineer",
+    "founding backend developer",
+    "founding ai engineer",
+    "founding python engineer",
+    "founding engineer",
+    "founding full stack engineer",
+    "founding fullstack engineer",
+    "founding software engineer",
+    "member of technical staff",
+    "mts - engineering",
+    "mts engineering",
 ]
 
 STRONG_TITLE_KEYWORDS = [
@@ -124,6 +145,17 @@ STRONG_TITLE_KEYWORDS = [
     "distributed systems",
     "ai engineer (backend)",
     "python ai engineer",
+    "ai engineer",
+    "llm engineer",
+    "generative ai engineer",
+    "genai engineer",
+    "ai developer",
+    "ai automation engineer",
+    # Early-Stage Startup Roles
+    "founding engineer",
+    "founding developer",
+    "member of technical staff",
+    "mts",
 ]
 
 SECONDARY_TITLE_KEYWORDS = [
@@ -179,7 +211,10 @@ CONCRETE_BACKEND_SIGNALS = [
     "fastapi", "flask", "django", "django rest framework", "drf",
     # Databases & Storage
     "postgresql", "postgres", "mysql", "sql", "sqlalchemy", "redis", "mongodb", "orm", "alembic",
-    "data access layer", "data layer",
+    "data access layer", "data layer", "caching",
+    # AI Backend Storage & Frameworks
+    "vector database", "vector db", "pgvector", "pinecone", "qdrant", "milvus", "chromadb", "faiss",
+    "embeddings", "vector embeddings", "langchain", "llamaindex", "rag", "semantic search", "hybrid search", "mcp",
     # Architecture, APIs & Queues
     "rest api", "rest apis", "restful api", "restful apis", "restful",
     "api development", "api design", "apis", "api", "backend services", "server-side",
@@ -227,7 +262,18 @@ SKILL_TAXONOMY: dict[str, dict[str, tuple[str, str]]] = {
         "microservices": ("microservices", "Microservices"),
         "distributed systems": ("distributed_systems", "Distributed Systems"),
         "system design": ("system_design", "System Design"),
+        "low-level design": ("lld", "Low-Level Design (LLD)"),
+        "low level design": ("lld", "Low-Level Design (LLD)"),
+        "lld": ("lld", "Low-Level Design (LLD)"),
+        "high-level design": ("hld", "High-Level Design (HLD)"),
+        "high level design": ("hld", "High-Level Design (HLD)"),
+        "hld": ("hld", "High-Level Design (HLD)"),
+        "software architecture": ("system_design", "System Design"),
         "scalability": ("scalability", "Scalability"),
+        "scalable systems": ("scalability", "Scalability"),
+        "high availability": ("scalability", "High Availability"),
+        "fault tolerance": ("scalability", "Fault Tolerance"),
+        "horizontal scaling": ("scalability", "Horizontal Scaling"),
         "event-driven architecture": ("event_driven", "Event-Driven"),
         "event-driven": ("event_driven", "Event-Driven"),
         "event driven": ("event_driven", "Event-Driven"),
@@ -236,11 +282,19 @@ SKILL_TAXONOMY: dict[str, dict[str, tuple[str, str]]] = {
         "task queue": ("task_queue", "Task Queue"),
         "message queue": ("message_queue", "Message Queue"),
         "caching": ("caching", "Caching"),
+        "distributed caching": ("caching", "Distributed Caching"),
         "load balancing": ("load_balancing", "Load Balancing"),
         "rate limiting": ("rate_limiting", "Rate Limiting"),
         "api gateway": ("api_gateway", "API Gateway"),
         "concurrency": ("concurrency", "Concurrency"),
         "event loop": ("event_loop", "Event Loop"),
+        "low latency": ("low_latency", "Low Latency"),
+        "high throughput": ("high_throughput", "High Throughput"),
+        "pub/sub": ("pub_sub", "Pub/Sub"),
+        "message broker": ("message_broker", "Message Broker"),
+        "idempotency": ("idempotency", "Idempotency"),
+        "database sharding": ("sharding", "Database Sharding"),
+        "sharding": ("sharding", "Database Sharding"),
     },
     "DATABASE": {
         "postgresql": ("postgresql", "PostgreSQL"),
@@ -268,6 +322,7 @@ SKILL_TAXONOMY: dict[str, dict[str, tuple[str, str]]] = {
     },
     "INFRASTRUCTURE": {
         "rabbitmq": ("rabbitmq", "RabbitMQ"),
+        "amqp": ("rabbitmq", "RabbitMQ / AMQP"),
         "celery": ("celery", "Celery"),
         "kafka": ("kafka", "Kafka"),
         "docker": ("docker", "Docker"),
@@ -352,12 +407,49 @@ SKILL_TAXONOMY: dict[str, dict[str, tuple[str, str]]] = {
         "ollama": ("ollama", "Ollama"),
         "huggingface": ("huggingface", "HuggingFace"),
     },
+    "CORE_ENGINEERING": {
+        "data structures and algorithms": ("dsa", "Data Structures & Algorithms"),
+        "data structures & algorithms": ("dsa", "Data Structures & Algorithms"),
+        "data structures": ("dsa", "Data Structures"),
+        "algorithms": ("algorithms", "Algorithms"),
+        "dsa": ("dsa", "DSA"),
+        "linear data structures": ("dsa", "Data Structures"),
+        "arrays": ("dsa", "Data Structures"),
+        "hash maps": ("dsa", "Data Structures"),
+        "hash table": ("dsa", "Data Structures"),
+        "hash tables": ("dsa", "Data Structures"),
+        "stacks": ("dsa", "Data Structures"),
+        "queues": ("dsa", "Data Structures"),
+        "linked lists": ("dsa", "Data Structures"),
+        "two pointers": ("algorithms", "Algorithms"),
+        "binary search": ("algorithms", "Algorithms"),
+        "sliding window": ("algorithms", "Algorithms"),
+        "time complexity": ("algorithms", "Complexity Analysis"),
+        "space complexity": ("algorithms", "Complexity Analysis"),
+        "problem solving": ("problem_solving", "Problem Solving"),
+        "oop": ("oop", "OOP"),
+        "oops": ("oop", "OOP"),
+        "object oriented programming": ("oop", "OOP"),
+        "object-oriented programming": ("oop", "OOP"),
+        "design patterns": ("design_patterns", "Design Patterns"),
+        "clean code": ("clean_code", "Clean Code"),
+        "readable code": ("clean_code", "Clean Code"),
+        "code readability": ("clean_code", "Clean Code"),
+        "code quality": ("clean_code", "Code Quality"),
+        "maintainable code": ("clean_code", "Maintainable Code"),
+        "solid principles": ("solid", "SOLID"),
+        "solid": ("solid", "SOLID"),
+        "refactoring": ("clean_code", "Clean Code"),
+        "pytest": ("testing", "PyTest"),
+        "unit testing": ("testing", "Unit Testing"),
+    },
 }
 
 CATEGORY_CONFIG: dict[str, dict[str, float]] = {
     "BACKEND": {"point_per_match": 3.0, "cap": 12.0},
     "ARCHITECTURE": {"point_per_match": 2.5, "cap": 8.0},
     "DATABASE": {"point_per_match": 2.0, "cap": 8.0},
+    "CORE_ENGINEERING": {"point_per_match": 2.0, "cap": 6.0},
     "AI_BACKEND": {"point_per_match": 2.0, "cap": 6.0},
     "FULL_STACK": {"point_per_match": 1.5, "cap": 4.0},
     "INFRASTRUCTURE": {"point_per_match": 1.0, "cap": 4.0},
@@ -419,11 +511,34 @@ def calculate_relevance_score(job: Job) -> tuple[float, list[str]]:
             if _has_keyword(lang, title):
                 return -100.0, []
 
-    # 5. Refined Rule D: Strict Seniority & Experience Disqualifications (min >= 5 yrs)
-    from models.normalizers.experience_parser import extract_experience
+    # Pure Frontend / UI roles (Target is Python Backend / Full Stack)
+    is_frontend_titled = any(_has_keyword(k, title) for k in ["frontend", "front-end", "front end", "ui developer", "ui engineer"])
+    has_backend_or_fullstack_or_python_title = any(_has_keyword(k, title) for k in ["backend", "back-end", "back end", "full stack", "fullstack", "full-stack", "python"])
+    if is_frontend_titled and not has_backend_or_fullstack_or_python_title:
+        return 0.0, []
+
+    from processing.experience_parser import extract_experience
     p_min, p_max, _ = extract_experience(full_text)
-    effective_min = p_min if p_min is not None else job.experience_min
-    effective_max = p_max if p_max is not None else job.experience_max
+    raw_min = p_min if p_min is not None else job.experience_min
+    raw_max = p_max if p_max is not None else job.experience_max
+
+    effective_min: float | None = None
+    if raw_min is not None:
+        try:
+            effective_min = float(raw_min)
+        except (ValueError, TypeError):
+            m_min = re.search(r"\d+", str(raw_min))
+            if m_min:
+                effective_min = float(m_min.group(0))
+
+    effective_max: float | None = None
+    if raw_max is not None:
+        try:
+            effective_max = float(raw_max)
+        except (ValueError, TypeError):
+            m_max = re.search(r"\d+", str(raw_max))
+            if m_max:
+                effective_max = float(m_max.group(0))
 
     if effective_min is not None and effective_min >= 5:
         return -100.0, []
@@ -441,7 +556,7 @@ def calculate_relevance_score(job: Job) -> tuple[float, list[str]]:
             return -100.0, []
 
     # 6. Refined Rule A: Must-Have Python Ecosystem Signal
-    has_python_ecosystem = any(_has_keyword(k, full_text) for k in ["python", "fastapi", "django", "flask"])
+    has_python_ecosystem = any(_has_keyword(k, full_text) for k in ["python", "fastapi", "flask"])
     if not has_python_ecosystem:
         return 0.0, []
 
@@ -449,7 +564,7 @@ def calculate_relevance_score(job: Job) -> tuple[float, list[str]]:
     is_primary_or_strong = any(_has_keyword(k, title) for k in PRIMARY_TITLE_KEYWORDS + STRONG_TITLE_KEYWORDS)
     is_generic_role = (not is_primary_or_strong) and any(_has_keyword(k, title) for k in GENERIC_TITLE_KEYWORDS)
 
-    has_backend_signal = any(_has_keyword(k, full_text) for k in CONCRETE_BACKEND_SIGNALS)
+    has_backend_signal = is_primary_or_strong or any(_has_keyword(k, full_text) for k in CONCRETE_BACKEND_SIGNALS)
     if not has_backend_signal:
         return 0.0, []
 
@@ -490,12 +605,32 @@ def calculate_relevance_score(job: Job) -> tuple[float, list[str]]:
     # 6. Multi-Stack Synergy Bonuses
     has_fe = any(k in seen_canonical_concepts for k in ["react", "javascript", "typescript", "nextjs"])
     has_ai = any(k in seen_canonical_concepts for k in ["llm", "rag", "langchain", "vector_db", "ai_agents", "mcp"])
+    has_caching = any(k in seen_canonical_concepts for k in ["redis", "caching", "memcached"])
+    has_async_queue = any(k in seen_canonical_concepts for k in ["rabbitmq", "celery", "kafka", "task_queue", "message_queue", "event_driven"])
+    has_scalability_or_sysdesign = any(
+        k in seen_canonical_concepts
+        for k in [
+            "scalability",
+            "system_design",
+            "lld",
+            "hld",
+            "distributed_systems",
+            "microservices",
+            "low_latency",
+            "high_throughput",
+            "dsa",
+            "algorithms",
+        ]
+    )
     if has_fe and (has_python_ecosystem or has_backend_signal):
         score += 2.0
         matched_skills.append("Full-Stack Synergy")
     if has_ai and has_python_ecosystem:
         score += 2.0
         matched_skills.append("AI-Backend Synergy")
+    if (has_caching or has_async_queue) and has_scalability_or_sysdesign and has_python_ecosystem:
+        score += 2.0
+        matched_skills.append("Scalable Backend Synergy")
 
     # 7. Experience Curve Scoring & Penalties (Target: 1-5 Years)
     if effective_min is not None:

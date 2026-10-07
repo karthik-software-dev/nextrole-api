@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { JobDetail, JobSummary, PaginatedResponse } from '../types';
+import type { FilterCounts, JobDetail, JobSummary, PaginatedResponse } from '../types';
 
 export interface GetJobsParams {
   page?: number;
@@ -7,6 +7,7 @@ export interface GetJobsParams {
   location?: string;
   tier?: string;
   is_remote?: boolean;
+  work_mode?: string;
   max_exp?: number;
   min_score?: number;
   search?: string;
@@ -16,6 +17,11 @@ export interface GetJobsParams {
 
 export const getJobs = async (params: GetJobsParams = {}): Promise<PaginatedResponse<JobSummary>> => {
   const response = await apiClient.get<PaginatedResponse<JobSummary>>('/jobs', { params });
+  return response.data;
+};
+
+export const getJobFilterCounts = async (): Promise<FilterCounts> => {
+  const response = await apiClient.get<FilterCounts>('/jobs/filters');
   return response.data;
 };
 

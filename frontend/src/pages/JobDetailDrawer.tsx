@@ -22,6 +22,7 @@ import { CompanyAvatar } from '../components/ui/CompanyAvatar';
 import { Button } from '../components/ui/Button';
 import { getJobById, createApplication, deactivateJob } from '../api';
 import { useToast } from '../context/ToastContext';
+import { playJobApplySound } from '../utils/audio';
 import type { JobDetail } from '../types';
 
 interface JobDetailDrawerProps {
@@ -68,6 +69,7 @@ export const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
 
   const handleTrackApplication = async () => {
     if (!job) return;
+    playJobApplySound();
     try {
       setIsApplying(true);
       await createApplication({
@@ -132,12 +134,21 @@ export const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
       ? 85
       : 70;
 
+  const tierLower = (job?.priority_tier || '').toLowerCase();
   const tierAlignmentPct =
-    job?.priority_tier === 'Tier-1'
+    tierLower.includes('tier 1') || tierLower.includes('tier-1') || tierLower.includes('tier1')
       ? 95
-      : job?.priority_tier === 'Tier-2'
+      : tierLower.includes('tier 2') || tierLower.includes('tier-2') || tierLower.includes('tier2')
       ? 80
       : 65;
+
+  const matchPct = job
+    ? job.match_percentage ?? (job.relevance_score > 50
+        ? Math.min(Math.round(job.relevance_score), 100)
+        : Math.min(100, Math.round((job.relevance_score / 35) * 100)))
+    : 0;
+
+  const stackPct = matchPct;
 
   return (
     <Drawer
@@ -177,7 +188,7 @@ export const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
               <div className="flex items-center gap-4">
                 {/* Circular / Large Score Badge */}
                 <div className="h-16 w-16 rounded-2xl bg-gradient-to-br from-indigo-600 to-indigo-700 text-white flex flex-col items-center justify-center shadow-md shadow-indigo-500/25 ring-1 ring-inset ring-white/20 shrink-0">
-                  <span className="text-[22px] font-bold leading-none">{job.relevance_score}%</span>
+                  <span className="text-[22px] font-bold leading-none">{matchPct}%</span>
                   <span className="text-[9.5px] uppercase tracking-wider font-bold opacity-90 mt-0.5">Match</span>
                 </div>
                 <div>
@@ -188,7 +199,7 @@ export const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
                     )}
                   </div>
                   <h3 className="text-[16.5px] font-bold text-slate-900 dark:text-white mt-1.5 leading-snug">
-                    AI Match Evaluation
+                    Match Evaluation
                   </h3>
                   <p className="text-[13px] font-medium text-slate-700 dark:text-slate-300 mt-0.5">
                     {evalSubtitle}
@@ -197,17 +208,23 @@ export const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
               </div>
 
               {/* Action Buttons */}
-              <div className="flex flex-col gap-2 shrink-0">
+              <div className="flex flex-col gap-1.5 shrink-0">
                 {job.canonical_apply_url && (
-                  <a
-                    href={job.canonical_apply_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center justify-center gap-2 px-4.5 py-2.5 text-[13.5px] font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white shadow-xs transition-colors cursor-pointer"
-                  >
-                    <span>Apply on Portal</span>
-                    <ExternalLink className="h-3.5 w-3.5" />
-                  </a>
+                  <>
+                    <a
+                      href={job.canonical_apply_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => playJobApplySound()}
+                      className="inline-flex items-center justify-center gap-2 px-4.5 py-2.5 text-[13.5px] font-bold rounded-xl bg-indigo-600 hover:bg-indigo-700 active:scale-95 text-white shadow-xs transition-all cursor-pointer"
+                    >
+                      <span>Apply on Portal</span>
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </a>
+                    <span className="text-[10.5px] text-slate-400 dark:text-slate-500 text-center font-medium">
+                      ↗ Opens official company ATS in new tab
+                    </span>
+                  </>
                 )}
                 <button
                   onClick={handleDeactivate}
@@ -225,7 +242,7 @@ export const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
                 <span className="text-slate-800 dark:text-slate-200 font-bold text-[12px]">Stack Match</span>
                 <div className="mt-1.5 flex items-center gap-2">
                   <div className="h-2 flex-1 rounded-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
-                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${Math.min(job.relevance_score, 100)}%` }} />
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${stackPct}%` }} />
                   </div>
                   <span className="font-bold text-slate-900 dark:text-white text-[12.5px]">{job.relevance_score}%</span>
                 </div>
@@ -364,9 +381,9 @@ export const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
                           Last confirmed active: {new Date(src.last_seen_at).toLocaleDateString()}
                         </p>
                       </div>
-                      {src.source_apply_url && (
+                      {(src.source_apply_url || src.discovery_url) && (
                         <a
-                          href={src.source_apply_url}
+                          href={(src.source_apply_url || src.discovery_url)!}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1.5 text-[13px] font-bold"

@@ -10,6 +10,8 @@ from schemas.dashboard import (
     LocationStatItemOut,
     RecentActivityItemOut,
 )
+from schemas.analytics import ExperienceDistributionOut, SalaryDistributionOut
+from processing.salary_parser import parse_salary_lpa
 from storage.models.application import Application
 from storage.models.application_history import ApplicationHistory
 from storage.models.job import Job
@@ -53,6 +55,7 @@ class DashboardService:
             bangalore=job_stats.get("bangalore_jobs", 0),
             chennai=job_stats.get("chennai_jobs", 0),
             remote=job_stats.get("remote_jobs", 0),
+            abroad=job_stats.get("abroad_jobs", 0),
             other=job_stats.get("other_jobs", 0),
         )
 
@@ -119,9 +122,17 @@ class DashboardService:
             .where(Job.is_active.is_(True))
             .group_by(Job.location_bucket, Job.is_remote)
         ).all()
-        loc_map: dict[str, int] = {"Bangalore": 0, "Remote": 0, "Chennai": 0, "Others": 0}
+        loc_map: dict[str, int] = {
+            "Bangalore": 0,
+            "Chennai": 0,
+            "Remote": 0,
+            "Abroad": 0,
+            "Others": 0,
+        }
         for bucket, is_rem, cnt in loc_rows:
-            if is_rem:
+            if bucket in ("ABROAD", "FOREIGN"):
+                loc_map["Abroad"] += cnt
+            elif is_rem:
                 loc_map["Remote"] += cnt
             elif bucket == "BANGALORE":
                 loc_map["Bangalore"] += cnt
@@ -214,6 +225,73 @@ class DashboardService:
         combined_activities = app_activities[:3] + disc_activities[:3]
         combined_activities.sort(key=lambda x: x.timestamp, reverse=True)
 
+        # 8. Experience & Salary Distributions (filtered by date window, fallback to active jobs)
+        jobs_in_window = (
+            session.query(Job)
+            .filter(
+                Job.first_seen_at >= start_dt,
+                Job.first_seen_at <= end_dt,
+            )
+            .all()
+        )
+        if not jobs_in_window:
+            jobs_in_window = session.query(Job).filter(Job.is_active.is_(True)).all()
+
+        exp_1_2 = 0
+        exp_2_3 = 0
+        exp_3_4 = 0
+        exp_4_plus = 0
+
+        for j in jobs_in_window:
+            emin = j.experience_min
+            emax = j.experience_max
+            if emin is not None:
+                if emin <= 1 or (emax is not None and emax <= 2):
+                    exp_1_2 += 1
+                elif emin == 2 and (emax is None or emax <= 3):
+                    exp_2_3 += 1
+                elif (emin == 2 and emax == 4) or emin == 3:
+                    exp_3_4 += 1
+                else:
+                    exp_4_plus += 1
+            else:
+                exp_2_3 += 1
+
+        experience_distribution = [
+            ExperienceDistributionOut(level="1-2 yrs", count=exp_1_2),
+            ExperienceDistributionOut(level="2-3 yrs", count=exp_2_3),
+            ExperienceDistributionOut(level="3-4 yrs", count=exp_3_4),
+            ExperienceDistributionOut(level="4+ yrs", count=exp_4_plus),
+        ]
+
+        sal_under_8 = 0
+        sal_8_12 = 0
+        sal_12_16 = 0
+        sal_16_22 = 0
+        sal_22_plus = 0
+
+        for j in jobs_in_window:
+            lpa = parse_salary_lpa(j)
+            if lpa is not None:
+                if lpa < 8.0:
+                    sal_under_8 += 1
+                elif 8.0 <= lpa < 12.0:
+                    sal_8_12 += 1
+                elif 12.0 <= lpa < 16.0:
+                    sal_12_16 += 1
+                elif 16.0 <= lpa < 22.0:
+                    sal_16_22 += 1
+                else:
+                    sal_22_plus += 1
+
+        salary_distribution = [
+            SalaryDistributionOut(bracket="<8 LPA", count=sal_under_8),
+            SalaryDistributionOut(bracket="8-12 LPA", count=sal_8_12),
+            SalaryDistributionOut(bracket="12-16 LPA", count=sal_12_16),
+            SalaryDistributionOut(bracket="16-22 LPA", count=sal_16_22),
+            SalaryDistributionOut(bracket="22+ LPA", count=sal_22_plus),
+        ]
+
         return DashboardSummaryOut(
             total_jobs=job_stats["total_jobs"],
             active_jobs=job_stats["active_jobs"],
@@ -229,4 +307,6 @@ class DashboardService:
             discovery_trend=discovery_trend,
             locations_breakdown=locations_breakdown,
             recent_activities=combined_activities,
+            experience_distribution=experience_distribution,
+            salary_distribution=salary_distribution,
         )

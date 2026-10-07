@@ -4,10 +4,22 @@ from sqlalchemy.orm import Session
 
 from api.deps import get_db_session
 from schemas.common import PaginatedResponse
-from schemas.job import JobDetailOut, JobSummaryOut
+from schemas.job import FilterCountsOut, JobDetailOut, JobSummaryOut
 from services.job_service import JobService
 
 router = APIRouter(prefix="/jobs", tags=["Jobs"])
+
+
+@router.get(
+    "/filters",
+    response_model=FilterCountsOut,
+    summary="Get live filter counts for sidebar facets",
+)
+def get_job_filter_counts(
+    db: Session = Depends(get_db_session),
+) -> FilterCountsOut:
+    """Returns dynamic counts for work modes, locations, experience, and salary bands."""
+    return JobService.get_filter_counts(session=db)
 
 
 @router.get(
@@ -21,6 +33,7 @@ def list_jobs(
     location: str | None = Query(None, description="Location bucket (BANGALORE, CHENNAI, OTHER)"),
     tier: str | None = Query(None, description="Priority tier filter (e.g. TIER 1, TIER 2)"),
     is_remote: bool | None = Query(None, description="Filter for remote positions"),
+    work_mode: str | None = Query(None, description="Work mode filter (office, remote/wfh, hybrid, abroad)"),
     max_exp: int | None = Query(None, description="Max required experience in years (e.g. 3)"),
     min_score: float | None = Query(None, description="Minimum relevance score threshold"),
     search: str | None = Query(None, description="Search keyword in title, company, or description"),
@@ -36,6 +49,7 @@ def list_jobs(
         location_bucket=location,
         priority_tier=tier,
         is_remote=is_remote,
+        work_mode=work_mode,
         max_exp=max_exp,
         min_score=min_score,
         search=search,

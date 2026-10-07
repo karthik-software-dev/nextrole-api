@@ -9,6 +9,7 @@ import {
   ArrowRight,
   Clock,
   Briefcase,
+  ChevronRight,
 } from 'lucide-react';
 import type { RecentActivityItem } from '../../types';
 
@@ -72,6 +73,20 @@ const getActivityVisuals = (type: string) => {
   }
 };
 
+const getActivityDestination = (item: RecentActivityItem): string => {
+  if (item.activity_type === 'discovery') {
+    return '/jobs?tier=Tier+1';
+  }
+  if (item.activity_type === 'source') {
+    const match = item.title.match(/from (.*)$/i);
+    if (match && match[1]) {
+      return `/jobs?search=${encodeURIComponent(match[1].trim())}`;
+    }
+    return '/jobs';
+  }
+  return '/applications';
+};
+
 export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) => {
   const items = activities && activities.length > 0 ? activities : [];
 
@@ -92,36 +107,50 @@ export const RecentActivity: React.FC<RecentActivityProps> = ({ activities }) =>
       </div>
 
       {/* Content */}
-      <div className="flex-1 p-6">
+      <div className="flex-1 p-5 sm:p-6">
         {items.length === 0 ? (
           <div className="flex h-full min-h-[240px] flex-col items-center justify-center gap-2 text-center text-slate-400">
             <Clock className="h-6 w-6 text-slate-300 dark:text-slate-600" />
             <p className="text-xs">No activity records recorded yet.</p>
           </div>
         ) : (
-          <div className="relative space-y-6">
+          <div className="relative space-y-3">
             {/* Timeline vertical connector thread */}
             {items.length > 1 && (
-              <div className="absolute left-[15px] top-3.5 bottom-3.5 w-[2px] bg-slate-300 dark:bg-slate-800 pointer-events-none" />
+              <div className="absolute left-[18px] top-4 bottom-4 w-[2px] bg-slate-200 dark:bg-slate-800 pointer-events-none" />
             )}
             {items.map((item) => {
               const { icon: Icon, bg } = getActivityVisuals(item.activity_type);
+              const destination = getActivityDestination(item);
+
               return (
-                <div key={item.id} className="relative z-10 flex items-start gap-3.5">
-                  <div
-                    className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${bg} ring-4 ring-white dark:ring-[#111726] shadow-xs transition-transform hover:scale-105`}
-                  >
-                    <Icon className="h-4 w-4" />
+                <Link
+                  key={item.id}
+                  to={destination}
+                  className="relative z-10 flex items-start justify-between gap-3.5 -mx-2.5 p-2 rounded-xl hover:bg-slate-50/80 dark:hover:bg-slate-800/40 transition-colors group cursor-pointer"
+                >
+                  <div className="flex items-start gap-3.5 min-w-0">
+                    <div
+                      className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full ${bg} ring-4 ring-white dark:ring-[#111726] shadow-xs transition-transform group-hover:scale-105`}
+                    >
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <div className="min-w-0 flex-1 pt-0.5">
+                      <p className="text-[13.5px] font-semibold text-slate-800 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors leading-snug">
+                        {item.title}
+                      </p>
+                      <div className="mt-1 flex items-center gap-1.5">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10.5px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border border-slate-200/60 dark:border-slate-700/60">
+                          {formatRelativeTime(item.timestamp) === 'Just now' && (
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0" />
+                          )}
+                          <span>{formatRelativeTime(item.timestamp)}</span>
+                        </span>
+                      </div>
+                    </div>
                   </div>
-                  <div className="min-w-0 flex-1 pt-0.5">
-                    <p className="text-[14px] font-semibold text-slate-800 dark:text-slate-100">
-                      {item.title}
-                    </p>
-                    <p className="mt-1 text-[12px] text-slate-600 dark:text-slate-500">
-                      {formatRelativeTime(item.timestamp)}
-                    </p>
-                  </div>
-                </div>
+                  <ChevronRight className="h-4 w-4 text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity self-center shrink-0" />
+                </Link>
               );
             })}
           </div>

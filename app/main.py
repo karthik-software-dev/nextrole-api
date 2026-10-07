@@ -5,16 +5,14 @@ from pathlib import Path
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
-from processing.deduplication import deduplicate_jobs
-from processing.prioritization import prioritize_jobs, get_location_bucket, select_by_location_quota
-from processing.relevance import filter_relevant_jobs
-from processing.url_validator import validate_job_urls
-from sources.ats_source import fetch_target_company_jobs
-from sources.google_jobs_source import fetch_google_jobs
-from sources.indeed_source import fetch_indeed_jobs
-from sources.linkedin_source import fetch_linkedin_jobs
-from sources.naukri_source import fetch_naukri_jobs
-from sources.wellfound_source import fetch_wellfound_jobs
+from processing.central_processor import CentralJobProcessor
+from custom_scraper import (
+    fetch_indeed_jobs,
+    fetch_linkedin_jobs,
+    fetch_naukri_jobs,
+    fetch_target_company_jobs,
+    fetch_wellfound_jobs,
+)
 from storage.database import get_db, init_db
 from storage.repositories.job_repository import JobRepository
 
@@ -80,7 +78,6 @@ def main():
         ("Naukri", ("naukri", "all"), fetch_naukri_jobs),
         ("LinkedIn", ("linkedin", "all"), fetch_linkedin_jobs),
         ("Wellfound", ("wellfound", "all"), fetch_wellfound_jobs),
-        ("Google Jobs", ("google_jobs", "google", "all"), fetch_google_jobs),
         ("Target Careers", ("ats", "careers", "target_companies", "all"), fetch_target_company_jobs),
     ]
 
@@ -95,26 +92,17 @@ def main():
                 source_counts[label] = 0
 
     sources_summary = ", ".join(f"{k}: {v}" for k, v in source_counts.items())
-    print(f"\nTotal jobs collected & normalized: {len(jobs)} ({sources_summary})")
+    print(f"\nTotal jobs collected: {len(jobs)} ({sources_summary})")
 
-    relevant_jobs = filter_relevant_jobs(jobs)
-    irrelevant_jobs = [j for j in jobs if j.relevance_score < 8.0]
-    unique_jobs = deduplicate_jobs(relevant_jobs)
-    validated_jobs = validate_job_urls(unique_jobs)
-    prioritized_jobs = prioritize_jobs(validated_jobs)
+    prioritized_jobs, irrelevant_jobs = CentralJobProcessor.process_jobs(
+        jobs=jobs,
+        location=location_arg,
+        max_days=14,
+        min_relevance_score=8.0,
+        check_liveness=True,
+    )
 
-    # Apply location filtering or 80/15/5 quota selection
-    if location_arg in ("bangalore", "bengaluru", "blr"):
-        prioritized_jobs = [j for j in prioritized_jobs if any(k in (j.location or "").lower() for k in ["bengaluru", "bangalore", "karnataka"])]
-    elif location_arg in ("chennai", "maa"):
-        prioritized_jobs = [j for j in prioritized_jobs if any(k in (j.location or "").lower() for k in ["chennai", "tamil nadu"])]
-    elif location_arg in ("other", "remote", "hyd", "hyderabad", "pune"):
-        prioritized_jobs = [j for j in prioritized_jobs if not any(k in (j.location or "").lower() for k in ["bengaluru", "bangalore", "karnataka", "chennai"])]
-    else:
-        # Default 'all': apply 80% Bangalore / 15% Chennai / 5% Other quota
-        prioritized_jobs = select_by_location_quota(prioritized_jobs, target_total=100)
-
-    duplicates_count = len(relevant_jobs) - len(prioritized_jobs)
+    duplicates_count = max(0, len(jobs) - len(prioritized_jobs) - len(irrelevant_jobs))
     direct_ats_count = sum(1 for j in prioritized_jobs if j.apply_type in ("DIRECT_ATS", "COMPANY_CAREERS"))
     tier1_count = sum(1 for j in prioritized_jobs if "TIER 1" in j.priority_tier)
     tier2_count = sum(1 for j in prioritized_jobs if "TIER 2" in j.priority_tier)
@@ -124,9 +112,9 @@ def main():
     maa_count = sum(1 for j in prioritized_jobs if any(k in (j.location or "").lower() for k in ["chennai", "tamil nadu"]))
     other_count = sum(1 for j in prioritized_jobs if not any(k in (j.location or "").lower() for k in ["bengaluru", "bangalore", "karnataka", "chennai", "tamil nadu"]))
 
-    print(f"Relevant opportunities found : {len(relevant_jobs)}")
-    print(f"Duplicates merged            : {duplicates_count}")
     print(f"Actionable unique jobs       : {len(prioritized_jobs)}")
+    print(f"Irrelevant jobs filtered     : {len(irrelevant_jobs)}")
+    print(f"Duplicates / Stale pruned    : {duplicates_count}")
     print(f"Direct ATS / Career links    : {direct_ats_count}/{len(prioritized_jobs)}")
     print(f"Priority breakdown           : {tier1_count} High Priority | {tier2_count} Solid | {tier3_count} Standard")
     print(f"Location breakdown           : {blr_count} Bengaluru | {maa_count} Chennai | {other_count} Other/Remote\n")

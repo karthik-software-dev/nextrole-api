@@ -1,8 +1,13 @@
 import { apiClient } from './client';
-import type { DiscoveryStatus } from '../types';
+import type { DiscoveryStatus, DiscoverySource } from '../types';
 
 export const getDiscoveryStatus = async (): Promise<DiscoveryStatus> => {
   const response = await apiClient.get<DiscoveryStatus>('/discovery/status');
+  return response.data;
+};
+
+export const getDiscoverySources = async (): Promise<DiscoverySource[]> => {
+  const response = await apiClient.get<DiscoverySource[]>('/discovery/sources');
   return response.data;
 };
 
@@ -10,3 +15,4 @@ export const triggerDiscoveryRun = async (params: { source?: string; location?: 
   const response = await apiClient.post<{ message: string; status: string }>('/discovery/run', params);
   return response.data;
 };
+

@@ -45,11 +45,52 @@ class SalaryDistributionOut(BaseModel):
     count: int
 
 
+class ApplyChannelItemOut(BaseModel):
+    channel: str
+    count: int
+    percentage: float
+    description: str
+
+
+class TopHiringCompanyOut(BaseModel):
+    name: str
+    active_jobs: int
+
+
+class LocationStatItemOut(BaseModel):
+    name: str
+    count: int
+
+
+class JobTitleStatOut(BaseModel):
+    title: str
+    count: int
+
+
+class WorkModeStatOut(BaseModel):
+    mode: str
+    count: int
+    percentage: float
+
+
+class TechStackPairStatOut(BaseModel):
+    pair: str
+    skill: str
+    count: int
+    percentage: float
+
+
 class JobIntelligenceOut(BaseModel):
     match_scores: list[MatchScoreBucketOut]
     top_skills: list[SkillFrequencyOut]
-    experience_distribution: list[ExperienceDistributionOut]
-    salary_distribution: list[SalaryDistributionOut]
+    experience_distribution: list[ExperienceDistributionOut] = []
+    salary_distribution: list[SalaryDistributionOut] = []
+    apply_channels: list[ApplyChannelItemOut] = []
+    top_hiring_companies: list[TopHiringCompanyOut] = []
+    locations: list[LocationStatItemOut] = []
+    top_job_titles: list[JobTitleStatOut] = []
+    work_modes: list[WorkModeStatOut] = []
+    tech_stack_pairs: list[TechStackPairStatOut] = []
 
 
 class ApplicationTimelineItemOut(BaseModel):
@@ -70,13 +111,43 @@ class ApplicationFunnelStepOut(BaseModel):
     conversion_rate: float
 
 
+class ChannelYieldOut(BaseModel):
+    portal: str
+    applied: int
+    interviews: int
+    conversion_rate: float
+
+
 class ApplicationAnalyticsOut(BaseModel):
     applications_over_time: list[ApplicationTimelineItemOut]
     status_distribution: list[ApplicationStatusItemOut]
     funnel: list[ApplicationFunnelStepOut]
+    channel_yield: list[ChannelYieldOut] = []
+    stale_applications_count: int = 0
 
 
-class AgentPerformanceOut(BaseModel):
+class SourceContributionItemOut(BaseModel):
+    source: str
+    count: int
+    percentage: float
+
+
+class TierTriageItemOut(BaseModel):
+    tier: str
+    label: str
+    count: int
+    percentage: float
+    color: str
+
+
+class ApplyGatewayItemOut(BaseModel):
+    gateway: str
+    count: int
+    percentage: float
+    color: str
+
+
+class PipelineAnalyticsOut(BaseModel):
     jobs_collected: int
     jobs_normalized: int
     duplicates_removed: int
@@ -86,10 +157,19 @@ class AgentPerformanceOut(BaseModel):
     filter_out_pct: float
     relevance_rate_pct: float = 0.0
     actionable_rate_pct: float = 0.0
+    dedup_ratio: float = 0.0
+    sources_breakdown: list[SourceContributionItemOut] = []
+    tier_breakdown: list[TierTriageItemOut] = []
+    gateways_breakdown: list[ApplyGatewayItemOut] = []
+
+
+# Backward compatibility alias
+AgentPerformanceOut = PipelineAnalyticsOut
 
 
 class AnalyticsSummaryOut(BaseModel):
     kpis: AnalyticsKpiData
     job_intelligence: JobIntelligenceOut
     application_analytics: ApplicationAnalyticsOut
-    agent_performance: AgentPerformanceOut
+    agent_performance: PipelineAnalyticsOut
+    pipeline_analytics: PipelineAnalyticsOut | None = None

@@ -8,6 +8,12 @@ class UserProfileOut(BaseModel):
     name: str
     email: str
     target_role: str
+    skills: list[str] = [
+        "Python", "FastAPI", "SQLAlchemy", "PostgreSQL", "Redis",
+        "RabbitMQ", "Celery", "System Design", "Scalability",
+        "Data Structures & Algorithms", "Linear DSA", "Problem Solving",
+        "Clean Code & SOLID", "REST APIs", "Docker", "Git"
+    ]
 
 
 class UserProfileUpdate(BaseModel):
@@ -16,6 +22,7 @@ class UserProfileUpdate(BaseModel):
     name: str | None = Field(None, min_length=1, max_length=150)
     email: str | None = Field(None, min_length=3, max_length=255)
     target_role: str | None = Field(None, min_length=1, max_length=150)
+    skills: list[str] | None = None
 
 
 class SearchScoringOut(BaseModel):
@@ -24,6 +31,9 @@ class SearchScoringOut(BaseModel):
     min_experience: int = 1
     max_experience: int = 5
     min_score: float = 8.0
+    min_salary_lpa: float = 4.0
+    target_salary_min_lpa: float = 5.0
+    target_salary_max_lpa: float = 15.0
     target_locations: list[str] = ["Bangalore", "Chennai", "Remote"]
 
 
@@ -33,6 +43,9 @@ class SearchScoringUpdate(BaseModel):
     min_experience: int | None = Field(None, ge=0, le=20)
     max_experience: int | None = Field(None, ge=0, le=30)
     min_score: float | None = Field(None, ge=0.0, le=50.0)
+    min_salary_lpa: float | None = Field(None, ge=0.0, le=100.0)
+    target_salary_min_lpa: float | None = Field(None, ge=0.0, le=100.0)
+    target_salary_max_lpa: float | None = Field(None, ge=0.0, le=100.0)
     target_locations: list[str] | None = None
 
 

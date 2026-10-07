@@ -5,8 +5,9 @@ import {
   RotateCw,
   Loader2,
   AlertCircle,
-  TrendingUp,
-  Bot,
+  Send,
+  Compass,
+  Layers,
 } from 'lucide-react';
 import { getAnalyticsSummary } from '../api';
 import type { AnalyticsSummary } from '../types';
@@ -41,8 +42,8 @@ export const AnalyticsPage: React.FC = () => {
   const [showCustomInputs, setShowCustomInputs] = useState(false);
   const dateMenuRef = useRef<HTMLDivElement>(null);
 
-  // Internal Navigation Tab ('insights' | 'agent')
-  const [activeTab, setActiveTab] = useState<'insights' | 'agent'>('insights');
+  // Internal Navigation Tab ('applications' | 'discovery' | 'pipeline')
+  const [activeTab, setActiveTab] = useState<'applications' | 'discovery' | 'pipeline'>('applications');
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -242,7 +243,7 @@ export const AnalyticsPage: React.FC = () => {
             type="button"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 text-[14px] font-medium text-white shadow-xs hover:bg-indigo-700 disabled:opacity-75 transition-colors cursor-pointer"
+            className="inline-flex h-9 items-center gap-1.5 rounded-xl bg-indigo-600 px-3.5 text-xs font-semibold text-white shadow-xs hover:bg-indigo-700 disabled:opacity-75 transition-colors cursor-pointer"
             title="Refresh analytics metrics"
           >
             <RotateCw className={`h-3.5 w-3.5 ${isRefreshing ? 'animate-spin' : ''}`} />
@@ -252,7 +253,7 @@ export const AnalyticsPage: React.FC = () => {
       </div>
 
       {/* -------------------------------------------------- */}
-      {/* INTERNAL TABS: Job & Application Insights vs Agent */}
+      {/* INTERNAL TABS: 3 CLEAR ANALYTICAL DOMAINS          */}
       {/* -------------------------------------------------- */}
       <div className="border-b border-slate-200 dark:border-slate-800">
         <nav
@@ -263,69 +264,106 @@ export const AnalyticsPage: React.FC = () => {
           <button
             type="button"
             role="tab"
-            id="tab-insights"
-            aria-selected={activeTab === 'insights'}
-            aria-controls="panel-insights"
-            onClick={() => setActiveTab('insights')}
-            className={`pb-3 pt-1 px-1 border-b-2 flex items-center gap-2.5 transition-colors cursor-pointer text-[14px] whitespace-nowrap ${activeTab === 'insights'
+            id="tab-applications"
+            aria-selected={activeTab === 'applications'}
+            aria-controls="panel-applications"
+            onClick={() => setActiveTab('applications')}
+            className={`pb-3 pt-1 px-1 border-b-2 flex items-center gap-2.5 transition-colors cursor-pointer text-[14px] whitespace-nowrap ${
+              activeTab === 'applications'
                 ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-bold'
                 : 'border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-semibold'
-              }`}
+            }`}
           >
-            <TrendingUp className="h-4.5 w-4.5" />
-            <span>Job & Application Insights</span>
+            <Send className="h-4.5 w-4.5" />
+            <span>Application Insights</span>
           </button>
 
           <button
             type="button"
             role="tab"
-            id="tab-agent"
-            aria-selected={activeTab === 'agent'}
-            aria-controls="panel-agent"
-            onClick={() => setActiveTab('agent')}
-            className={`pb-3 pt-1 px-1 border-b-2 flex items-center gap-2.5 transition-colors cursor-pointer text-[14px] whitespace-nowrap ${activeTab === 'agent'
+            id="tab-discovery"
+            aria-selected={activeTab === 'discovery'}
+            aria-controls="panel-discovery"
+            onClick={() => setActiveTab('discovery')}
+            className={`pb-3 pt-1 px-1 border-b-2 flex items-center gap-2.5 transition-colors cursor-pointer text-[14px] whitespace-nowrap ${
+              activeTab === 'discovery'
                 ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-bold'
                 : 'border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-semibold'
-              }`}
+            }`}
           >
-            <Bot className="h-4.5 w-4.5" />
-            <span>Agent Performance</span>
+            <Compass className="h-4.5 w-4.5" />
+            <span>Job Discovery</span>
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            id="tab-pipeline"
+            aria-selected={activeTab === 'pipeline'}
+            aria-controls="panel-pipeline"
+            onClick={() => setActiveTab('pipeline')}
+            className={`pb-3 pt-1 px-1 border-b-2 flex items-center gap-2.5 transition-colors cursor-pointer text-[14px] whitespace-nowrap ${
+              activeTab === 'pipeline'
+                ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 font-bold'
+                : 'border-transparent text-slate-600 hover:text-slate-900 dark:text-slate-300 dark:hover:text-white font-semibold'
+            }`}
+          >
+            <Layers className="h-4.5 w-4.5" />
+            <span>Data Pipeline</span>
           </button>
         </nav>
       </div>
 
       {/* -------------------------------------------------- */}
-      {/* TAB 1: JOB & APPLICATION INSIGHTS                  */}
+      {/* TAB 1: APPLICATION INSIGHTS                        */}
       {/* -------------------------------------------------- */}
-      {activeTab === 'insights' && (
+      {activeTab === 'applications' && (
         <div
-          id="panel-insights"
+          id="panel-applications"
           role="tabpanel"
-          aria-labelledby="tab-insights"
+          aria-labelledby="tab-applications"
           className="space-y-6 page-reveal"
         >
-          {/* SECTION 1: TOP KPI CARDS */}
+          {/* SECTION 1.1: APPLICATION OVERVIEW (4 KPI CARDS) */}
           <AnalyticsKpiCards kpis={summary?.kpis} />
 
-          {/* SECTION 2: JOB INTELLIGENCE */}
-          <JobIntelligenceSection data={summary?.job_intelligence} />
-
-          {/* SECTION 3: APPLICATION ANALYTICS */}
-          <ApplicationAnalyticsSection data={summary?.application_analytics} />
+          {/* SECTIONS 1.2–1.3: SUBMISSION ACTIVITY & APPLICATION FUNNEL */}
+          <ApplicationAnalyticsSection
+            data={summary?.application_analytics}
+          />
         </div>
       )}
 
       {/* -------------------------------------------------- */}
-      {/* TAB 2: AGENT PERFORMANCE                           */}
+      {/* TAB 2: JOB DISCOVERY                               */}
       {/* -------------------------------------------------- */}
-      {activeTab === 'agent' && (
+      {activeTab === 'discovery' && (
         <div
-          id="panel-agent"
+          id="panel-discovery"
           role="tabpanel"
-          aria-labelledby="tab-agent"
+          aria-labelledby="tab-discovery"
           className="space-y-6 page-reveal"
         >
-          <AgentPerformanceSection data={summary?.agent_performance} />
+          <JobIntelligenceSection
+            data={summary?.job_intelligence}
+            pipelineData={summary?.pipeline_analytics ?? summary?.agent_performance}
+          />
+        </div>
+      )}
+
+      {/* -------------------------------------------------- */}
+      {/* TAB 3: DATA PIPELINE                               */}
+      {/* -------------------------------------------------- */}
+      {activeTab === 'pipeline' && (
+        <div
+          id="panel-pipeline"
+          role="tabpanel"
+          aria-labelledby="tab-pipeline"
+          className="space-y-6 page-reveal"
+        >
+          <AgentPerformanceSection
+            data={summary?.pipeline_analytics ?? summary?.agent_performance}
+          />
         </div>
       )}
     </div>

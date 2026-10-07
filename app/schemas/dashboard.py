@@ -8,6 +8,7 @@ class LocationBreakdownOut(BaseModel):
     bangalore: int = 0
     chennai: int = 0
     remote: int = 0
+    abroad: int = 0
     other: int = 0
 
 
@@ -53,6 +54,9 @@ class RecentActivityItemOut(BaseModel):
     activity_type: str
 
 
+from schemas.analytics import ExperienceDistributionOut, SalaryDistributionOut
+
+
 class DashboardSummaryOut(BaseModel):
     """High-level metrics for dashboard cards and pipeline charts."""
 
@@ -70,3 +74,5 @@ class DashboardSummaryOut(BaseModel):
     discovery_trend: list[DiscoveryTrendItemOut] = []
     locations_breakdown: list[LocationStatItemOut] = []
     recent_activities: list[RecentActivityItemOut] = []
+    experience_distribution: list[ExperienceDistributionOut] = []
+    salary_distribution: list[SalaryDistributionOut] = []

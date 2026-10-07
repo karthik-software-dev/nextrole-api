@@ -1,0 +1,279 @@
+ABROAD SMALL / STARTUP COMPANY TARGET LIST — LIST 3A
+Additional discovery layer for ~2-year Python Backend / Software / AI profiles
+Focus: small companies, early-stage startups, seed/Series A/B, developer tools, SaaS, fintech, AI and deeptech
+These names are an expansion pool; current hiring, role level, location and visa eligibility must be verified before applying.
+
+============================================================
+SINGAPORE
+============================================================
+Finmo
+SleekFlow
+Anchanto
+Igloo
+Tookitaki
+Biofourmis
+BetterTradeOff
+Handshakes
+Spenmo
+Hubble
+Talenox
+Clozette
+Chope
+Homage
+Rainforest
+Beam Mobility
+GetGo
+Kinobi
+CoverGo
+Higher Ground Labs
+Durianpay
+Wallex
+Finaxar
+HydraX
+M-DAQ
+PigeonLab
+Vouch
+Y Combinator Singapore startups
+HUD
+pavebank
+Conveo
+
+============================================================
+UAE / DUBAI / ABU DHABI
+============================================================
+AXON
+Alaan
+Corcava
+Dukkantek
+Livlyt
+WAJ
+Salla
+RemotePass
+NashTech UAE
+Ajar
+Grubtech
+Connect Resources
+Cafu
+Seez
+Washmen
+ServiceMarket
+Property Finder Labs
+Dubizzle Labs
+Hubpay
+Pemo
+FlapKap
+Lune
+Malaak
+Huspy
+Mamo Pay
+Postpay
+Auraa
+
+============================================================
+UNITED KINGDOM
+============================================================
+Monolith AI
+PhysicsX
+Stability AI
+V7 Labs
+Orbital Witness
+Permutive
+Kroo
+Hubble
+Yonder
+Peppy
+Peanut
+Sproutl
+Cognition AI
+Humans.ai
+Conjecture
+Causaly
+Signal AI
+Fintern
+ClearBank
+Volt
+Hometree
+Omnipresent
+Curve
+Chip
+Freetrade
+Moneybox
+Upvest
+Flock
+
+============================================================
+NETHERLANDS
+============================================================
+Corgi Insurance
+Conveo
+SustainaBase
+Dott
+Crisp
+Vesper
+Wonderkind
+Reaktor Netherlands
+Seenons
+Orbisk
+Source.ag
+Trengo
+Re:Shaping
+ParkBee
+Quatt
+Temper
+Bunq Labs
+Biller
+Skoon
+Lemonade Netherlands
+CodeSandbox
+Gitpod
+Weaviate
+Lightyear
+Quin AI
+Overstory
+AxonIQ
+Lemonade Fashion
+VanMoof
+Goboony
+Catawiki Labs
+Quantware
+Cradle
+Syntho
+PULSE Labs
+Deep Branch
+Carbon Equity
+
+============================================================
+GERMANY
+============================================================
+Wefox
+Cloover
+Black Forest Labs
+Aily Labs
+Midas
+Entrix
+Patronus
+Arbio
+Project Q
+Avelios Medical
+Cortea AI
+Flip
+Symbiotic
+Remberg
+Plancraft
+Xayn
+Parloa
+Taktile
+Plan A
+Contentful Labs
+Cognigy
+Helsing AI
+n8n
+Xentral
+SMACC
+Afilio
+HiveMQ
+Signavio
+ParcelLab
+Masterplan
+Forto Labs
+Ubitricity
+Vytal
+Trinckle
+
+============================================================
+IRELAND
+============================================================
+CitySwift
+Dataships
+Assiduous
+Climeaction
+ZeroMission
+VividQ
+Swoop Funding
+Breezy HR Ireland
+Glofox
+Everseen
+CarTrawler
+HealthBeacon
+Akara Robotics
+Deciphex
+Firefly
+Evervault
+Tug
+Zyte
+Aylien
+Soapbox
+Teamwork
+Immedis
+Routable Ireland
+
+============================================================
+CANADA
+============================================================
+Suger
+ApiceFlow
+Reflow
+Tyce
+Pulsora
+Clipboard
+Oneleet
+AltaML
+Noibu
+Humi
+Float
+Jane App
+GoodGood
+Rewind AI
+Figment
+Benevity
+Tulip
+Lilia
+Vention
+Botpress
+TextNow
+Cohere Labs
+Cyclic
+Dandelion Health
+LimeChat
+Rilla
+Ample Organics
+Mavrck
+Tailscale Canada
+Super.com
+Neo Financial
+Wealthsimple Labs
+
+============================================================
+AUSTRALIA
+============================================================
+Hnry
+FrankieOne
+Lyrebird Health
+Upflowy
+Tiliter
+InLoop
+Assignar
+Spenda
+Zeller
+Till Payments
+Airwallex Labs
+Figured
+Blinq
+SonderMind
+Qwilr
+Machinery Partner
+Humii
+Morse Micro
+Fleet Space Technologies
+Lendi
+Airtasker Labs
+Paperform
+Reejig
+Brighte
+Mable
+Ezidebit
+HotDoc
+HealthMatch
+Marlee
+Archistar
+Spacetalk

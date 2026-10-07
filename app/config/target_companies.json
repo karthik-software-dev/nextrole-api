@@ -1,0 +1,3031 @@
+{
+  "india": [
+    {
+      "name": "InMobi",
+      "ats_type": "greenhouse",
+      "identifier": "inmobi",
+      "career_url": "https://www.inmobi.com/company/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Razorpay",
+      "ats_type": "greenhouse",
+      "identifier": "razorpaysoftwareprivatelimited",
+      "career_url": "https://razorpay.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Groww",
+      "ats_type": "greenhouse",
+      "identifier": "groww",
+      "career_url": "https://groww.in/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Slice",
+      "ats_type": "greenhouse",
+      "identifier": "slice",
+      "career_url": "https://www.sliceit.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "BrowserStack",
+      "ats_type": "greenhouse",
+      "identifier": "browserstack",
+      "career_url": "https://www.browserstack.com/careers",
+      "enabled": false,
+      "category": "india"
+    },
+    {
+      "name": "Postman",
+      "ats_type": "greenhouse",
+      "identifier": "postman",
+      "career_url": "https://www.postman.com/company/careers/",
+      "enabled": false,
+      "category": "india"
+    },
+    {
+      "name": "CRED",
+      "ats_type": "lever",
+      "identifier": "cred",
+      "career_url": "https://careers.cred.club",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Meesho",
+      "ats_type": "lever",
+      "identifier": "meesho",
+      "career_url": "https://www.meesho.io/jobs",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Zeta",
+      "ats_type": "lever",
+      "identifier": "zeta",
+      "career_url": "https://www.zeta.tech/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Weekday",
+      "ats_type": "lever",
+      "identifier": "weekdayworks",
+      "career_url": "https://jobs.lever.co/weekdayworks",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Atlan",
+      "ats_type": "ashby",
+      "identifier": "atlan",
+      "career_url": "https://jobs.ashbyhq.com/atlan",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Freshworks",
+      "ats_type": "smartrecruiters",
+      "identifier": "Freshworks",
+      "career_url": "https://www.freshworks.com/company/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Securonix",
+      "ats_type": "bamboohr",
+      "identifier": "securonix",
+      "career_url": "https://securonix.bamboohr.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Darwinbox",
+      "ats_type": "bamboohr",
+      "identifier": "darwinbox",
+      "career_url": "https://darwinbox.bamboohr.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Hatio",
+      "ats_type": "breezy",
+      "identifier": "hatio",
+      "career_url": "https://hatio.breezy.hr",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Tekion",
+      "ats_type": "ashby",
+      "identifier": "tekion",
+      "career_url": "https://tekion.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Sarvam AI",
+      "ats_type": "ashby",
+      "identifier": "sarvam",
+      "career_url": "https://www.sarvam.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Ema",
+      "ats_type": "ashby",
+      "identifier": "ema",
+      "career_url": "https://www.ema.co/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "AiPrise",
+      "ats_type": "ashby",
+      "identifier": "aiprise",
+      "career_url": "https://www.aiprise.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Flock",
+      "ats_type": "ashby",
+      "identifier": "flock",
+      "career_url": "https://flock.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Bounce",
+      "ats_type": "ashby",
+      "identifier": "bounce",
+      "career_url": "https://bounce.inc/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Cardboard",
+      "ats_type": "ashby",
+      "identifier": "cardboard",
+      "career_url": "https://cardboard.inc/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Navi",
+      "ats_type": "ashby",
+      "identifier": "navi",
+      "career_url": "https://navi.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Druva",
+      "ats_type": "greenhouse",
+      "identifier": "druva",
+      "career_url": "https://www.druva.com/about/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "HighRadius",
+      "ats_type": "greenhouse",
+      "identifier": "highradius",
+      "career_url": "https://www.highradius.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Observe.AI",
+      "ats_type": "greenhouse",
+      "identifier": "observeai",
+      "career_url": "https://www.observe.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "CloudSEK",
+      "ats_type": "greenhouse",
+      "identifier": "cloudsek",
+      "career_url": "https://cloudsek.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "FalconX",
+      "ats_type": "greenhouse",
+      "identifier": "falconx",
+      "career_url": "https://falconx.io/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "FourKites",
+      "ats_type": "greenhouse",
+      "identifier": "fourkites",
+      "career_url": "https://www.fourkites.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Suki",
+      "ats_type": "greenhouse",
+      "identifier": "suki",
+      "career_url": "https://www.suki.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Mindtickle",
+      "ats_type": "lever",
+      "identifier": "mindtickle",
+      "career_url": "https://www.mindtickle.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Pocket FM",
+      "ats_type": "lever",
+      "identifier": "pocketfm",
+      "career_url": "https://pocketfm.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Swiggy",
+      "ats_type": "smartrecruiters",
+      "identifier": "swiggy",
+      "career_url": "https://careers.swiggy.com/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Kovai.co",
+      "ats_type": "smartrecruiters",
+      "identifier": "kovaico",
+      "career_url": "https://www.kovai.co/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Refyne",
+      "ats_type": "smartrecruiters",
+      "identifier": "refyne",
+      "career_url": "https://www.refyne.co.in/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Shipsy",
+      "ats_type": "smartrecruiters",
+      "identifier": "shipsy",
+      "career_url": "https://shipsy.io/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Unacademy",
+      "ats_type": "smartrecruiters",
+      "identifier": "unacademy",
+      "career_url": "https://unacademy.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "PhonePe",
+      "ats_type": "smartrecruiters",
+      "identifier": "PHONEPELIMITED",
+      "career_url": "https://www.phonepe.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Stripe",
+      "ats_type": "greenhouse",
+      "identifier": "stripe",
+      "career_url": "https://stripe.com/jobs",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Toast",
+      "ats_type": "greenhouse",
+      "identifier": "toast",
+      "career_url": "https://careers.toasttab.com/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Coupang",
+      "ats_type": "greenhouse",
+      "identifier": "coupang",
+      "career_url": "https://www.coupang.jobs/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Nium",
+      "ats_type": "lever",
+      "identifier": "nium",
+      "career_url": "https://www.nium.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Coinbase",
+      "ats_type": "greenhouse",
+      "identifier": "coinbase",
+      "career_url": "https://www.coinbase.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Tala",
+      "ats_type": "lever",
+      "identifier": "tala",
+      "career_url": "https://tala.co/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Zenoti",
+      "ats_type": "greenhouse",
+      "identifier": "zenoti",
+      "career_url": "https://www.zenoti.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Level AI",
+      "ats_type": "ashby",
+      "identifier": "level-ai",
+      "career_url": "https://thelevel.ai/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Bolna AI",
+      "ats_type": "ashby",
+      "identifier": "bolna",
+      "career_url": "https://www.bolna.dev/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Forward Networks",
+      "ats_type": "greenhouse",
+      "identifier": "forwardnetworks",
+      "career_url": "https://www.forwardnetworks.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Ixigo",
+      "ats_type": "smartrecruiters",
+      "identifier": "ixigo",
+      "career_url": "https://www.ixigo.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "PubMatic",
+      "ats_type": "greenhouse",
+      "identifier": "pubmatic",
+      "career_url": "https://pubmatic.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "TechVedika",
+      "ats_type": "smartrecruiters",
+      "identifier": "techvedika",
+      "career_url": "https://www.techvedika.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Tsenta",
+      "ats_type": "ashby",
+      "identifier": "tsenta",
+      "career_url": "https://tsenta.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Oliv AI",
+      "ats_type": "greenhouse",
+      "identifier": "olivai",
+      "career_url": "https://www.oliv.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Distill",
+      "ats_type": "ashby",
+      "identifier": "distill",
+      "career_url": "https://distill.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Zinnia",
+      "ats_type": "greenhouse",
+      "identifier": "zinnia",
+      "career_url": "https://zinnia.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Kellton",
+      "ats_type": "smartrecruiters",
+      "identifier": "kelltontech",
+      "career_url": "https://www.kellton.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Aera Technology",
+      "ats_type": "smartrecruiters",
+      "identifier": "aeratechnology",
+      "career_url": "https://www.aeratechnology.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "LogiNext",
+      "ats_type": "smartrecruiters",
+      "identifier": "loginext",
+      "career_url": "https://www.loginextmiles.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Focus Labs",
+      "ats_type": "smartrecruiters",
+      "identifier": "focuslabs",
+      "career_url": "https://focuslabs.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "NowFloats",
+      "ats_type": "smartrecruiters",
+      "identifier": "nowfloats",
+      "career_url": "https://nowfloats.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Storable India",
+      "ats_type": "greenhouse",
+      "identifier": "storableindia",
+      "career_url": "https://www.storable.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Cars24",
+      "ats_type": "smartrecruiters",
+      "identifier": "cars24",
+      "career_url": "https://www.cars24.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Composio",
+      "ats_type": "ashby",
+      "identifier": "composio",
+      "career_url": "https://jobs.ashbyhq.com/composio",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Granica",
+      "ats_type": "ashby",
+      "identifier": "granica",
+      "career_url": "https://jobs.ashbyhq.com/granica",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Broccoli AI",
+      "ats_type": "ashby",
+      "identifier": "broccoli",
+      "career_url": "https://jobs.ashbyhq.com/broccoli",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Collinear AI",
+      "ats_type": "ashby",
+      "identifier": "collinear-ai",
+      "career_url": "https://jobs.ashbyhq.com/collinear-ai",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Genera",
+      "ats_type": "ashby",
+      "identifier": "genera",
+      "career_url": "https://jobs.ashbyhq.com/genera",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "APEXX Global",
+      "ats_type": "ashby",
+      "identifier": "apexx",
+      "career_url": "https://jobs.ashbyhq.com/apexx",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "FurtherAI",
+      "ats_type": "ashby",
+      "identifier": "furtherai",
+      "career_url": "https://jobs.ashbyhq.com/furtherai",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Human Archive",
+      "ats_type": "ashby",
+      "identifier": "humanarchive",
+      "career_url": "https://jobs.ashbyhq.com/humanarchive",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Avoca",
+      "ats_type": "ashby",
+      "identifier": "avoca",
+      "career_url": "https://jobs.ashbyhq.com/avoca",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Coram AI",
+      "ats_type": "ashby",
+      "identifier": "coram-ai",
+      "career_url": "https://jobs.ashbyhq.com/coram-ai",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Wisdom AI",
+      "ats_type": "ashby",
+      "identifier": "wisdom-ai",
+      "career_url": "https://jobs.ashbyhq.com/wisdom-ai",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Rox Data Corp",
+      "ats_type": "ashby",
+      "identifier": "Rox-Data-Corp",
+      "career_url": "https://jobs.ashbyhq.com/Rox-Data-Corp",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "SigNoz",
+      "ats_type": "ashby",
+      "identifier": "signoz",
+      "career_url": "https://jobs.ashbyhq.com/signoz",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "TrueFoundry",
+      "ats_type": "greenhouse",
+      "identifier": "truefoundry",
+      "career_url": "https://boards.greenhouse.io/truefoundry",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "DevRev",
+      "ats_type": "greenhouse",
+      "identifier": "devrev",
+      "career_url": "https://boards.greenhouse.io/devrev",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Orkes",
+      "ats_type": "greenhouse",
+      "identifier": "orkes",
+      "career_url": "https://boards.greenhouse.io/orkes",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Greptile",
+      "ats_type": "ashby",
+      "identifier": "greptile",
+      "career_url": "https://jobs.ashbyhq.com/greptile",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Hyperbound",
+      "ats_type": "ashby",
+      "identifier": "hyperbound",
+      "career_url": "https://jobs.ashbyhq.com/hyperbound",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "FamPay",
+      "ats_type": "lever",
+      "identifier": "fampay",
+      "career_url": "https://jobs.lever.co/fampay",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Dozee",
+      "ats_type": "lever",
+      "identifier": "dozee",
+      "career_url": "https://jobs.lever.co/dozee",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Entropik Tech",
+      "ats_type": "smartrecruiters",
+      "identifier": "entropik",
+      "career_url": "https://careers.smartrecruiters.com/entropik",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Kula",
+      "ats_type": "smartrecruiters",
+      "identifier": "kula",
+      "career_url": "https://careers.smartrecruiters.com/kula",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Platform Science",
+      "ats_type": "greenhouse",
+      "identifier": "platformscience",
+      "career_url": "https://boards.greenhouse.io/platformscience",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Sigmoid",
+      "ats_type": "greenhouse",
+      "identifier": "sigmoid",
+      "career_url": "https://boards.greenhouse.io/sigmoid",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Plane",
+      "ats_type": "ashby",
+      "identifier": "plane",
+      "career_url": "https://plane.so/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Notion",
+      "ats_type": "ashby",
+      "identifier": "notion",
+      "career_url": "https://www.notion.so/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Astronomer",
+      "ats_type": "ashby",
+      "identifier": "astronomer",
+      "career_url": "https://www.astronomer.io/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "LiveRamp",
+      "ats_type": "ashby",
+      "identifier": "liveramp-inc",
+      "career_url": "https://liveramp.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Kandou AI",
+      "ats_type": "ashby",
+      "identifier": "kandou-ai",
+      "career_url": "https://kandou.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "OpenGov",
+      "ats_type": "ashby",
+      "identifier": "opengov",
+      "career_url": "https://opengov.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Litmus",
+      "ats_type": "ashby",
+      "identifier": "litmus",
+      "career_url": "https://litmus.io/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Gradera",
+      "ats_type": "ashby",
+      "identifier": "gradera",
+      "career_url": "https://gradera.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Neural Concept",
+      "ats_type": "ashby",
+      "identifier": "neuralconcept",
+      "career_url": "https://www.neuralconcept.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Axelera AI",
+      "ats_type": "ashby",
+      "identifier": "axelera",
+      "career_url": "https://www.axelera.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Fourier",
+      "ats_type": "ashby",
+      "identifier": "fourier",
+      "career_url": "https://www.fftai.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "BusPatrol",
+      "ats_type": "ashby",
+      "identifier": "buspatrol",
+      "career_url": "https://buspatrol.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Ensono",
+      "ats_type": "greenhouse",
+      "identifier": "ensono",
+      "career_url": "https://www.ensono.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Addepar",
+      "ats_type": "greenhouse",
+      "identifier": "addepar1",
+      "career_url": "https://addepar.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Thoughtworks",
+      "ats_type": "greenhouse",
+      "identifier": "thoughtworks",
+      "career_url": "https://www.thoughtworks.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Springer Nature",
+      "ats_type": "smartrecruiters",
+      "identifier": "springernature",
+      "career_url": "https://www.springernature.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Synechron",
+      "ats_type": "smartrecruiters",
+      "identifier": "synechron",
+      "career_url": "https://www.synechron.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Loop Health",
+      "ats_type": "smartrecruiters",
+      "identifier": "loophealth",
+      "career_url": "https://www.loophealth.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Nisum",
+      "ats_type": "smartrecruiters",
+      "identifier": "nisum",
+      "career_url": "https://www.nisum.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "ValueLabs",
+      "ats_type": "smartrecruiters",
+      "identifier": "valuelabs",
+      "career_url": "https://www.valuelabs.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Turtlemint",
+      "ats_type": "smartrecruiters",
+      "identifier": "turtlemint",
+      "career_url": "https://www.turtlemint.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "SailPoint",
+      "ats_type": "workday",
+      "identifier": "sailpoint",
+      "career_url": "https://www.sailpoint.com/company/careers",
+      "enabled": true,
+      "category": "india",
+      "workday_datacenter": "wd1",
+      "workday_site": "SailPoint"
+    },
+    {
+      "name": "Accenture",
+      "ats_type": "workday",
+      "identifier": "accenture",
+      "career_url": "https://www.accenture.com/in-en/careers",
+      "enabled": true,
+      "category": "india",
+      "workday_datacenter": "wd103",
+      "workday_site": "AccentureCareers"
+    },
+    {
+      "name": "PwC",
+      "ats_type": "workday",
+      "identifier": "pwc",
+      "career_url": "https://jobs.pwc.com",
+      "enabled": true,
+      "category": "india",
+      "workday_datacenter": "wd3",
+      "workday_site": "Global_Experienced_Careers"
+    },
+    {
+      "name": "Genpact",
+      "ats_type": "workday",
+      "identifier": "genpact",
+      "career_url": "https://www.genpact.com/careers",
+      "enabled": true,
+      "category": "india",
+      "workday_datacenter": "wd108",
+      "workday_site": "External_Careers"
+    },
+    {
+      "name": "Paytm",
+      "ats_type": "lever",
+      "identifier": "paytm",
+      "career_url": "https://jobs.lever.co/paytm",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Deutsche Bank",
+      "ats_type": "workday",
+      "identifier": "db",
+      "career_url": "https://careers.db.com",
+      "enabled": true,
+      "category": "india",
+      "workday_datacenter": "wd3",
+      "workday_site": "DBWebsite"
+    },
+    {
+      "name": "Fiserv",
+      "ats_type": "workday",
+      "identifier": "fiserv",
+      "career_url": "https://www.fiserv.com/en/about-fiserv/careers.html",
+      "enabled": true,
+      "category": "india",
+      "workday_datacenter": "wd5",
+      "workday_site": "EXT"
+    },
+    {
+      "name": "AlphaSense",
+      "ats_type": "greenhouse",
+      "identifier": "alphasense",
+      "career_url": "https://www.alpha-sense.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Airbnb",
+      "ats_type": "greenhouse",
+      "identifier": "airbnb",
+      "career_url": "https://careers.airbnb.com/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Taboola",
+      "ats_type": "greenhouse",
+      "identifier": "taboola",
+      "career_url": "https://www.taboola.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Kong Inc.",
+      "ats_type": "ashby",
+      "identifier": "kong",
+      "career_url": "https://konghq.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Neo4j",
+      "ats_type": "greenhouse",
+      "identifier": "neo4j",
+      "career_url": "https://neo4j.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "SentiLink",
+      "ats_type": "ashby",
+      "identifier": "sentilink",
+      "career_url": "https://sentilink.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Atlys",
+      "ats_type": "ashby",
+      "identifier": "atlys",
+      "career_url": "https://www.atlys.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Nivoda",
+      "ats_type": "ashby",
+      "identifier": "nivoda",
+      "career_url": "https://nivoda.net/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Bitwarden",
+      "ats_type": "greenhouse",
+      "identifier": "bitwarden",
+      "career_url": "https://bitwarden.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Menlo Security",
+      "ats_type": "ashby",
+      "identifier": "menlosecurity",
+      "career_url": "https://www.menlosecurity.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Gather AI",
+      "ats_type": "greenhouse",
+      "identifier": "gatherai",
+      "career_url": "https://www.gather.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Quantanite",
+      "ats_type": "smartrecruiters",
+      "identifier": "quantanite",
+      "career_url": "https://quantanite.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Protegrity",
+      "ats_type": "ashby",
+      "identifier": "protegrity",
+      "career_url": "https://www.protegrity.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Ciroos",
+      "ats_type": "ashby",
+      "identifier": "ciroos",
+      "career_url": "https://ciroos.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "RevenueBase",
+      "ats_type": "ashby",
+      "identifier": "revenuebase-inc",
+      "career_url": "https://www.revenuebase.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Pravāh",
+      "ats_type": "ashby",
+      "identifier": "pravah",
+      "career_url": "https://pravah.io/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Hyde",
+      "ats_type": "ashby",
+      "identifier": "hyde",
+      "career_url": "https://www.hyde.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Jellyfish",
+      "ats_type": "ashby",
+      "identifier": "jellyfish",
+      "career_url": "https://jellyfish.co/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "BOLD",
+      "ats_type": "greenhouse",
+      "identifier": "bold",
+      "career_url": "https://www.bold.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Vyn",
+      "ats_type": "ashby",
+      "identifier": "vyn",
+      "career_url": "https://www.vyn.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Affle",
+      "ats_type": "greenhouse",
+      "identifier": "affle",
+      "career_url": "https://affle.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Freecharge",
+      "ats_type": "smartrecruiters",
+      "identifier": "freecharge",
+      "career_url": "https://www.freecharge.in/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Orion Innovation",
+      "ats_type": "greenhouse",
+      "identifier": "orioninnovation",
+      "career_url": "https://www.orioninc.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "BerryWorks",
+      "ats_type": "smartrecruiters",
+      "identifier": "BerryWorks",
+      "career_url": "https://berryworks.in/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "IQVIA",
+      "ats_type": "workday",
+      "identifier": {
+        "tenant": "iqvia",
+        "client": "wd1",
+        "site": "IQVIA"
+      },
+      "career_url": "https://iqvia.wd1.myworkdayjobs.com/IQVIA",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Strada",
+      "ats_type": "workday",
+      "identifier": {
+        "tenant": "strada",
+        "client": "wd12",
+        "site": "Careers"
+      },
+      "career_url": "https://strada.wd12.myworkdayjobs.com/Careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Aptiv",
+      "ats_type": "workday",
+      "identifier": {
+        "tenant": "aptiv",
+        "client": "wd5",
+        "site": "aptiv_careers"
+      },
+      "career_url": "https://aptiv.wd5.myworkdayjobs.com/aptiv_careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Bridge Global",
+      "ats_type": "smartrecruiters",
+      "identifier": "bridgeglobal",
+      "career_url": "https://www.bridge-global.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "State Street",
+      "ats_type": "workday",
+      "identifier": {
+        "tenant": "statestreet",
+        "client": "wd1",
+        "site": "Global"
+      },
+      "career_url": "https://statestreet.wd1.myworkdayjobs.com/Global",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Arcana Analytics",
+      "ats_type": "greenhouse",
+      "identifier": "arcanaanalytics",
+      "career_url": "https://arcanaanalytics.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Percona",
+      "ats_type": "ashby",
+      "identifier": "percona",
+      "career_url": "https://www.percona.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "eInfochips",
+      "ats_type": "smartrecruiters",
+      "identifier": "EInfochips1",
+      "career_url": "https://www.einfochips.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Volansys Technologies",
+      "ats_type": "smartrecruiters",
+      "identifier": "VolansysTechmnologies",
+      "career_url": "https://volansys.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Conga",
+      "ats_type": "greenhouse",
+      "identifier": "conga",
+      "career_url": "https://conga.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "SmartBear",
+      "ats_type": "greenhouse",
+      "identifier": "smartbear",
+      "career_url": "https://smartbear.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Astera Labs",
+      "ats_type": "greenhouse",
+      "identifier": "asteralabs",
+      "career_url": "https://www.asteralabs.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Indusa",
+      "ats_type": "smartrecruiters",
+      "identifier": "indusa",
+      "career_url": "https://www.indusa.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Speechify",
+      "ats_type": "greenhouse",
+      "identifier": "speechify",
+      "career_url": "https://speechify.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Nissan Digital",
+      "ats_type": "workday",
+      "identifier": {
+        "tenant": "alliance",
+        "client": "wd3",
+        "site": "nissanjobs"
+      },
+      "career_url": "https://alliance.wd3.myworkdayjobs.com/nissanjobs",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Quantiphi",
+      "ats_type": "workday",
+      "identifier": {
+        "tenant": "quantiphi",
+        "client": "wd1",
+        "site": "Careers_at_Quantiphi"
+      },
+      "career_url": "https://quantiphi.wd1.myworkdayjobs.com/Careers_at_Quantiphi",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "AOT Technologies",
+      "ats_type": "greenhouse",
+      "identifier": "aottechnologies",
+      "career_url": "https://www.aottechnologies.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "PAR Technology",
+      "ats_type": "ashby",
+      "identifier": "par%20technology",
+      "career_url": "https://partech.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "iCapital",
+      "ats_type": "greenhouse",
+      "identifier": "icapitalnetwork",
+      "career_url": "https://icapital.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Spaulding Ridge",
+      "ats_type": "greenhouse",
+      "identifier": "spauldingridge",
+      "career_url": "https://www.spauldingridge.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Certa",
+      "ats_type": "ashby",
+      "identifier": "certa",
+      "career_url": "https://www.certa.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "InfoBeans",
+      "ats_type": "smartrecruiters",
+      "identifier": "infobeans",
+      "career_url": "https://www.infobeans.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Stage",
+      "ats_type": "greenhouse",
+      "identifier": "stage",
+      "career_url": "https://stage.in/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Smallest AI",
+      "ats_type": "ashby",
+      "identifier": "smallest",
+      "career_url": "https://smallest.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Airbound",
+      "ats_type": "ashby",
+      "identifier": "airbound",
+      "career_url": "https://www.airbound.co/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Aspora",
+      "ats_type": "ashby",
+      "identifier": "aspora",
+      "career_url": "https://aspora.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Ambient.ai",
+      "ats_type": "ashby",
+      "identifier": "ambient.ai",
+      "career_url": "https://ambient.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Meraki Labs",
+      "ats_type": "ashby",
+      "identifier": "meraki-labs",
+      "career_url": "https://meraki-labs.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Supa",
+      "ats_type": "ashby",
+      "identifier": "supa",
+      "career_url": "https://supahealth.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Libra AI",
+      "ats_type": "ashby",
+      "identifier": "libra",
+      "career_url": "https://libra.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "kAIgentic",
+      "ats_type": "ashby",
+      "identifier": "kaigentic",
+      "career_url": "https://kaigentic.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Reo.dev",
+      "ats_type": "ashby",
+      "identifier": "reo-dev",
+      "career_url": "https://reo.dev/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "CodeRabbit",
+      "ats_type": "ashby",
+      "identifier": "coderabbit",
+      "career_url": "https://coderabbit.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Pebl",
+      "ats_type": "ashby",
+      "identifier": "pebl",
+      "career_url": "https://pebl.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "UptimeAI",
+      "ats_type": "ashby",
+      "identifier": "uptimeai",
+      "career_url": "https://uptimeai.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Bidgely",
+      "ats_type": "ashby",
+      "identifier": "bidgely-inc",
+      "career_url": "https://www.bidgely.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Netgear",
+      "ats_type": "ashby",
+      "identifier": "netgear",
+      "career_url": "https://www.netgear.com/about/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Cyberhaven",
+      "ats_type": "ashby",
+      "identifier": "cyberhaven",
+      "career_url": "https://cyberhaven.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Harvey",
+      "ats_type": "ashby",
+      "identifier": "harvey",
+      "career_url": "https://www.harvey.ai/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Juniper Square",
+      "ats_type": "ashby",
+      "identifier": "junipersquare",
+      "career_url": "https://www.junipersquare.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Skylo Technologies",
+      "ats_type": "ashby",
+      "identifier": "skylo",
+      "career_url": "https://www.skylo.tech/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Ontologize",
+      "ats_type": "ashby",
+      "identifier": "ontologize",
+      "career_url": "https://ontologize.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Ripple Street",
+      "ats_type": "ashby",
+      "identifier": "ripplestreet",
+      "career_url": "https://www.ripplestreet.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Fi Money",
+      "ats_type": "lever",
+      "identifier": "epifi",
+      "career_url": "https://fi.money/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Lokal",
+      "ats_type": "smartrecruiters",
+      "identifier": "lokal",
+      "career_url": "https://getlokalapp.com/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Winbold",
+      "ats_type": "smartrecruiters",
+      "identifier": "winbold",
+      "career_url": "https://winbold.com/careers",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Okta",
+      "ats_type": "greenhouse",
+      "identifier": "okta",
+      "career_url": "https://www.okta.com/company/careers/",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Twilio",
+      "ats_type": "greenhouse",
+      "identifier": "twilio",
+      "career_url": "https://www.twilio.com/company/jobs",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Skill-Lync",
+      "ats_type": "smartrecruiters",
+      "identifier": "skill-lync",
+      "career_url": "https://careers.smartrecruiters.com/skill-lync",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Capco",
+      "ats_type": "greenhouse",
+      "identifier": "capco",
+      "career_url": "https://boards.greenhouse.io/capco",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Neara",
+      "ats_type": "ashby",
+      "identifier": "neara",
+      "career_url": "https://jobs.ashbyhq.com/neara",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "SpotDraft",
+      "ats_type": "ashby",
+      "identifier": "spotdraft",
+      "career_url": "https://jobs.ashbyhq.com/spotdraft",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "CynLr",
+      "ats_type": "ashby",
+      "identifier": "cynlr",
+      "career_url": "https://jobs.ashbyhq.com/cynlr",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Plotline",
+      "ats_type": "ashby",
+      "identifier": "plotlineso",
+      "career_url": "https://jobs.ashbyhq.com/plotlineso",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Altimate.ai",
+      "ats_type": "ashby",
+      "identifier": "altimate",
+      "career_url": "https://jobs.ashbyhq.com/altimate",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Spector.ai",
+      "ats_type": "ashby",
+      "identifier": "spector-ai",
+      "career_url": "https://jobs.ashbyhq.com/spector-ai",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Nightfall AI",
+      "ats_type": "ashby",
+      "identifier": "nightfall-ai",
+      "career_url": "https://jobs.ashbyhq.com/nightfall-ai",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "G2",
+      "ats_type": "ashby",
+      "identifier": "g2",
+      "career_url": "https://jobs.ashbyhq.com/g2",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Fieldguide",
+      "ats_type": "ashby",
+      "identifier": "fieldguide",
+      "career_url": "https://jobs.ashbyhq.com/fieldguide",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Trail",
+      "ats_type": "ashby",
+      "identifier": "trailhq",
+      "career_url": "https://jobs.ashbyhq.com/trailhq",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Augrade",
+      "ats_type": "ashby",
+      "identifier": "augrade",
+      "career_url": "https://jobs.ashbyhq.com/augrade",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Novo",
+      "ats_type": "ashby",
+      "identifier": "novo",
+      "career_url": "https://jobs.ashbyhq.com/novo",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Overview",
+      "ats_type": "ashby",
+      "identifier": "overview",
+      "career_url": "https://jobs.ashbyhq.com/overview",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Point72",
+      "ats_type": "greenhouse",
+      "identifier": "point72",
+      "career_url": "https://boards.greenhouse.io/point72",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "BarRaiser",
+      "ats_type": "smartrecruiters",
+      "identifier": "barraiser",
+      "career_url": "https://careers.smartrecruiters.com/barraiser",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Karya",
+      "ats_type": "greenhouse",
+      "identifier": "karya",
+      "career_url": "https://boards.greenhouse.io/karya",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Docsumo",
+      "ats_type": "lever",
+      "identifier": "docsumo",
+      "career_url": "https://jobs.lever.co/docsumo",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "CertifyOS",
+      "ats_type": "ashby",
+      "identifier": "certifyos",
+      "career_url": "https://jobs.ashbyhq.com/certifyos",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Eurofins",
+      "ats_type": "smartrecruiters",
+      "identifier": "Eurofins",
+      "career_url": "https://careers.smartrecruiters.com/Eurofins",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Oscilar",
+      "ats_type": "ashby",
+      "identifier": "oscilar",
+      "career_url": "https://jobs.ashbyhq.com/oscilar",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Reacher",
+      "ats_type": "ashby",
+      "identifier": "reacher",
+      "career_url": "https://jobs.ashbyhq.com/reacher",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Sensor Tower",
+      "ats_type": "ashby",
+      "identifier": "sensor-tower",
+      "career_url": "https://jobs.ashbyhq.com/sensor-tower",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Temporal Technologies",
+      "ats_type": "ashby",
+      "identifier": "temporal",
+      "career_url": "https://jobs.ashbyhq.com/temporal",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Riveron",
+      "ats_type": "ashby",
+      "identifier": "riveron",
+      "career_url": "https://jobs.ashbyhq.com/riveron",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Fi",
+      "ats_type": "lever",
+      "identifier": "fi",
+      "career_url": "https://jobs.lever.co/fi",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Porter",
+      "ats_type": "lever",
+      "identifier": "porter",
+      "career_url": "https://jobs.lever.co/porter",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Sentient",
+      "ats_type": "ashby",
+      "identifier": "sentient",
+      "career_url": "https://jobs.ashbyhq.com/sentient",
+      "enabled": true,
+      "category": "india"
+    },
+    {
+      "name": "Vultr",
+      "ats_type": "ashby",
+      "identifier": "vultr",
+      "career_url": "https://jobs.ashbyhq.com/vultr",
+      "enabled": true,
+      "category": "india"
+    }
+  ],
+  "abroad": [
+    {
+      "name": "GitLab",
+      "ats_type": "greenhouse",
+      "identifier": "gitlab",
+      "career_url": "https://about.gitlab.com/jobs/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Rubrik",
+      "ats_type": "greenhouse",
+      "identifier": "rubrik",
+      "career_url": "https://www.rubrik.com/company/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Databricks",
+      "ats_type": "greenhouse",
+      "identifier": "databricks",
+      "career_url": "https://www.databricks.com/company/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Apollo.io",
+      "ats_type": "greenhouse",
+      "identifier": "apolloio",
+      "career_url": "https://www.apollo.io/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Abnormal Security",
+      "ats_type": "greenhouse",
+      "identifier": "abnormalsecurity",
+      "career_url": "https://abnormalsecurity.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "6sense",
+      "ats_type": "greenhouse",
+      "identifier": "6sense",
+      "career_url": "https://6sense.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Ethos Life",
+      "ats_type": "greenhouse",
+      "identifier": "ethoslife",
+      "career_url": "https://www.ethoslife.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Elastic",
+      "ats_type": "greenhouse",
+      "identifier": "elastic",
+      "career_url": "https://www.elastic.co/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Deliveroo",
+      "ats_type": "greenhouse",
+      "identifier": "deliveroo",
+      "career_url": "https://careers.deliveroo.co.uk/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Glean",
+      "ats_type": "greenhouse",
+      "identifier": "glean",
+      "career_url": "https://www.glean.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Palantir",
+      "ats_type": "lever",
+      "identifier": "palantir",
+      "career_url": "https://www.palantir.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Wealthfront",
+      "ats_type": "lever",
+      "identifier": "wealthfront",
+      "career_url": "https://www.wealthfront.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Spotify",
+      "ats_type": "lever",
+      "identifier": "spotify",
+      "career_url": "https://www.lifeatspotify.com/jobs",
+      "enabled": true,
+      "location_filter": null,
+      "category": "abroad"
+    },
+    {
+      "name": "Commure",
+      "ats_type": "ashby",
+      "identifier": "commure",
+      "career_url": "https://jobs.ashbyhq.com/commure",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Lambda",
+      "ats_type": "ashby",
+      "identifier": "lambda",
+      "career_url": "https://jobs.ashbyhq.com/lambda",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Zapier",
+      "ats_type": "ashby",
+      "identifier": "zapier",
+      "career_url": "https://jobs.ashbyhq.com/zapier",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Linear",
+      "ats_type": "ashby",
+      "identifier": "linear",
+      "career_url": "https://jobs.ashbyhq.com/linear",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Sentry",
+      "ats_type": "ashby",
+      "identifier": "sentry",
+      "career_url": "https://jobs.ashbyhq.com/sentry",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "LangChain",
+      "ats_type": "ashby",
+      "identifier": "langchain",
+      "career_url": "https://jobs.ashbyhq.com/langchain",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Perplexity",
+      "ats_type": "ashby",
+      "identifier": "perplexity",
+      "career_url": "https://jobs.ashbyhq.com/perplexity",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Together AI",
+      "ats_type": "ashby",
+      "identifier": "together-ai",
+      "career_url": "https://jobs.ashbyhq.com/together-ai",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Nvidia",
+      "ats_type": "workday",
+      "identifier": "nvidia",
+      "career_url": "https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite",
+      "enabled": true,
+      "workday_datacenter": "wd5",
+      "workday_site": "NVIDIAExternalCareerSite",
+      "category": "abroad"
+    },
+    {
+      "name": "Target",
+      "ats_type": "workday",
+      "identifier": "target",
+      "career_url": "https://target.wd5.myworkdayjobs.com/targetcareers",
+      "enabled": true,
+      "workday_datacenter": "wd5",
+      "workday_site": "targetcareers",
+      "category": "abroad"
+    },
+    {
+      "name": "Adobe",
+      "ats_type": "workday",
+      "identifier": "adobe",
+      "career_url": "https://adobe.wd5.myworkdayjobs.com/external_experienced",
+      "enabled": true,
+      "workday_datacenter": "wd5",
+      "workday_site": "external_experienced",
+      "category": "abroad"
+    },
+    {
+      "name": "Autodesk",
+      "ats_type": "workday",
+      "identifier": "autodesk",
+      "career_url": "https://autodesk.wd1.myworkdayjobs.com/Ext",
+      "enabled": true,
+      "workday_datacenter": "wd1",
+      "workday_site": "Ext",
+      "category": "abroad"
+    },
+    {
+      "name": "PayPal",
+      "ats_type": "workday",
+      "identifier": "paypal",
+      "career_url": "https://paypal.wd1.myworkdayjobs.com/jobs",
+      "enabled": true,
+      "workday_datacenter": "wd1",
+      "workday_site": "jobs",
+      "category": "abroad"
+    },
+    {
+      "name": "Mastercard",
+      "ats_type": "workday",
+      "identifier": "mastercard",
+      "career_url": "https://mastercard.wd1.myworkdayjobs.com/CorporateCareers",
+      "enabled": true,
+      "workday_datacenter": "wd1",
+      "workday_site": "CorporateCareers",
+      "category": "abroad"
+    },
+    {
+      "name": "ServiceNow",
+      "ats_type": "smartrecruiters",
+      "identifier": "ServiceNow",
+      "career_url": "https://www.servicenow.com/company/careers.html",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Bosch Group",
+      "ats_type": "smartrecruiters",
+      "identifier": "BoschGroup",
+      "career_url": "https://careers.smartrecruiters.com/BoschGroup",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Avery Dennison",
+      "ats_type": "smartrecruiters",
+      "identifier": "AveryDennison",
+      "career_url": "https://jobs.smartrecruiters.com/AveryDennison",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Ubisoft",
+      "ats_type": "smartrecruiters",
+      "identifier": "Ubisoft2",
+      "career_url": "https://jobs.smartrecruiters.com/Ubisoft2",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "SGS",
+      "ats_type": "smartrecruiters",
+      "identifier": "SGS",
+      "career_url": "https://jobs.smartrecruiters.com/SGS",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "The Codest",
+      "ats_type": "recruitee",
+      "identifier": "thecodest",
+      "career_url": "https://thecodest.recruitee.com",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Transavia",
+      "ats_type": "recruitee",
+      "identifier": "transavia",
+      "career_url": "https://transavia.recruitee.com",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Bunq",
+      "ats_type": "recruitee",
+      "identifier": "bunq",
+      "career_url": "https://bunq.recruitee.com",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Hugging Face",
+      "ats_type": "workable",
+      "identifier": "huggingface",
+      "career_url": "https://apply.workable.com/huggingface",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Stellar Cyber",
+      "ats_type": "workable",
+      "identifier": "stellar-cyber",
+      "career_url": "https://apply.workable.com/stellar-cyber",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Seeq",
+      "ats_type": "workable",
+      "identifier": "seeq",
+      "career_url": "https://apply.workable.com/seeq",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "SOFTSWISS",
+      "ats_type": "teamtailor",
+      "identifier": "softswiss",
+      "career_url": "https://softswiss.teamtailor.com",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Tibber",
+      "ats_type": "teamtailor",
+      "identifier": "tibber",
+      "career_url": "https://tibber.teamtailor.com",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Storytel",
+      "ats_type": "teamtailor",
+      "identifier": "storytel",
+      "career_url": "https://storytel.teamtailor.com",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Personio",
+      "ats_type": "personio",
+      "identifier": "personio",
+      "career_url": "https://personio.jobs.personio.de",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "NavVis",
+      "ats_type": "personio",
+      "identifier": "navvis",
+      "career_url": "https://navvis.jobs.personio.de",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Forto",
+      "ats_type": "personio",
+      "identifier": "forto",
+      "career_url": "https://forto.jobs.personio.de",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Beekeeper",
+      "ats_type": "breezy",
+      "identifier": "beekeeper",
+      "career_url": "https://beekeeper.breezy.hr",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Sprinklr",
+      "ats_type": "breezy",
+      "identifier": "sprinklr",
+      "career_url": "https://sprinklr.breezy.hr",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Anchanto",
+      "ats_type": "greenhouse",
+      "identifier": "anchanto",
+      "career_url": "https://www.anchanto.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Biofourmis",
+      "ats_type": "greenhouse",
+      "identifier": "biofourmis",
+      "career_url": "https://www.biofourmis.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Beam Mobility",
+      "ats_type": "greenhouse",
+      "identifier": "beam",
+      "career_url": "https://www.ridebeam.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Vouch",
+      "ats_type": "smartrecruiters",
+      "identifier": "vouch",
+      "career_url": "https://vouch.sg/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Pave Bank",
+      "ats_type": "ashby",
+      "identifier": "pavebank",
+      "career_url": "https://pavebank.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Conveo",
+      "ats_type": "ashby",
+      "identifier": "conveo",
+      "career_url": "https://conveo.ai/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Ninja Van",
+      "ats_type": "lever",
+      "identifier": "ninjavan",
+      "career_url": "https://www.ninjavan.co/en-sg/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Carousell",
+      "ats_type": "smartrecruiters",
+      "identifier": "CarousellGroup",
+      "career_url": "https://careers.carousell.com/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Deepgram",
+      "ats_type": "ashby",
+      "identifier": "deepgram",
+      "career_url": "https://deepgram.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "ElevenLabs",
+      "ats_type": "ashby",
+      "identifier": "elevenlabs",
+      "career_url": "https://elevenlabs.io/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Exa",
+      "ats_type": "ashby",
+      "identifier": "exa",
+      "career_url": "https://exa.ai/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Fireworks AI",
+      "ats_type": "ashby",
+      "identifier": "fireworks",
+      "career_url": "https://fireworks.ai/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Plaud",
+      "ats_type": "ashby",
+      "identifier": "plaud",
+      "career_url": "https://www.plaud.ai/pages/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Retell AI",
+      "ats_type": "ashby",
+      "identifier": "retell-ai",
+      "career_url": "https://www.retellai.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Axon",
+      "ats_type": "greenhouse",
+      "identifier": "axon",
+      "career_url": "https://www.axon.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Careem",
+      "ats_type": "greenhouse",
+      "identifier": "careem",
+      "career_url": "https://www.careem.com/en-ae/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Tamara",
+      "ats_type": "greenhouse",
+      "identifier": "tamara",
+      "career_url": "https://tamara.me/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Ziina",
+      "ats_type": "ashby",
+      "identifier": "ziina",
+      "career_url": "https://ziina.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Braze",
+      "ats_type": "greenhouse",
+      "identifier": "braze",
+      "career_url": "https://www.braze.com/company/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "AppsFlyer",
+      "ats_type": "greenhouse",
+      "identifier": "appsflyer",
+      "career_url": "https://www.appsflyer.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "BigID",
+      "ats_type": "greenhouse",
+      "identifier": "bigid",
+      "career_url": "https://bigid.com/company/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Legora",
+      "ats_type": "ashby",
+      "identifier": "legora",
+      "career_url": "https://legora.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Ideals",
+      "ats_type": "ashby",
+      "identifier": "ideals",
+      "career_url": "https://www.idealsvdr.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Sparta",
+      "ats_type": "ashby",
+      "identifier": "sparta-commodities",
+      "career_url": "https://sparta.cloud/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Squarepoint Capital",
+      "ats_type": "greenhouse",
+      "identifier": "squarepointcapital",
+      "career_url": "https://www.squarepoint-capital.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "PhysicsX",
+      "ats_type": "greenhouse",
+      "identifier": "physicsx",
+      "career_url": "https://physicsx.ai/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Stability AI",
+      "ats_type": "greenhouse",
+      "identifier": "stabilityai",
+      "career_url": "https://stability.ai/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Cognition AI",
+      "ats_type": "ashby",
+      "identifier": "cognition",
+      "career_url": "https://cognition.ai/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Causaly",
+      "ats_type": "ashby",
+      "identifier": "causaly",
+      "career_url": "https://www.causaly.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "ClearBank",
+      "ats_type": "ashby",
+      "identifier": "clearbank",
+      "career_url": "https://clear.bank/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Freetrade",
+      "ats_type": "ashby",
+      "identifier": "freetrade",
+      "career_url": "https://freetrade.io/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Moneybox",
+      "ats_type": "ashby",
+      "identifier": "moneybox",
+      "career_url": "https://www.moneyboxapp.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Upvest",
+      "ats_type": "ashby",
+      "identifier": "upvest",
+      "career_url": "https://upvest.co/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Permutive",
+      "ats_type": "ashby",
+      "identifier": "permutive",
+      "career_url": "https://permutive.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Weaviate",
+      "ats_type": "ashby",
+      "identifier": "weaviate",
+      "career_url": "https://weaviate.io/company/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Temper",
+      "ats_type": "ashby",
+      "identifier": "temper",
+      "career_url": "https://temper.works/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Overstory",
+      "ats_type": "greenhouse",
+      "identifier": "overstory",
+      "career_url": "https://www.overstory.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Cradle Bio",
+      "ats_type": "ashby",
+      "identifier": "cradlebio",
+      "career_url": "https://www.cradle.bio/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Catawiki",
+      "ats_type": "greenhouse",
+      "identifier": "catawiki",
+      "career_url": "https://careers.catawiki.com/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Crisp",
+      "ats_type": "ashby",
+      "identifier": "crisp",
+      "career_url": "https://crisp.app/en/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Wonderkind",
+      "ats_type": "smartrecruiters",
+      "identifier": "wonderkind",
+      "career_url": "https://wonderkind.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Black Forest Labs",
+      "ats_type": "ashby",
+      "identifier": "black-forest-labs",
+      "career_url": "https://blackforestlabs.ai/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Parloa",
+      "ats_type": "greenhouse",
+      "identifier": "parloa",
+      "career_url": "https://www.parloa.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Taktile",
+      "ats_type": "ashby",
+      "identifier": "taktile",
+      "career_url": "https://www.taktile.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Helsing",
+      "ats_type": "ashby",
+      "identifier": "helsing",
+      "career_url": "https://helsing.ai/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "n8n",
+      "ats_type": "ashby",
+      "identifier": "n8n",
+      "career_url": "https://n8n.io/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "HiveMQ",
+      "ats_type": "ashby",
+      "identifier": "hivemq",
+      "career_url": "https://www.hivemq.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Contentful",
+      "ats_type": "greenhouse",
+      "identifier": "contentful",
+      "career_url": "https://www.contentful.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Plancraft",
+      "ats_type": "ashby",
+      "identifier": "plancraft",
+      "career_url": "https://plancraft.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Flip",
+      "ats_type": "ashby",
+      "identifier": "flip",
+      "career_url": "https://www.flipapp.de/en/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Suger",
+      "ats_type": "lever",
+      "identifier": "suger",
+      "career_url": "https://www.suger.io/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Oneleet",
+      "ats_type": "ashby",
+      "identifier": "oneleet",
+      "career_url": "https://www.oneleet.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "AltaML",
+      "ats_type": "lever",
+      "identifier": "altaml",
+      "career_url": "https://altaml.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Noibu",
+      "ats_type": "ashby",
+      "identifier": "noibu",
+      "career_url": "https://noibu.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Float Financial",
+      "ats_type": "ashby",
+      "identifier": "float",
+      "career_url": "https://floatcard.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Jane App",
+      "ats_type": "ashby",
+      "identifier": "jane",
+      "career_url": "https://jane.app/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Rewind",
+      "ats_type": "ashby",
+      "identifier": "rewind",
+      "career_url": "https://rewind.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Benevity",
+      "ats_type": "ashby",
+      "identifier": "benevity",
+      "career_url": "https://benevity.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Tulip Retail",
+      "ats_type": "greenhouse",
+      "identifier": "tulip",
+      "career_url": "https://tulip.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Cohere",
+      "ats_type": "ashby",
+      "identifier": "cohere",
+      "career_url": "https://cohere.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Dandelion Health",
+      "ats_type": "ashby",
+      "identifier": "dandelionhealth",
+      "career_url": "https://dandelionhealth.ai/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Rilla",
+      "ats_type": "ashby",
+      "identifier": "rilla",
+      "career_url": "https://rilla.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Tailscale",
+      "ats_type": "greenhouse",
+      "identifier": "tailscale",
+      "career_url": "https://tailscale.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Super.com",
+      "ats_type": "greenhouse",
+      "identifier": "super",
+      "career_url": "https://www.super.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Neo Financial",
+      "ats_type": "ashby",
+      "identifier": "neofinancial",
+      "career_url": "https://www.neofinancial.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Wealthsimple",
+      "ats_type": "ashby",
+      "identifier": "wealthsimple",
+      "career_url": "https://www.wealthsimple.com/en-ca/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Clipboard Health",
+      "ats_type": "ashby",
+      "identifier": "clipboard",
+      "career_url": "https://clipboardhealth.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Lyrebird Health",
+      "ats_type": "lever",
+      "identifier": "lyrebirdhealth",
+      "career_url": "https://www.lyrebirdhealth.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Airwallex",
+      "ats_type": "ashby",
+      "identifier": "airwallex",
+      "career_url": "https://www.airwallex.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Blinq",
+      "ats_type": "lever",
+      "identifier": "blinq",
+      "career_url": "https://blinq.me/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "SonderMind",
+      "ats_type": "ashby",
+      "identifier": "sondermind",
+      "career_url": "https://www.sondermind.com/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Qwilr",
+      "ats_type": "smartrecruiters",
+      "identifier": "qwilr",
+      "career_url": "https://qwilr.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Brighte",
+      "ats_type": "lever",
+      "identifier": "brighte",
+      "career_url": "https://brighte.com.au/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "HealthMatch",
+      "ats_type": "ashby",
+      "identifier": "healthmatch",
+      "career_url": "https://healthmatch.io/careers",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Canva",
+      "ats_type": "smartrecruiters",
+      "identifier": "canva",
+      "career_url": "https://www.canva.com/careers/",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "CitySwift",
+      "ats_type": "greenhouse",
+      "identifier": "cityswift",
+      "career_url": "https://boards.greenhouse.io/cityswift",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "CarTrawler",
+      "ats_type": "lever",
+      "identifier": "cartrawler",
+      "career_url": "https://jobs.lever.co/cartrawler",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Evervault",
+      "ats_type": "ashby",
+      "identifier": "evervault",
+      "career_url": "https://jobs.ashbyhq.com/evervault",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Swoop Funding",
+      "ats_type": "ashby",
+      "identifier": "swoop",
+      "career_url": "https://jobs.ashbyhq.com/swoop",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Teamwork",
+      "ats_type": "smartrecruiters",
+      "identifier": "teamworkcorporate",
+      "career_url": "https://jobs.smartrecruiters.com/TeamworkCorporate",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Reaktor",
+      "ats_type": "ashby",
+      "identifier": "reaktor",
+      "career_url": "https://jobs.ashbyhq.com/reaktor",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Orbisk",
+      "ats_type": "greenhouse",
+      "identifier": "orbisk",
+      "career_url": "https://boards.greenhouse.io/orbisk",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Lemonade Tech",
+      "ats_type": "ashby",
+      "identifier": "lemonade",
+      "career_url": "https://jobs.ashbyhq.com/lemonade",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Quantware",
+      "ats_type": "ashby",
+      "identifier": "quantware",
+      "career_url": "https://jobs.ashbyhq.com/quantware",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "PULSE",
+      "ats_type": "ashby",
+      "identifier": "pulse",
+      "career_url": "https://jobs.ashbyhq.com/pulse",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Source.ag",
+      "ats_type": "lever",
+      "identifier": "source",
+      "career_url": "https://jobs.lever.co/source",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Patronus",
+      "ats_type": "ashby",
+      "identifier": "patronus",
+      "career_url": "https://jobs.ashbyhq.com/patronus",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Avelios Medical",
+      "ats_type": "ashby",
+      "identifier": "avelios-medical",
+      "career_url": "https://jobs.ashbyhq.com/avelios-medical",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Cortea",
+      "ats_type": "ashby",
+      "identifier": "cortea",
+      "career_url": "https://jobs.ashbyhq.com/cortea",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Symbiotic",
+      "ats_type": "ashby",
+      "identifier": "symbiotic",
+      "career_url": "https://jobs.ashbyhq.com/symbiotic",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Remberg",
+      "ats_type": "ashby",
+      "identifier": "remberg",
+      "career_url": "https://jobs.ashbyhq.com/remberg",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Signal AI",
+      "ats_type": "ashby",
+      "identifier": "signal-ai",
+      "career_url": "https://jobs.ashbyhq.com/signal-ai",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Reflow",
+      "ats_type": "ashby",
+      "identifier": "reflow",
+      "career_url": "https://jobs.ashbyhq.com/reflow",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Morse Micro",
+      "ats_type": "ashby",
+      "identifier": "morse-micro",
+      "career_url": "https://jobs.ashbyhq.com/morse-micro",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Mable",
+      "ats_type": "smartrecruiters",
+      "identifier": "mable",
+      "career_url": "https://jobs.smartrecruiters.com/Mable",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Modal Labs",
+      "ats_type": "ashby",
+      "identifier": "modal",
+      "career_url": "https://jobs.ashbyhq.com/modal",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Anyscale",
+      "ats_type": "ashby",
+      "identifier": "anyscale",
+      "career_url": "https://jobs.ashbyhq.com/anyscale",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Baseten",
+      "ats_type": "ashby",
+      "identifier": "baseten",
+      "career_url": "https://jobs.ashbyhq.com/baseten",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Hex Technologies",
+      "ats_type": "ashby",
+      "identifier": "hex",
+      "career_url": "https://jobs.ashbyhq.com/hex",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Chroma",
+      "ats_type": "ashby",
+      "identifier": "trychroma",
+      "career_url": "https://jobs.ashbyhq.com/trychroma",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Anysphere",
+      "ats_type": "ashby",
+      "identifier": "cursor",
+      "career_url": "https://jobs.ashbyhq.com/cursor",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "E2B",
+      "ats_type": "ashby",
+      "identifier": "e2b",
+      "career_url": "https://jobs.ashbyhq.com/e2b",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "LlamaIndex",
+      "ats_type": "ashby",
+      "identifier": "llamaindex",
+      "career_url": "https://jobs.ashbyhq.com/llamaindex",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Braintrust",
+      "ats_type": "ashby",
+      "identifier": "braintrust",
+      "career_url": "https://jobs.ashbyhq.com/braintrust",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Pika",
+      "ats_type": "ashby",
+      "identifier": "pika",
+      "career_url": "https://jobs.ashbyhq.com/pika",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Replit",
+      "ats_type": "ashby",
+      "identifier": "replit",
+      "career_url": "https://jobs.ashbyhq.com/replit",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Cartesia",
+      "ats_type": "ashby",
+      "identifier": "cartesia",
+      "career_url": "https://jobs.ashbyhq.com/cartesia",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Pinecone",
+      "ats_type": "ashby",
+      "identifier": "pinecone",
+      "career_url": "https://jobs.ashbyhq.com/pinecone",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Runway",
+      "ats_type": "ashby",
+      "identifier": "runway",
+      "career_url": "https://jobs.ashbyhq.com/runway",
+      "enabled": true,
+      "category": "abroad"
+    },
+    {
+      "name": "Cerebras Systems",
+      "ats_type": "ashby",
+      "identifier": "cerebras",
+      "career_url": "https://jobs.ashbyhq.com/cerebras",
+      "enabled": true,
+      "category": "abroad"
+    }
+  ]
+}

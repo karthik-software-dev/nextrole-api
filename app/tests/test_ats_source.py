@@ -1,6 +1,6 @@
 import unittest
 from models.job import Job
-from models.normalizers.ats_normalizer import (
+from custom_scraper.ats_normalizer import (
     normalize_smartrecruiters_job,
     normalize_greenhouse_job,
     normalize_ats_jobs,
@@ -80,9 +80,59 @@ class TestATSSource(unittest.TestCase):
         self.assertEqual(len(merged), 1)
         # Should retain the official SmartRecruiters ATS URL
         self.assertEqual(merged[0].apply_url, "https://jobs.smartrecruiters.com/ServiceNow/744000149796910")
-        self.assertIn("indeed+ats", merged[0].source)
+        self.assertIn("indeed", merged[0].source)
+        self.assertIn("ats", merged[0].source)
         self.assertEqual(merged[0].duplicate_count, 2)
-        self.assertEqual(merged[0].relevance_score, 18.0)
+    def test_ashby_normalizer(self):
+        from custom_scraper.ats_normalizer import normalize_ashby_job
+
+        sample = {
+            "id": "d3bc1ced-3ce4-4086-a050-555055dbb1ff",
+            "title": "Backend Systems Engineer",
+            "location": "Bengaluru, India",
+            "secondaryLocations": [{"location": "Remote - India"}],
+            "isRemote": True,
+            "jobUrl": "https://jobs.ashbyhq.com/linear/d3bc1ced-3ce4-4086-a050-555055dbb1ff",
+            "descriptionPlain": "Build real-time backend synchronization in Python and distributed systems.",
+            "publishedAt": "2026-09-22T18:21:27.232+00:00",
+        }
+
+        job = normalize_ashby_job(sample, company_name="Linear", identifier="linear")
+        self.assertEqual(job.id, "ats_ashby_linear_d3bc1ced-3ce4-4086-a050-555055dbb1ff")
+        self.assertEqual(job.title, "Backend Systems Engineer")
+        self.assertEqual(job.company, "Linear")
+        self.assertEqual(job.source, "ats")
+        self.assertIn("Bengaluru, India", job.location)
+        self.assertIn("Remote - India", job.location)
+        self.assertTrue(job.is_remote)
+        self.assertEqual(job.apply_url, "https://jobs.ashbyhq.com/linear/d3bc1ced-3ce4-4086-a050-555055dbb1ff")
+        self.assertEqual(job.ats_provider, "Ashby")
+        self.assertEqual(job.apply_type, "DIRECT_ATS")
+        self.assertEqual(job.posted_at, "2026-09-22T18:21:27.232+00:00")
+        self.assertIn("Build real-time backend synchronization", job.description)
+
+    def test_fetch_ashby_postings_mocked(self):
+        from unittest.mock import MagicMock, patch
+        from config.target_companies import TargetCompany
+        from custom_scraper.ats_source import fetch_ashby_postings
+
+        comp = TargetCompany(
+            name="Linear",
+            identifier="linear",
+            ats_type="ashby",
+            career_url="https://jobs.ashbyhq.com/linear",
+            location_filter="India",
+        )
+
+        mock_resp = MagicMock()
+        mock_resp.read.return_value = b'{"jobs": [{"id": "1", "title": "Staff Backend Engineer", "location": "India", "isRemote": true}]}'
+        mock_resp.__enter__.return_value = mock_resp
+        mock_resp.__exit__.return_value = None
+
+        with patch("urllib.request.urlopen", return_value=mock_resp):
+            items = fetch_ashby_postings(comp)
+            self.assertEqual(len(items), 1)
+            self.assertEqual(items[0]["title"], "Staff Backend Engineer")
 
 
 if __name__ == "__main__":

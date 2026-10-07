@@ -23,8 +23,18 @@ DEFAULT_SCORING_PREFERENCES = {
     "min_experience": 1,
     "max_experience": 5,
     "min_score": 8.0,
+    "min_salary_lpa": 4.0,
+    "target_salary_min_lpa": 5.0,
+    "target_salary_max_lpa": 15.0,
     "target_locations": ["Bangalore", "Chennai", "Remote"],
 }
+
+DEFAULT_SKILLS = [
+    "Python", "FastAPI", "SQLAlchemy", "PostgreSQL", "Redis",
+    "RabbitMQ", "Celery", "System Design", "Scalability",
+    "Data Structures & Algorithms", "Linear DSA", "Problem Solving",
+    "Clean Code & SOLID", "REST APIs", "Docker", "Git"
+]
 
 
 class SettingsService:
@@ -71,6 +81,7 @@ class SettingsService:
             name=user.name,
             email=user.email,
             target_role=user.target_role,
+            skills=prefs.get("skills", DEFAULT_SKILLS),
         )
 
         raw_token = prefs.get("apify_api_token") or os.getenv("APIFY_API_TOKEN") or ""
@@ -97,6 +108,10 @@ class SettingsService:
                 user.email = payload.profile.email.strip()
             if payload.profile.target_role is not None and payload.profile.target_role.strip():
                 user.target_role = payload.profile.target_role.strip()
+            if payload.profile.skills is not None:
+                clean_skills = [s.strip() for s in payload.profile.skills if s.strip()]
+                current_prefs["skills"] = clean_skills
+                prefs_changed = True
 
         # 2. Update Scoring Preferences if provided
         if payload.scoring:
@@ -141,7 +156,7 @@ class SettingsService:
         url = f"https://api.apify.com/v2/users/me?token={clean_token}"
         req = urllib.request.Request(
             url,
-            headers={"User-Agent": "CareerPilot-JobAgent/1.0"},
+            headers={"User-Agent": "JobScout/1.0"},
             method="GET",
         )
         try:

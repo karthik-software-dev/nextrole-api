@@ -41,6 +41,7 @@ def _to_application_out(app: Application) -> ApplicationOut:
             priority_score=float(j.priority_score),
             priority_tier=j.priority_tier,
             status=j.status,
+            application_status=app.status,
             source_count=j.source_count,
             is_active=j.is_active,
             tags=j.tags or [],
@@ -171,3 +172,15 @@ class ApplicationService:
         stmt = stmt.order_by(Application.updated_at.desc())
         apps = session.scalars(stmt).all()
         return [_to_application_out(a) for a in apps]
+
+    @staticmethod
+    def delete_application_by_job_id(
+        session: Session,
+        job_id: int,
+        user_id: int = 1,
+    ) -> bool:
+        """Deletes an application for a job (e.g. un-saving a draft) and commits."""
+        deleted = ApplicationRepository.delete_by_job_id(session=session, user_id=user_id, job_id=job_id)
+        if deleted:
+            session.commit()
+        return deleted

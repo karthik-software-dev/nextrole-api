@@ -38,3 +38,7 @@ export const updateApplication = async (appId: number, payload: UpdateApplicatio
   const response = await apiClient.patch<Application>(`/applications/${appId}`, payload);
   return response.data;
 };
+
+export const deleteApplicationByJobId = async (jobId: number): Promise<void> => {
+  await apiClient.delete(`/applications/job/${jobId}`);
+};

@@ -19,6 +19,7 @@ __pycache__/
 # IDE & Editors
 .vscode/
 .idea/
+.agents/mcp_config.json
 *.swp
 *.swo
 
@@ -31,3 +32,5 @@ data/
 app/data/
 scratch/
 *.cache.json
+job scrapper/
+

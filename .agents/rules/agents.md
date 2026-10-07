@@ -98,11 +98,11 @@ trigger: always_on
 ## 9. Git Workflow & Safety
 
 ```text
-dev2 → dev → main
+dev → main
 ```
 
-* Develop locally on `dev2`.
-* Never develop directly on `dev` or `main`.
+* Develop locally on `dev`.
+* Never develop directly on `main`.
 * Always check `git status` and the current branch before Git operations.
 * Never include unrelated changes in a commit.
 * Never push unless explicitly requested.
@@ -112,12 +112,11 @@ When instructed to **"push the code"**:
 1. Review changes.
 2. Review `git diff`.
 3. Review staged files using `git diff --staged`.
-4. Commit only related changes.
-5. Merge `dev2 → dev`.
-6. Verify/test `dev`.
-7. Merge `dev → main`.
-8. Verify `dev` and `main` point to the same tested commit.
-9. Push the tested code.
+4. Commit only related changes on `dev`.
+5. Verify/test `dev`.
+6. Merge `dev → main`.
+7. Verify `dev` and `main` point to the same tested commit.
+8. Push the tested code.
 
 Never force-push, reset/discard changes, delete branches, destructively rebase, or overwrite unrelated work without explicit approval.
 

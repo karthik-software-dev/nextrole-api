@@ -14,6 +14,7 @@ import {
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useDiscovery } from '../../context/DiscoveryContext';
+import { useAuth } from '../../context/AuthContext';
 import { getSettings } from '../../api/settings';
 
 interface NavItem {
@@ -31,7 +32,8 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
   const location = useLocation();
   const { theme, toggleTheme } = useTheme();
   const { lastRunAt } = useDiscovery();
-  const [userName, setUserName] = React.useState('Karthik');
+  const { user } = useAuth();
+  const [userName, setUserName] = React.useState('Rahul Karthik');
 
   React.useEffect(() => {
     let isMounted = true;
@@ -43,6 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
       })
       .catch(() => { });
     return () => {
+
       isMounted = false;
     };
   }, []);
@@ -192,12 +195,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
                   title="Open Settings"
                 >
                   <div className="h-8 w-8 rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold text-xs flex items-center justify-center border border-indigo-200/80 dark:border-indigo-800/60 shadow-2xs shrink-0 group-hover:scale-105 transition-transform">
-                    {userName ? userName.charAt(0).toUpperCase() : 'K'}
+                    {(user?.name || userName).charAt(0).toUpperCase()}
                   </div>
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] font-bold text-slate-900 dark:text-slate-100 truncate leading-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-                      {userName ? userName.split(' ')[0] : 'Karthik'}
+                      {(user?.name || userName).split(' ')[0]}
                     </p>
+
                     <p className="text-[10.5px] text-slate-500 dark:text-slate-400 truncate leading-tight">
                       Account Settings
                     </p>

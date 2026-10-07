@@ -22,7 +22,9 @@ class User(Base, TimestampMixin, ActiveMixin):
         default="Python Backend Engineer",
         nullable=False,
     )
+    hashed_password: Mapped[str | None] = mapped_column(String(255), nullable=True)
     preferences_json: Mapped[dict] = mapped_column(JSONB, default=dict, nullable=False)
+
 
     # Relationships
     applications: Mapped[list["Application"]] = relationship(

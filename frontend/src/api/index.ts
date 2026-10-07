@@ -7,4 +7,6 @@ export * from './discovery';
 export * from './analytics';
 export * from './settings';
 export * from './notifications';
+export * from './auth';
+
 

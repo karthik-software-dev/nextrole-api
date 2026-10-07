@@ -36,20 +36,17 @@ def trigger_discovery_run(
     payload: DiscoveryRunIn,
     background_tasks: BackgroundTasks,
 ) -> dict[str, str]:
-    """Launches the multi-source scraper pipeline asynchronously in the background."""
-    current_status = DiscoveryService.get_status()
-    if current_status.is_running:
-        return {
-            "message": "Discovery run is already in progress.",
-            "status": "running",
-        }
-
-    background_tasks.add_task(
-        DiscoveryService.run_pipeline,
+    started = DiscoveryService.start_pipeline_async(
+        background_tasks=background_tasks,
         source=payload.source,
         location=payload.location,
         use_cache=payload.use_cache,
     )
+    if not started:
+        return {
+            "message": "Discovery run is already in progress.",
+            "status": "running",
+        }
 
     return {
         "message": f"Discovery pipeline initiated in background (source={payload.source}, location={payload.location}).",

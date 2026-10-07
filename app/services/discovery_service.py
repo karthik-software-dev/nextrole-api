@@ -187,6 +187,33 @@ class DiscoveryService:
         return result
 
     @classmethod
+    def start_pipeline_async(
+        cls,
+        background_tasks: Any,
+        source: str = "all",
+        location: str = "all",
+        use_cache: bool = True,
+    ) -> bool:
+        """Atomically marks discovery status as running and enqueues worker in BackgroundTasks."""
+        with cls._lock:
+            if cls._is_running:
+                logger.warning("Discovery pipeline is already running. Skipping concurrent run.")
+                return False
+            cls._is_running = True
+            cls._last_status = "running"
+            cls._last_error = None
+            cls._last_jobs_found = 0
+            cls._last_jobs_synced = 0
+
+        background_tasks.add_task(
+            cls._execute_pipeline,
+            source=source,
+            location=location,
+            use_cache=use_cache,
+        )
+        return True
+
+    @classmethod
     def run_pipeline(
         cls,
         source: str = "all",
@@ -200,10 +227,27 @@ class DiscoveryService:
                 logger.warning("Discovery pipeline is already running. Skipping concurrent run.")
                 return
             cls._is_running = True
+            cls._last_status = "running"
+            cls._last_error = None
+            cls._last_jobs_found = 0
+            cls._last_jobs_synced = 0
 
-        cls._last_status = "running"
-        cls._last_error = None
+        cls._execute_pipeline(
+            source=source,
+            location=location,
+            use_cache=use_cache,
+            custom_fetchers=custom_fetchers,
+        )
 
+    @classmethod
+    def _execute_pipeline(
+        cls,
+        source: str = "all",
+        location: str = "all",
+        use_cache: bool = True,
+        custom_fetchers: list | None = None,
+    ) -> None:
+        """Internal execution body for the discovery pipeline."""
         start_time = time.perf_counter()
         try:
             logger.info(f"Starting discovery run (source={source}, location={location}, cache={use_cache})")

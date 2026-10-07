@@ -110,7 +110,7 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         if (!isMounted) return;
         if (st?.last_run_at) {
           const d = new Date(st.last_run_at);
-          setLastRunAt(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
+          setLastRunAt(d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' }));
         }
         if (st?.last_jobs_synced) {
           setLastSyncedCount(st.last_jobs_synced);
@@ -207,15 +207,13 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           return { message: 'Discovery task queued' };
         });
 
-        // Brief tick to allow backend background task to register in-memory status
-        await new Promise((r) => setTimeout(r, 600));
-
         let pollCount = 0;
         let isBackendRunning = true;
+        let hasSeenRunning = false;
         let lastFetchedStatus = null;
 
         // Poll backend /api/v1/discovery/status until background tasks finish
-        while (isBackendRunning && pollCount < 120) {
+        while (isBackendRunning && pollCount < 180) {
           if (isCancelledRef.current) {
             break;
           }
@@ -230,15 +228,22 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
             break;
           }
 
+          // Wait 1 second between polls
+          await new Promise((r) => setTimeout(r, 1000));
           pollCount++;
-          const elapsedSec = Math.round(pollCount * 1.5);
+          const elapsedSec = pollCount;
 
           try {
             const st = await getDiscoveryStatus();
             lastFetchedStatus = st;
-            isBackendRunning = st.is_running;
 
-            if (!isBackendRunning) {
+            if (st.is_running || st.last_status === 'running') {
+              hasSeenRunning = true;
+            }
+
+            // Only complete when backend is not running AND it was observed running (or minimum 2 polls checked)
+            if (!st.is_running && st.last_status !== 'running' && (hasSeenRunning || pollCount >= 2)) {
+              isBackendRunning = false;
               break;
             }
 
@@ -248,6 +253,10 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
                 addLog('net', 'CACHE', 'Loading pre-cached postings from local snapshot storage across 30 sources...');
               } else if (pollCount === 2) {
                 addLog('parse', 'PARSE', 'Normalizing job schema records and eliminating duplicates...');
+              } else if (pollCount === 4) {
+                addLog('tier', 'TIER', 'Evaluating relevance threshold and computing priority tiers...');
+              } else if (pollCount === 6) {
+                addLog('db', 'POSTGRES', 'Writing transactional upserts to PostgreSQL (localhost:5432/job_agent)...');
               }
             } else {
               // Live Scraping Progress Logging

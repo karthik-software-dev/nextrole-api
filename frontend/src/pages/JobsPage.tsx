@@ -14,6 +14,7 @@ import {
   RotateCcw,
   ChevronDown,
   Check,
+  CheckCircle2,
   Bookmark,
   Building2,
   Sparkles,
@@ -52,6 +53,7 @@ const LOC_LABELS: Record<string, string> = {
   BANGALORE: 'Bangalore',
   CHENNAI: 'Chennai',
   REMOTE_INDIA: 'Remote (IN)',
+  OTHER: 'Other Hubs (Pune, Hyd, NCR)',
   ABROAD: 'Abroad / Expat',
 };
 
@@ -60,6 +62,27 @@ const SAL_LABELS: Record<string, string> = {
   '8-15': '8–15 Lakhs',
   '15-25': '15–25 Lakhs',
   '25+': '25+ Lakhs',
+  undisclosed: 'Not Disclosed',
+};
+
+const TIER_LABELS: Record<string, string> = {
+  tier1: 'Tier 1 (High)',
+  tier2: 'Tier 2 (Solid)',
+  tier3: 'Tier 3 (Standard)',
+};
+
+const STATUS_LABELS: Record<string, string> = {
+  unapplied: 'Not Applied',
+  drafted: 'Drafted',
+  applied: 'Applied',
+  interviewing: 'Interviewing',
+};
+
+const FRESHNESS_LABELS: Record<number, string> = {
+  1: 'Past 24 Hours',
+  3: 'Past 3 Days',
+  7: 'Past 7 Days',
+  14: 'Past 14 Days',
 };
 
 export const JobsPage: React.FC = () => {
@@ -95,13 +118,25 @@ export const JobsPage: React.FC = () => {
   });
 
   const [selectedSalary, setSelectedSalary] = useState<string>(searchParams.get('salary') || 'all');
+  const [selectedSource, setSelectedSource] = useState<string>(() => {
+    return searchParams.get('source') || 'all';
+  });
+  const [selectedAppStatus, setSelectedAppStatus] = useState<string>(() => {
+    return searchParams.get('app_status') || 'all';
+  });
+  const [selectedFreshness, setSelectedFreshness] = useState<number | null>(() => {
+    const fromUrl = searchParams.get('days');
+    return fromUrl ? parseInt(fromUrl, 10) : null;
+  });
   const [selectedMinScore, setSelectedMinScore] = useState<number | null>(() => {
     const fromUrl = searchParams.get('min_score');
     return fromUrl ? parseFloat(fromUrl) : null;
   });
 
   // Floating dropdown popover state for filter pills
-  const [openDropdown, setOpenDropdown] = useState<'workMode' | 'experience' | 'location' | 'salary' | null>(null);
+  const [openDropdown, setOpenDropdown] = useState<
+    'workMode' | 'experience' | 'location' | 'salary' | 'tier' | 'source' | 'appStatus' | 'freshness' | null
+  >(null);
   const filterPillsRef = useRef<HTMLDivElement>(null);
 
   // Dismiss floating dropdown on click outside or Escape key
@@ -309,6 +344,10 @@ export const JobsPage: React.FC = () => {
     const urlLoc = searchParams.get('location') || 'all';
     const urlWorkMode = searchParams.get('work_mode') || 'all';
     const urlMaxExp = searchParams.get('max_exp');
+    const urlSalary = searchParams.get('salary') || 'all';
+    const urlSource = searchParams.get('source') || 'all';
+    const urlAppStatus = searchParams.get('app_status') || 'all';
+    const urlDays = searchParams.get('days');
     const urlMinScore = searchParams.get('min_score');
     const urlSelected = searchParams.get('selected');
 
@@ -319,6 +358,13 @@ export const JobsPage: React.FC = () => {
     setSelectedExp((prev) => {
       if (urlMaxExp) return parseInt(urlMaxExp, 10);
       return prev !== null ? prev : 2;
+    });
+    setSelectedSalary((prev) => (prev !== urlSalary ? urlSalary : prev));
+    setSelectedSource((prev) => (prev !== urlSource ? urlSource : prev));
+    setSelectedAppStatus((prev) => (prev !== urlAppStatus ? urlAppStatus : prev));
+    setSelectedFreshness((prev) => {
+      if (urlDays) return parseInt(urlDays, 10);
+      return null;
     });
     setSelectedMinScore((prev) => {
       const parsed = urlMinScore ? parseFloat(urlMinScore) : null;
@@ -345,7 +391,20 @@ export const JobsPage: React.FC = () => {
 
   useEffect(() => {
     fetchJobs();
-  }, [currentPage, pageSize, selectedTier, selectedLocation, selectedWorkMode, selectedExp, selectedSalary, selectedMinScore, lastRunAt]);
+  }, [
+    currentPage,
+    pageSize,
+    selectedTier,
+    selectedLocation,
+    selectedWorkMode,
+    selectedExp,
+    selectedSalary,
+    selectedSource,
+    selectedAppStatus,
+    selectedFreshness,
+    selectedMinScore,
+    lastRunAt,
+  ]);
 
   const fetchJobs = async (searchOverride?: string) => {
     const requestId = ++activeRequestIdRef.current;
@@ -362,6 +421,10 @@ export const JobsPage: React.FC = () => {
       if (selectedLocation !== 'all') params.location = selectedLocation;
       if (selectedWorkMode !== 'all') params.work_mode = selectedWorkMode;
       if (selectedExp !== null && selectedExp < 5) params.max_exp = selectedExp;
+      if (selectedSalary !== 'all') params.salary = selectedSalary;
+      if (selectedSource !== 'all') params.source = selectedSource;
+      if (selectedAppStatus !== 'all') params.app_status = selectedAppStatus;
+      if (selectedFreshness !== null) params.days = selectedFreshness;
       if (selectedMinScore !== null) params.min_score = selectedMinScore;
 
       const res = await getJobs(params);
@@ -441,6 +504,34 @@ export const JobsPage: React.FC = () => {
     updateUrlParam('min_score', score !== null ? score.toString() : null);
   };
 
+  const handleTierChange = (tier: string) => {
+    const nextTier = selectedTier === tier ? 'all' : tier;
+    setSelectedTier(nextTier);
+    setCurrentPage(1);
+    updateUrlParam('tier', nextTier === 'all' ? null : nextTier);
+  };
+
+  const handleSourceChange = (src: string) => {
+    const nextSource = selectedSource === src ? 'all' : src;
+    setSelectedSource(nextSource);
+    setCurrentPage(1);
+    updateUrlParam('source', nextSource === 'all' ? null : nextSource);
+  };
+
+  const handleAppStatusChange = (status: string) => {
+    const nextStatus = selectedAppStatus === status ? 'all' : status;
+    setSelectedAppStatus(nextStatus);
+    setCurrentPage(1);
+    updateUrlParam('app_status', nextStatus === 'all' ? null : nextStatus);
+  };
+
+  const handleFreshnessChange = (days: number | null) => {
+    const nextDays = selectedFreshness === days ? null : days;
+    setSelectedFreshness(nextDays);
+    setCurrentPage(1);
+    updateUrlParam('days', nextDays !== null ? nextDays.toString() : null);
+  };
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setCurrentPage(1);
@@ -462,6 +553,9 @@ export const JobsPage: React.FC = () => {
     setSelectedWorkMode('all');
     setSelectedExp(2); // Reset to default 2 Yrs target
     setSelectedSalary('all');
+    setSelectedSource('all');
+    setSelectedAppStatus('all');
+    setSelectedFreshness(null);
     setSelectedMinScore(null);
     setCurrentPage(1);
     setSearchParams(new URLSearchParams(), { replace: true });
@@ -511,12 +605,30 @@ export const JobsPage: React.FC = () => {
   if (selectedTier !== 'all') {
     activeFiltersList.push({
       key: 'tier',
-      label: selectedTier.toUpperCase(),
-      onRemove: () => {
-        setSelectedTier('all');
-        setCurrentPage(1);
-        updateUrlParam('tier', null);
-      },
+      label: TIER_LABELS[selectedTier] || selectedTier.toUpperCase(),
+      onRemove: () => handleTierChange(selectedTier),
+    });
+  }
+  if (selectedSource !== 'all') {
+    const srcObj = filterCounts?.sources?.find(s => s.key === selectedSource);
+    activeFiltersList.push({
+      key: 'source',
+      label: `Source: ${srcObj?.label || selectedSource}`,
+      onRemove: () => handleSourceChange(selectedSource),
+    });
+  }
+  if (selectedAppStatus !== 'all') {
+    activeFiltersList.push({
+      key: 'app_status',
+      label: `Status: ${STATUS_LABELS[selectedAppStatus] || selectedAppStatus}`,
+      onRemove: () => handleAppStatusChange(selectedAppStatus),
+    });
+  }
+  if (selectedFreshness !== null) {
+    activeFiltersList.push({
+      key: 'freshness',
+      label: FRESHNESS_LABELS[selectedFreshness] || `Past ${selectedFreshness}d`,
+      onRemove: () => handleFreshnessChange(null),
     });
   }
   if (selectedMinScore !== null) {
@@ -530,24 +642,58 @@ export const JobsPage: React.FC = () => {
   const hasActiveFilters = activeFiltersList.length > 0;
 
   const workModeOptions = [
-    { key: 'wfo', label: 'Work from office', count: filterCounts?.work_modes.find(m => m.key === 'wfo')?.count ?? 80 },
-    { key: 'wfh', label: 'Work from home', count: filterCounts?.work_modes.find(m => m.key === 'wfh')?.count ?? 20 },
-    { key: 'hybrid', label: 'Hybrid', count: filterCounts?.work_modes.find(m => m.key === 'hybrid')?.count ?? 15 },
-    { key: 'abroad', label: 'Abroad / Relocation', count: filterCounts?.work_modes.find(m => m.key === 'abroad')?.count ?? 26 },
+    { key: 'wfo', label: 'Work from office', count: filterCounts?.work_modes.find(m => m.key === 'wfo')?.count ?? 0 },
+    { key: 'wfh', label: 'Work from home', count: filterCounts?.work_modes.find(m => m.key === 'wfh')?.count ?? 0 },
+    { key: 'hybrid', label: 'Hybrid', count: filterCounts?.work_modes.find(m => m.key === 'hybrid')?.count ?? 0 },
+    { key: 'abroad', label: 'Abroad / Relocation', count: filterCounts?.work_modes.find(m => m.key === 'abroad')?.count ?? 0 },
   ];
 
   const locationOptions = [
-    { key: 'BANGALORE', label: 'Bangalore', count: filterCounts?.locations.find(l => l.key === 'BANGALORE')?.count ?? 69 },
-    { key: 'CHENNAI', label: 'Chennai', count: filterCounts?.locations.find(l => l.key === 'CHENNAI')?.count ?? 22 },
-    { key: 'REMOTE_INDIA', label: 'Remote (IN)', count: filterCounts?.locations.find(l => l.key === 'REMOTE_INDIA')?.count ?? 3 },
-    { key: 'ABROAD', label: 'Abroad / Expat', count: filterCounts?.locations.find(l => l.key === 'ABROAD')?.count ?? 26 },
+    { key: 'BANGALORE', label: 'Bangalore', count: filterCounts?.locations.find(l => l.key === 'BANGALORE')?.count ?? 0 },
+    { key: 'CHENNAI', label: 'Chennai', count: filterCounts?.locations.find(l => l.key === 'CHENNAI')?.count ?? 0 },
+    { key: 'REMOTE_INDIA', label: 'Remote (IN)', count: filterCounts?.locations.find(l => l.key === 'REMOTE_INDIA')?.count ?? 0 },
+    { key: 'OTHER', label: 'Other Hubs (Pune, Hyd, NCR)', count: filterCounts?.locations.find(l => l.key === 'OTHER')?.count ?? 0 },
+    { key: 'ABROAD', label: 'Abroad / Expat', count: filterCounts?.locations.find(l => l.key === 'ABROAD')?.count ?? 0 },
   ];
 
   const salaryOptions = [
-    { key: '4-8', label: '4–8 Lakhs', count: filterCounts?.salary_buckets.find(s => s.key === '4-8')?.count ?? 16 },
-    { key: '8-15', label: '8–15 Lakhs', count: filterCounts?.salary_buckets.find(s => s.key === '8-15')?.count ?? 15 },
-    { key: '15-25', label: '15–25 Lakhs', count: filterCounts?.salary_buckets.find(s => s.key === '15-25')?.count ?? 11 },
-    { key: '25+', label: '25+ Lakhs', count: filterCounts?.salary_buckets.find(s => s.key === '25+')?.count ?? 6 },
+    { key: '4-8', label: '4–8 Lakhs', count: filterCounts?.salary_buckets.find(s => s.key === '4-8')?.count ?? 0 },
+    { key: '8-15', label: '8–15 Lakhs', count: filterCounts?.salary_buckets.find(s => s.key === '8-15')?.count ?? 0 },
+    { key: '15-25', label: '15–25 Lakhs', count: filterCounts?.salary_buckets.find(s => s.key === '15-25')?.count ?? 0 },
+    { key: '25+', label: '25+ Lakhs', count: filterCounts?.salary_buckets.find(s => s.key === '25+')?.count ?? 0 },
+    { key: 'undisclosed', label: 'Not Disclosed / Competitive', count: filterCounts?.salary_buckets.find(s => s.key === 'undisclosed')?.count ?? 0 },
+  ];
+
+  const tierOptions = [
+    { key: 'tier1', label: '⭐ Tier 1 (High Priority)', count: filterCounts?.tiers?.find(t => t.key === 'tier1')?.count ?? 0 },
+    { key: 'tier2', label: '⚡ Tier 2 (Solid Match)', count: filterCounts?.tiers?.find(t => t.key === 'tier2')?.count ?? 0 },
+    { key: 'tier3', label: '📌 Tier 3 (Standard)', count: filterCounts?.tiers?.find(t => t.key === 'tier3')?.count ?? 0 },
+  ];
+
+  const sourceOptions = filterCounts?.sources && filterCounts.sources.length > 0
+    ? filterCounts.sources
+    : [
+        { key: 'greenhouse', label: 'Greenhouse', count: 0 },
+        { key: 'indeed', label: 'Indeed', count: 0 },
+        { key: 'hirist', label: 'Hirist', count: 0 },
+        { key: 'ashby', label: 'Ashby', count: 0 },
+        { key: 'wellfound', label: 'Wellfound', count: 0 },
+        { key: 'cutshort', label: 'Cutshort', count: 0 },
+        { key: 'linkedin', label: 'LinkedIn', count: 0 },
+      ];
+
+  const appStatusOptions = [
+    { key: 'unapplied', label: '🟢 Not Applied / Fresh', count: filterCounts?.application_statuses?.find(s => s.key === 'unapplied')?.count ?? 0 },
+    { key: 'drafted', label: '📝 Drafted', count: filterCounts?.application_statuses?.find(s => s.key === 'drafted')?.count ?? 0 },
+    { key: 'applied', label: '📨 Applied', count: filterCounts?.application_statuses?.find(s => s.key === 'applied')?.count ?? 0 },
+    { key: 'interviewing', label: '🎯 Interviewing', count: filterCounts?.application_statuses?.find(s => s.key === 'interviewing')?.count ?? 0 },
+  ];
+
+  const freshnessOptions = [
+    { key: 1, label: '⚡ Past 24 Hours', count: filterCounts?.freshness_buckets?.find(f => f.key === '1')?.count ?? 0 },
+    { key: 3, label: '📅 Past 3 Days', count: filterCounts?.freshness_buckets?.find(f => f.key === '3')?.count ?? 0 },
+    { key: 7, label: '🗓️ Past 7 Days', count: filterCounts?.freshness_buckets?.find(f => f.key === '7')?.count ?? 0 },
+    { key: 14, label: '📆 Past 14 Days', count: filterCounts?.freshness_buckets?.find(f => f.key === '14')?.count ?? 0 },
   ];
 
   return (
@@ -562,7 +708,7 @@ export const JobsPage: React.FC = () => {
               Jobs Feed
             </h1>
             <span className="px-2 py-0.5 rounded-md text-[12.5px] font-semibold bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-slate-300 border border-slate-200 dark:border-slate-700 self-center mt-1">
-              {totalJobs} active
+              {filterCounts?.total_active ?? totalJobs} active
             </span>
           </div>
           <p className="mt-1 text-[13px] text-slate-600 dark:text-slate-400">
@@ -968,6 +1114,380 @@ export const JobsPage: React.FC = () => {
             )}
           </div>
 
+          {/* 5. Priority Tier Pill */}
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenDropdown(openDropdown === 'tier' ? null : 'tier');
+              }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold transition-all border cursor-pointer select-none ${
+                selectedTier !== 'all'
+                  ? 'bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 border-amber-300 dark:border-amber-800 shadow-2xs'
+                  : 'bg-slate-50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/60 dark:hover:bg-slate-800/40'
+              }`}
+            >
+              <Sparkles className="h-3.5 w-3.5 text-amber-500" />
+              <span>
+                {selectedTier !== 'all' ? (TIER_LABELS[selectedTier] || selectedTier.toUpperCase()) : 'Tier'}
+              </span>
+              {selectedTier !== 'all' ? (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleTierChange(selectedTier);
+                  }}
+                  className="ml-0.5 p-0.5 rounded hover:bg-amber-200/60 dark:hover:bg-amber-900/60 text-amber-600 dark:text-amber-400 cursor-pointer"
+                  title="Clear tier"
+                >
+                  <X className="h-3 w-3" />
+                </span>
+              ) : (
+                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${openDropdown === 'tier' ? 'rotate-180' : ''}`} />
+              )}
+            </button>
+
+            {openDropdown === 'tier' && (
+              <div className="hidden sm:block absolute top-full left-0 mt-1.5 z-40 w-64 p-2 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#111726] shadow-xl space-y-1">
+                <div className="px-2 py-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <span>Priority Tier</span>
+                  {selectedTier !== 'all' && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleTierChange(selectedTier);
+                        setOpenDropdown(null);
+                      }}
+                      className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 hover:underline cursor-pointer lowercase"
+                    >
+                      clear
+                    </button>
+                  )}
+                </div>
+                {tierOptions.map((t) => {
+                  const isChecked = selectedTier === t.key;
+                  return (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => {
+                        handleTierChange(t.key);
+                        setOpenDropdown(null);
+                      }}
+                      className={`flex items-center justify-between w-full text-left text-[13px] px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer select-none ${
+                        isChecked
+                          ? 'bg-amber-50/70 dark:bg-amber-950/40 text-amber-800 dark:text-amber-200 font-semibold'
+                          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-slate-800/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center ${
+                          isChecked
+                            ? 'border-amber-600 bg-amber-600 text-white'
+                            : 'border-slate-300 dark:border-slate-600'
+                        }`}>
+                          {isChecked && <Check className="h-2.5 w-2.5" />}
+                        </div>
+                        <span>{t.label}</span>
+                      </div>
+                      <span className={`text-[11px] font-medium px-1.5 py-0.2 rounded-full tabular-nums ${
+                        isChecked
+                          ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300'
+                          : 'bg-slate-100 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500'
+                      }`}>
+                        {t.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* 6. Source Pill */}
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenDropdown(openDropdown === 'source' ? null : 'source');
+              }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold transition-all border cursor-pointer select-none ${
+                selectedSource !== 'all'
+                  ? 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 border-indigo-300 dark:border-indigo-800 shadow-2xs'
+                  : 'bg-slate-50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/60 dark:hover:bg-slate-800/40'
+              }`}
+            >
+              <Globe className="h-3.5 w-3.5 text-indigo-500 dark:text-indigo-400" />
+              <span>
+                {selectedSource !== 'all'
+                  ? (filterCounts?.sources?.find(s => s.key === selectedSource)?.label || selectedSource)
+                  : 'Source'}
+              </span>
+              {selectedSource !== 'all' ? (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleSourceChange(selectedSource);
+                  }}
+                  className="ml-0.5 p-0.5 rounded hover:bg-indigo-200/60 dark:hover:bg-indigo-900/60 text-indigo-600 dark:text-indigo-400 cursor-pointer"
+                  title="Clear source"
+                >
+                  <X className="h-3 w-3" />
+                </span>
+              ) : (
+                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${openDropdown === 'source' ? 'rotate-180' : ''}`} />
+              )}
+            </button>
+
+            {openDropdown === 'source' && (
+              <div className="hidden sm:block absolute top-full left-0 mt-1.5 z-40 w-64 max-h-72 overflow-y-auto p-2 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#111726] shadow-xl space-y-1">
+                <div className="px-2 py-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center justify-between sticky top-0 bg-white dark:bg-[#111726] z-10">
+                  <span>Job Source</span>
+                  {selectedSource !== 'all' && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleSourceChange(selectedSource);
+                        setOpenDropdown(null);
+                      }}
+                      className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline cursor-pointer lowercase"
+                    >
+                      clear
+                    </button>
+                  )}
+                </div>
+                {sourceOptions.map((s) => {
+                  const isChecked = selectedSource === s.key;
+                  return (
+                    <button
+                      key={s.key}
+                      type="button"
+                      onClick={() => {
+                        handleSourceChange(s.key);
+                        setOpenDropdown(null);
+                      }}
+                      className={`flex items-center justify-between w-full text-left text-[13px] px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer select-none ${
+                        isChecked
+                          ? 'bg-indigo-50/70 dark:bg-indigo-950/40 text-indigo-700 dark:text-indigo-300 font-semibold'
+                          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-slate-800/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2 truncate pr-2">
+                        <div className={`h-3.5 w-3.5 rounded border shrink-0 flex items-center justify-center ${
+                          isChecked
+                            ? 'border-indigo-600 bg-indigo-600 text-white'
+                            : 'border-slate-300 dark:border-slate-600'
+                        }`}>
+                          {isChecked && <Check className="h-2.5 w-2.5" />}
+                        </div>
+                        <span className="truncate">{s.label}</span>
+                      </div>
+                      <span className={`text-[11px] font-medium px-1.5 py-0.2 rounded-full tabular-nums shrink-0 ${
+                        isChecked
+                          ? 'bg-indigo-100/80 dark:bg-indigo-900/60 text-indigo-600 dark:text-indigo-300'
+                          : 'bg-slate-100 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500'
+                      }`}>
+                        {s.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* 7. Application Status Pill */}
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenDropdown(openDropdown === 'appStatus' ? null : 'appStatus');
+              }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold transition-all border cursor-pointer select-none ${
+                selectedAppStatus !== 'all'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800 shadow-2xs'
+                  : 'bg-slate-50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/60 dark:hover:bg-slate-800/40'
+              }`}
+            >
+              <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+              <span>
+                {selectedAppStatus !== 'all'
+                  ? (STATUS_LABELS[selectedAppStatus] || selectedAppStatus)
+                  : 'Status'}
+              </span>
+              {selectedAppStatus !== 'all' ? (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleAppStatusChange(selectedAppStatus);
+                  }}
+                  className="ml-0.5 p-0.5 rounded hover:bg-emerald-200/60 dark:hover:bg-emerald-900/60 text-emerald-600 dark:text-emerald-400 cursor-pointer"
+                  title="Clear status"
+                >
+                  <X className="h-3 w-3" />
+                </span>
+              ) : (
+                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${openDropdown === 'appStatus' ? 'rotate-180' : ''}`} />
+              )}
+            </button>
+
+            {openDropdown === 'appStatus' && (
+              <div className="hidden sm:block absolute top-full left-0 sm:left-auto sm:right-0 mt-1.5 z-40 w-64 p-2 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#111726] shadow-xl space-y-1">
+                <div className="px-2 py-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <span>Application Status</span>
+                  {selectedAppStatus !== 'all' && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleAppStatusChange(selectedAppStatus);
+                        setOpenDropdown(null);
+                      }}
+                      className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer lowercase"
+                    >
+                      clear
+                    </button>
+                  )}
+                </div>
+                {appStatusOptions.map((st) => {
+                  const isChecked = selectedAppStatus === st.key;
+                  return (
+                    <button
+                      key={st.key}
+                      type="button"
+                      onClick={() => {
+                        handleAppStatusChange(st.key);
+                        setOpenDropdown(null);
+                      }}
+                      className={`flex items-center justify-between w-full text-left text-[13px] px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer select-none ${
+                        isChecked
+                          ? 'bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-200 font-semibold'
+                          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-slate-800/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center ${
+                          isChecked
+                            ? 'border-emerald-600 bg-emerald-600 text-white'
+                            : 'border-slate-300 dark:border-slate-600'
+                        }`}>
+                          {isChecked && <Check className="h-2.5 w-2.5" />}
+                        </div>
+                        <span>{st.label}</span>
+                      </div>
+                      <span className={`text-[11px] font-medium px-1.5 py-0.2 rounded-full tabular-nums ${
+                        isChecked
+                          ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300'
+                          : 'bg-slate-100 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500'
+                      }`}>
+                        {st.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          {/* 8. Freshness Pill */}
+          <div className="relative shrink-0">
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setOpenDropdown(openDropdown === 'freshness' ? null : 'freshness');
+              }}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[13px] font-semibold transition-all border cursor-pointer select-none ${
+                selectedFreshness !== null
+                  ? 'bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-800 shadow-2xs'
+                  : 'bg-slate-50 dark:bg-slate-900/60 text-slate-700 dark:text-slate-300 border-slate-200/90 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 hover:bg-slate-100/60 dark:hover:bg-slate-800/40'
+              }`}
+            >
+              <Clock className="h-3.5 w-3.5 text-blue-500" />
+              <span>
+                {selectedFreshness !== null
+                  ? (FRESHNESS_LABELS[selectedFreshness] || `${selectedFreshness}d`)
+                  : 'Freshness'}
+              </span>
+              {selectedFreshness !== null ? (
+                <span
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleFreshnessChange(null);
+                  }}
+                  className="ml-0.5 p-0.5 rounded hover:bg-blue-200/60 dark:hover:bg-blue-900/60 text-blue-600 dark:text-blue-400 cursor-pointer"
+                  title="Clear freshness"
+                >
+                  <X className="h-3 w-3" />
+                </span>
+              ) : (
+                <ChevronDown className={`h-3.5 w-3.5 text-slate-400 transition-transform ${openDropdown === 'freshness' ? 'rotate-180' : ''}`} />
+              )}
+            </button>
+
+            {openDropdown === 'freshness' && (
+              <div className="hidden sm:block absolute top-full left-0 sm:left-auto sm:right-0 mt-1.5 z-40 w-64 p-2 rounded-xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#111726] shadow-xl space-y-1">
+                <div className="px-2 py-1 text-[11px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-wider flex items-center justify-between">
+                  <span>Discovered Freshness</span>
+                  {selectedFreshness !== null && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleFreshnessChange(null);
+                        setOpenDropdown(null);
+                      }}
+                      className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline cursor-pointer lowercase"
+                    >
+                      clear
+                    </button>
+                  )}
+                </div>
+                {freshnessOptions.map((f) => {
+                  const isChecked = selectedFreshness === f.key;
+                  return (
+                    <button
+                      key={f.key}
+                      type="button"
+                      onClick={() => {
+                        handleFreshnessChange(f.key);
+                        setOpenDropdown(null);
+                      }}
+                      className={`flex items-center justify-between w-full text-left text-[13px] px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer select-none ${
+                        isChecked
+                          ? 'bg-blue-50/70 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-semibold'
+                          : 'text-slate-700 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100/60 dark:hover:bg-slate-800/40'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <div className={`h-3.5 w-3.5 rounded border flex items-center justify-center ${
+                          isChecked
+                            ? 'border-blue-600 bg-blue-600 text-white'
+                            : 'border-slate-300 dark:border-slate-600'
+                        }`}>
+                          {isChecked && <Check className="h-2.5 w-2.5" />}
+                        </div>
+                        <span>{f.label}</span>
+                      </div>
+                      <span className={`text-[11px] font-medium px-1.5 py-0.2 rounded-full tabular-nums ${
+                        isChecked
+                          ? 'bg-blue-100/80 dark:bg-blue-900/60 text-blue-600 dark:text-blue-300'
+                          : 'bg-slate-100 dark:bg-slate-800/60 text-slate-400 dark:text-slate-500'
+                      }`}>
+                        {f.count}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
           {/* Reset Filters CTA */}
           {hasActiveFilters && (
             <button
@@ -1005,11 +1525,19 @@ export const JobsPage: React.FC = () => {
                   {openDropdown === 'experience' && <Layers className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />}
                   {openDropdown === 'location' && <MapPin className="h-5 w-5 text-indigo-600 dark:text-indigo-400" />}
                   {openDropdown === 'salary' && <Banknote className="h-5 w-5 text-emerald-500" />}
+                  {openDropdown === 'tier' && <Sparkles className="h-5 w-5 text-amber-500" />}
+                  {openDropdown === 'source' && <Globe className="h-5 w-5 text-indigo-500 dark:text-indigo-400" />}
+                  {openDropdown === 'appStatus' && <CheckCircle2 className="h-5 w-5 text-emerald-500" />}
+                  {openDropdown === 'freshness' && <Clock className="h-5 w-5 text-blue-500" />}
                   <h3 className="text-[17px] font-bold text-slate-900 dark:text-white">
                     {openDropdown === 'workMode' && 'Select Work Mode'}
                     {openDropdown === 'experience' && 'Filter by Experience'}
                     {openDropdown === 'location' && 'Select Location'}
                     {openDropdown === 'salary' && 'Select Salary Bracket'}
+                    {openDropdown === 'tier' && 'Select Priority Tier'}
+                    {openDropdown === 'source' && 'Select Job Source'}
+                    {openDropdown === 'appStatus' && 'Select Application Status'}
+                    {openDropdown === 'freshness' && 'Select Freshness Window'}
                   </h3>
                 </div>
                 <button
@@ -1292,6 +1820,274 @@ export const JobsPage: React.FC = () => {
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
                         }`}>
                           {sal.count} jobs
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Sheet Content for Priority Tier */}
+              {openDropdown === 'tier' && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedTier('all');
+                      setCurrentPage(1);
+                      updateUrlParam('tier', null);
+                      setOpenDropdown(null);
+                    }}
+                    className={`flex items-center justify-between w-full text-left text-[14.5px] px-3.5 py-3 rounded-xl transition-colors cursor-pointer select-none ${
+                      selectedTier === 'all'
+                        ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-200 font-semibold border border-amber-200 dark:border-amber-800'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`h-5 w-5 rounded-md border-2 shrink-0 flex items-center justify-center transition-colors ${
+                        selectedTier === 'all'
+                          ? 'border-amber-600 bg-amber-600 text-white'
+                          : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
+                      }`}>
+                        {selectedTier === 'all' && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                      </div>
+                      <span className="font-medium">All Priority Tiers</span>
+                    </div>
+                  </button>
+                  {tierOptions.map((t) => {
+                    const isChecked = selectedTier === t.key;
+                    return (
+                      <button
+                        key={t.key}
+                        type="button"
+                        onClick={() => {
+                          handleTierChange(t.key);
+                          setOpenDropdown(null);
+                        }}
+                        className={`flex items-center justify-between w-full text-left text-[14.5px] px-3.5 py-3 rounded-xl transition-colors cursor-pointer select-none ${
+                          isChecked
+                            ? 'bg-amber-50 dark:bg-amber-950/50 text-amber-800 dark:text-amber-200 font-semibold border border-amber-200 dark:border-amber-800'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`h-5 w-5 rounded-md border-2 shrink-0 flex items-center justify-center transition-colors ${
+                            isChecked
+                              ? 'border-amber-600 bg-amber-600 text-white'
+                              : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
+                          }`}>
+                            {isChecked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                          </div>
+                          <span className="font-medium">{t.label}</span>
+                        </div>
+                        <span className={`text-[12px] font-semibold px-2.5 py-1 rounded-full tabular-nums ${
+                          isChecked
+                            ? 'bg-amber-100 dark:bg-amber-900/60 text-amber-700 dark:text-amber-300'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                        }`}>
+                          {t.count} jobs
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Sheet Content for Job Source */}
+              {openDropdown === 'source' && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedSource('all');
+                      setCurrentPage(1);
+                      updateUrlParam('source', null);
+                      setOpenDropdown(null);
+                    }}
+                    className={`flex items-center justify-between w-full text-left text-[14.5px] px-3.5 py-3 rounded-xl transition-colors cursor-pointer select-none ${
+                      selectedSource === 'all'
+                        ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-200 dark:border-indigo-800'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`h-5 w-5 rounded-md border-2 shrink-0 flex items-center justify-center transition-colors ${
+                        selectedSource === 'all'
+                          ? 'border-indigo-600 bg-indigo-600 text-white'
+                          : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
+                      }`}>
+                        {selectedSource === 'all' && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                      </div>
+                      <span className="font-medium">All Sources</span>
+                    </div>
+                  </button>
+                  {sourceOptions.map((s) => {
+                    const isChecked = selectedSource === s.key;
+                    return (
+                      <button
+                        key={s.key}
+                        type="button"
+                        onClick={() => {
+                          handleSourceChange(s.key);
+                          setOpenDropdown(null);
+                        }}
+                        className={`flex items-center justify-between w-full text-left text-[14.5px] px-3.5 py-3 rounded-xl transition-colors cursor-pointer select-none ${
+                          isChecked
+                            ? 'bg-indigo-50 dark:bg-indigo-950/50 text-indigo-700 dark:text-indigo-300 font-semibold border border-indigo-200 dark:border-indigo-800'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`h-5 w-5 rounded-md border-2 shrink-0 flex items-center justify-center transition-colors ${
+                            isChecked
+                              ? 'border-indigo-600 bg-indigo-600 text-white'
+                              : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
+                          }`}>
+                            {isChecked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                          </div>
+                          <span className="font-medium">{s.label}</span>
+                        </div>
+                        <span className={`text-[12px] font-semibold px-2.5 py-1 rounded-full tabular-nums ${
+                          isChecked
+                            ? 'bg-indigo-100 dark:bg-indigo-900/60 text-indigo-700 dark:text-indigo-300'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                        }`}>
+                          {s.count} jobs
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Sheet Content for Application Status */}
+              {openDropdown === 'appStatus' && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedAppStatus('all');
+                      setCurrentPage(1);
+                      updateUrlParam('app_status', null);
+                      setOpenDropdown(null);
+                    }}
+                    className={`flex items-center justify-between w-full text-left text-[14.5px] px-3.5 py-3 rounded-xl transition-colors cursor-pointer select-none ${
+                      selectedAppStatus === 'all'
+                        ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 font-semibold border border-emerald-200 dark:border-emerald-800'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`h-5 w-5 rounded-md border-2 shrink-0 flex items-center justify-center transition-colors ${
+                        selectedAppStatus === 'all'
+                          ? 'border-emerald-600 bg-emerald-600 text-white'
+                          : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
+                      }`}>
+                        {selectedAppStatus === 'all' && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                      </div>
+                      <span className="font-medium">All Statuses</span>
+                    </div>
+                  </button>
+                  {appStatusOptions.map((st) => {
+                    const isChecked = selectedAppStatus === st.key;
+                    return (
+                      <button
+                        key={st.key}
+                        type="button"
+                        onClick={() => {
+                          handleAppStatusChange(st.key);
+                          setOpenDropdown(null);
+                        }}
+                        className={`flex items-center justify-between w-full text-left text-[14.5px] px-3.5 py-3 rounded-xl transition-colors cursor-pointer select-none ${
+                          isChecked
+                            ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-800 dark:text-emerald-200 font-semibold border border-emerald-200 dark:border-emerald-800'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`h-5 w-5 rounded-md border-2 shrink-0 flex items-center justify-center transition-colors ${
+                            isChecked
+                              ? 'border-emerald-600 bg-emerald-600 text-white'
+                              : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
+                          }`}>
+                            {isChecked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                          </div>
+                          <span className="font-medium">{st.label}</span>
+                        </div>
+                        <span className={`text-[12px] font-semibold px-2.5 py-1 rounded-full tabular-nums ${
+                          isChecked
+                            ? 'bg-emerald-100 dark:bg-emerald-900/60 text-emerald-700 dark:text-emerald-300'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                        }`}>
+                          {st.count} jobs
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+
+              {/* Sheet Content for Freshness */}
+              {openDropdown === 'freshness' && (
+                <div className="space-y-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFreshness(null);
+                      setCurrentPage(1);
+                      updateUrlParam('days', null);
+                      setOpenDropdown(null);
+                    }}
+                    className={`flex items-center justify-between w-full text-left text-[14.5px] px-3.5 py-3 rounded-xl transition-colors cursor-pointer select-none ${
+                      selectedFreshness === null
+                        ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-200 font-semibold border border-blue-200 dark:border-blue-800'
+                        : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <div className={`h-5 w-5 rounded-md border-2 shrink-0 flex items-center justify-center transition-colors ${
+                        selectedFreshness === null
+                          ? 'border-blue-600 bg-blue-600 text-white'
+                          : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
+                      }`}>
+                        {selectedFreshness === null && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                      </div>
+                      <span className="font-medium">Any Time</span>
+                    </div>
+                  </button>
+                  {freshnessOptions.map((f) => {
+                    const isChecked = selectedFreshness === f.key;
+                    return (
+                      <button
+                        key={f.key}
+                        type="button"
+                        onClick={() => {
+                          handleFreshnessChange(f.key);
+                          setOpenDropdown(null);
+                        }}
+                        className={`flex items-center justify-between w-full text-left text-[14.5px] px-3.5 py-3 rounded-xl transition-colors cursor-pointer select-none ${
+                          isChecked
+                            ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-800 dark:text-blue-200 font-semibold border border-blue-200 dark:border-blue-800'
+                            : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800/80'
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className={`h-5 w-5 rounded-md border-2 shrink-0 flex items-center justify-center transition-colors ${
+                            isChecked
+                              ? 'border-blue-600 bg-blue-600 text-white'
+                              : 'border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-900'
+                          }`}>
+                            {isChecked && <Check className="h-3.5 w-3.5 stroke-[3]" />}
+                          </div>
+                          <span className="font-medium">{f.label}</span>
+                        </div>
+                        <span className={`text-[12px] font-semibold px-2.5 py-1 rounded-full tabular-nums ${
+                          isChecked
+                            ? 'bg-blue-100 dark:bg-blue-900/60 text-blue-700 dark:text-blue-300'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400'
+                        }`}>
+                          {f.count} jobs
                         </span>
                       </button>
                     );

@@ -1,9 +1,10 @@
 import math
 import re
 from typing import Any
-from sqlalchemy import and_, func, or_, select
+from sqlalchemy import and_, func, not_, or_, select
 from sqlalchemy.orm import Session, selectinload
 
+from datetime import datetime, timedelta, timezone
 from schemas.common import PaginatedResponse, PaginationMeta
 from schemas.job import (
     FilterCountItem,
@@ -16,6 +17,7 @@ from schemas.job import (
 from storage.models.application import Application
 from storage.models.company import Company
 from storage.models.job import Job
+from storage.models.job_source import JobSource
 from storage.repositories.job_repository import JobRepository
 from processing.prioritization import calculate_match_percentage
 from processing.salary_parser import format_salary_display
@@ -58,6 +60,10 @@ class JobService:
         work_mode: str | None = None,
         max_exp: int | None = None,
         min_score: float | None = None,
+        salary: str | None = None,
+        source: str | None = None,
+        app_status: str | None = None,
+        days: int | None = None,
         search: str | None = None,
         tag: str | None = None,
         active_only: bool = True,
@@ -77,29 +83,71 @@ class JobService:
         if location_bucket:
             loc_upper = location_bucket.strip().upper()
             if loc_upper in ("REMOTE", "REMOTE_INDIA", "REMOTE (IN)", "REMOTE(IN)"):
-                stmt = stmt.where(or_(Job.location_bucket == "REMOTE_INDIA", and_(Job.is_remote.is_(True), Job.location_bucket != "ABROAD")))
+                stmt = stmt.where(Job.location_bucket == "REMOTE_INDIA")
             elif loc_upper in ("ABROAD", "GLOBAL", "INTERNATIONAL"):
                 stmt = stmt.where(Job.location_bucket == "ABROAD")
+            elif loc_upper in ("OTHER", "OTHER_HUBS", "OTHERS"):
+                stmt = stmt.where(Job.location_bucket == "OTHER")
             else:
                 stmt = stmt.where(Job.location_bucket == loc_upper)
 
         if work_mode:
             modes = [m.strip().lower() for m in work_mode.split(",") if m.strip()]
             mode_conds = []
+            is_hybrid_safe = or_(
+                func.coalesce(Job.location, "").ilike("%hybrid%"),
+                func.coalesce(Job.title, "").ilike("%hybrid%"),
+                func.coalesce(Job.description, "").ilike("%hybrid%"),
+            )
+            is_abroad_cond = Job.location_bucket == "ABROAD"
             for wm in modes:
                 if wm in ("remote", "wfh", "work_from_home"):
-                    mode_conds.append(or_(Job.is_remote.is_(True), Job.location_bucket == "REMOTE_INDIA"))
+                    mode_conds.append(
+                        and_(
+                            or_(Job.is_remote.is_(True), Job.location_bucket == "REMOTE_INDIA"),
+                            not_(is_hybrid_safe),
+                            not_(is_abroad_cond),
+                        )
+                    )
                 elif wm in ("office", "wfo", "work_from_office"):
-                    mode_conds.append(and_(Job.is_remote.is_(False), Job.location_bucket.in_(("BANGALORE", "CHENNAI", "OTHER"))))
+                    mode_conds.append(
+                        and_(
+                            Job.is_remote.is_(False),
+                            Job.location_bucket != "REMOTE_INDIA",
+                            not_(is_hybrid_safe),
+                            not_(is_abroad_cond),
+                        )
+                    )
                 elif wm == "hybrid":
-                    mode_conds.append(or_(Job.location.ilike("%hybrid%"), Job.title.ilike("%hybrid%"), Job.description.ilike("%hybrid%")))
+                    mode_conds.append(is_hybrid_safe)
                 elif wm in ("abroad", "relocation"):
-                    mode_conds.append(Job.location_bucket == "ABROAD")
+                    mode_conds.append(and_(is_abroad_cond, not_(is_hybrid_safe)))
             if mode_conds:
                 stmt = stmt.where(or_(*mode_conds))
 
         if priority_tier:
-            stmt = stmt.where(Job.priority_tier.ilike(f"%{priority_tier}%"))
+            p_clean = priority_tier.strip().lower().replace(" ", "").replace("_", "")
+            if p_clean in ("tier1", "1"):
+                stmt = stmt.where(Job.priority_tier.ilike("%TIER 1%"))
+            elif p_clean in ("tier2", "2"):
+                stmt = stmt.where(Job.priority_tier.ilike("%TIER 2%"))
+            elif p_clean in ("tier3", "3"):
+                stmt = stmt.where(Job.priority_tier.ilike("%TIER 3%"))
+            else:
+                stmt = stmt.where(Job.priority_tier.ilike(f"%{priority_tier}%"))
+
+        if salary and salary.strip().lower() != "all":
+            sal_key = salary.strip().lower()
+            if sal_key in ("undisclosed", "none", "not_disclosed", "competitive"):
+                stmt = stmt.where(Job.salary_min.is_(None), Job.salary_max.is_(None))
+            elif sal_key == "4-8":
+                stmt = stmt.where(Job.salary_max >= 400000, Job.salary_min <= 800000)
+            elif sal_key == "8-15":
+                stmt = stmt.where(Job.salary_max >= 800000, Job.salary_min <= 1500000)
+            elif sal_key == "15-25":
+                stmt = stmt.where(Job.salary_max >= 1500000, Job.salary_min <= 2500000)
+            elif sal_key in ("25+", "25plus"):
+                stmt = stmt.where(Job.salary_max >= 2500000)
 
         if is_remote is not None:
             stmt = stmt.where(Job.is_remote.is_(is_remote))
@@ -114,6 +162,34 @@ class JobService:
 
         if min_score is not None:
             stmt = stmt.where(Job.relevance_score >= min_score)
+
+        if source and source.strip().lower() != "all":
+            src_clean = source.strip().lower()
+            if src_clean in ("ats", "company_careers", "careers", "direct_ats"):
+                stmt = stmt.where(or_(Job.apply_type == "COMPANY_CAREERS", Job.ats_provider.is_not(None)))
+            else:
+                stmt = stmt.where(
+                    or_(
+                        Job.sources.any(JobSource.source_name.ilike(f"%{src_clean}%")),
+                        Job.ats_provider.ilike(f"%{src_clean}%"),
+                    )
+                )
+
+        if app_status and app_status.strip().lower() != "all":
+            st_clean = app_status.strip().lower()
+            if st_clean in ("unapplied", "new", "fresh"):
+                stmt = stmt.where(
+                    or_(
+                        Job.application == None,
+                        Job.application.has(Application.status.in_(("discovered", "saved", None))),
+                    )
+                )
+            else:
+                stmt = stmt.where(Job.application.has(Application.status.ilike(f"%{st_clean}%")))
+
+        if days is not None and days > 0:
+            cutoff = datetime.now(timezone.utc) - timedelta(days=days)
+            stmt = stmt.where(Job.first_seen_at >= cutoff)
 
         if tag:
             stmt = stmt.where(Job.tags.any(tag))
@@ -195,14 +271,44 @@ class JobService:
     @staticmethod
     def get_filter_counts(session: Session) -> FilterCountsOut:
         """Computes live counts for work modes, locations, experience, and salary bands."""
-        wfo_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.is_remote.is_(False), Job.location_bucket != "ABROAD")) or 0
-        wfh_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), or_(Job.is_remote.is_(True), Job.location_bucket == "REMOTE_INDIA"))) or 0
-        hybrid_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), or_(Job.location.ilike("%hybrid%"), Job.description.ilike("%hybrid%")))) or 0
-        abroad_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "ABROAD")) or 0
+        total_active = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True))) or 0
+
+        is_hybrid_safe = or_(
+            func.coalesce(Job.location, "").ilike("%hybrid%"),
+            func.coalesce(Job.title, "").ilike("%hybrid%"),
+            func.coalesce(Job.description, "").ilike("%hybrid%"),
+        )
+        is_abroad_cond = Job.location_bucket == "ABROAD"
+
+        wfo_count = session.scalar(
+            select(func.count(Job.id)).where(
+                Job.is_active.is_(True),
+                Job.is_remote.is_(False),
+                Job.location_bucket != "REMOTE_INDIA",
+                not_(is_hybrid_safe),
+                not_(is_abroad_cond),
+            )
+        ) or 0
+        wfh_count = session.scalar(
+            select(func.count(Job.id)).where(
+                Job.is_active.is_(True),
+                or_(Job.is_remote.is_(True), Job.location_bucket == "REMOTE_INDIA"),
+                not_(is_hybrid_safe),
+                not_(is_abroad_cond),
+            )
+        ) or 0
+        hybrid_count = session.scalar(
+            select(func.count(Job.id)).where(Job.is_active.is_(True), is_hybrid_safe)
+        ) or 0
+        abroad_count = session.scalar(
+            select(func.count(Job.id)).where(Job.is_active.is_(True), is_abroad_cond, not_(is_hybrid_safe))
+        ) or 0
 
         blr_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "BANGALORE")) or 0
         chn_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "CHENNAI")) or 0
         remote_in_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "REMOTE_INDIA")) or 0
+        other_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "OTHER")) or 0
+        abroad_loc_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "ABROAD")) or 0
 
         exp_sweet_spot = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), or_(Job.experience_min.is_(None), Job.experience_min <= 2), or_(Job.experience_max.is_(None), Job.experience_max >= 2))) or 0
         exp_0_2 = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), or_(Job.experience_min.is_(None), Job.experience_min <= 2))) or 0
@@ -212,8 +318,77 @@ class JobService:
         sal_8_15 = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.salary_max >= 800000, Job.salary_min <= 1500000)) or 0
         sal_15_25 = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.salary_max >= 1500000, Job.salary_min <= 2500000)) or 0
         sal_25_plus = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.salary_max >= 2500000)) or 0
+        sal_undisclosed = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.salary_min.is_(None), Job.salary_max.is_(None))) or 0
+
+        # Priority Tiers
+        tier1_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.priority_tier.ilike("%TIER 1%"))) or 0
+        tier2_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.priority_tier.ilike("%TIER 2%"))) or 0
+        tier3_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.priority_tier.ilike("%TIER 3%"))) or 0
+
+        # Application Tracking Statuses
+        unapplied_count = session.scalar(
+            select(func.count(Job.id)).outerjoin(Job.application).where(
+                Job.is_active.is_(True),
+                or_(Application.id.is_(None), Application.status.in_(("discovered", "saved", None)))
+            )
+        ) or 0
+        drafted_count = session.scalar(
+            select(func.count(Job.id)).join(Job.application).where(Job.is_active.is_(True), Application.status == "drafted")
+        ) or 0
+        applied_count = session.scalar(
+            select(func.count(Job.id)).join(Job.application).where(Job.is_active.is_(True), Application.status == "applied")
+        ) or 0
+        interviewing_count = session.scalar(
+            select(func.count(Job.id)).join(Job.application).where(Job.is_active.is_(True), Application.status == "interviewing")
+        ) or 0
+
+        # Freshness buckets
+        now = datetime.now(timezone.utc)
+        f_24h = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.first_seen_at >= now - timedelta(days=1))) or 0
+        f_3d = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.first_seen_at >= now - timedelta(days=3))) or 0
+        f_7d = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.first_seen_at >= now - timedelta(days=7))) or 0
+        f_14d = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.first_seen_at >= now - timedelta(days=14))) or 0
+
+        # Sources (Option B: Live counts exactly matching get_jobs query)
+        canonical_sources = [
+            ("greenhouse", "Greenhouse"),
+            ("ashby", "Ashby"),
+            ("indeed", "Indeed"),
+            ("hirist", "Hirist"),
+            ("wellfound", "Wellfound"),
+            ("cutshort", "Cutshort"),
+            ("workday", "Workday"),
+            ("linkedin", "LinkedIn"),
+            ("smartrecruiters", "SmartRecruiters"),
+            ("apna", "Apna"),
+            ("internshala", "Internshala"),
+            ("yc", "YC"),
+            ("shine", "Shine"),
+            ("relocateme", "RelocateMe"),
+            ("lever", "Lever"),
+            ("naukri", "Naukri"),
+            ("remotive", "Remotive"),
+            ("wwr", "We Work Remotely"),
+        ]
+        sources_list = []
+        for s_key, s_label in canonical_sources:
+            cnt = session.scalar(
+                select(func.count(Job.id.distinct()))
+                .outerjoin(Job.sources)
+                .where(
+                    Job.is_active.is_(True),
+                    or_(
+                        JobSource.source_name.ilike(f"%{s_key}%"),
+                        Job.ats_provider.ilike(f"%{s_key}%"),
+                    ),
+                )
+            ) or 0
+            if cnt > 0:
+                sources_list.append(FilterCountItem(key=s_key, label=s_label, count=cnt))
+        sources_list.sort(key=lambda x: x.count, reverse=True)
 
         return FilterCountsOut(
+            total_active=total_active,
             work_modes=[
                 FilterCountItem(key="wfo", label="Work from office", count=wfo_count),
                 FilterCountItem(key="wfh", label="Work from home", count=wfh_count),
@@ -224,7 +399,8 @@ class JobService:
                 FilterCountItem(key="BANGALORE", label="Bangalore", count=blr_count),
                 FilterCountItem(key="CHENNAI", label="Chennai", count=chn_count),
                 FilterCountItem(key="REMOTE_INDIA", label="Remote (IN)", count=remote_in_count),
-                FilterCountItem(key="ABROAD", label="Abroad", count=abroad_count),
+                FilterCountItem(key="OTHER", label="Other Hubs (Pune, Hyd, NCR)", count=other_count),
+                FilterCountItem(key="ABROAD", label="Abroad / Expat", count=abroad_loc_count),
             ],
             experience_buckets=[
                 FilterCountItem(key="sweet_spot_2yr", label="2 Yrs Sweet Spot (1–3 Yrs)", count=exp_sweet_spot),
@@ -236,6 +412,25 @@ class JobService:
                 FilterCountItem(key="8-15", label="8–15 Lakhs", count=sal_8_15),
                 FilterCountItem(key="15-25", label="15–25 Lakhs", count=sal_15_25),
                 FilterCountItem(key="25+", label="25+ Lakhs", count=sal_25_plus),
+                FilterCountItem(key="undisclosed", label="Not Disclosed / Competitive", count=sal_undisclosed),
+            ],
+            tiers=[
+                FilterCountItem(key="tier1", label="⭐ Tier 1 (High Priority)", count=tier1_count),
+                FilterCountItem(key="tier2", label="⚡ Tier 2 (Solid Match)", count=tier2_count),
+                FilterCountItem(key="tier3", label="📌 Tier 3 (Standard)", count=tier3_count),
+            ],
+            sources=sources_list,
+            application_statuses=[
+                FilterCountItem(key="unapplied", label="🟢 Not Applied / Fresh", count=unapplied_count),
+                FilterCountItem(key="drafted", label="📝 Drafted", count=drafted_count),
+                FilterCountItem(key="applied", label="📨 Applied", count=applied_count),
+                FilterCountItem(key="interviewing", label="🎯 Interviewing", count=interviewing_count),
+            ],
+            freshness_buckets=[
+                FilterCountItem(key="1", label="⚡ Past 24 Hours", count=f_24h),
+                FilterCountItem(key="3", label="📅 Past 3 Days", count=f_3d),
+                FilterCountItem(key="7", label="🗓️ Past 7 Days", count=f_7d),
+                FilterCountItem(key="14", label="📆 Past 14 Days", count=f_14d),
             ],
         )
 

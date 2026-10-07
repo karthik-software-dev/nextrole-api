@@ -76,10 +76,15 @@ class FilterCountItem(BaseModel):
 
 
 class FilterCountsOut(BaseModel):
+    total_active: int = 0
     work_modes: list[FilterCountItem]
     locations: list[FilterCountItem]
     experience_buckets: list[FilterCountItem]
     salary_buckets: list[FilterCountItem]
+    tiers: list[FilterCountItem] = Field(default_factory=list)
+    sources: list[FilterCountItem] = Field(default_factory=list)
+    application_statuses: list[FilterCountItem] = Field(default_factory=list)
+    freshness_buckets: list[FilterCountItem] = Field(default_factory=list)
 
 
 class JobDetailOut(JobSummaryOut):

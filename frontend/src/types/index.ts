@@ -74,10 +74,15 @@ export interface FilterCountItem {
 }
 
 export interface FilterCounts {
+  total_active?: number;
   work_modes: FilterCountItem[];
   locations: FilterCountItem[];
   experience_buckets: FilterCountItem[];
   salary_buckets: FilterCountItem[];
+  tiers?: FilterCountItem[];
+  sources?: FilterCountItem[];
+  application_statuses?: FilterCountItem[];
+  freshness_buckets?: FilterCountItem[];
 }
 
 export interface JobDetail extends JobSummary {

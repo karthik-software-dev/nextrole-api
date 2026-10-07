@@ -1,0 +1,1 @@
+# NextRole Core Module

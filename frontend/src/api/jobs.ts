@@ -10,6 +10,10 @@ export interface GetJobsParams {
   work_mode?: string;
   max_exp?: number;
   min_score?: number;
+  salary?: string;
+  source?: string;
+  app_status?: string;
+  days?: number;
   search?: string;
   tag?: string;
   active_only?: boolean;

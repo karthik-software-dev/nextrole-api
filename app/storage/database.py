@@ -94,19 +94,39 @@ def get_db():
 
 
 def seed_default_user(session: Session) -> User:
-    """Ensures at least one default user profile exists for personal application tracking."""
-    user = session.scalar(select(User).limit(1))
-    if not user:
-        user = User(
-            name="Job Seeker",
-            email="jobseeker@local.agent",
-            target_role="Python Backend Engineer",
-            is_active=True,
-        )
-        session.add(user)
-        session.commit()
-        session.refresh(user)
-    return user
+    """Ensures default admin user profile exists with secure password hash for personal application tracking."""
+    from config import ADMIN_EMAIL, ADMIN_INITIAL_PASSWORD
+    from core.security import hash_password
+
+    admin_user = session.scalar(select(User).where(User.email == ADMIN_EMAIL).limit(1))
+    if not admin_user:
+        legacy_user = session.scalar(select(User).limit(1))
+        if legacy_user:
+            legacy_user.email = ADMIN_EMAIL
+            legacy_user.name = "Rahul Karthik"
+            if ADMIN_INITIAL_PASSWORD:
+                legacy_user.hashed_password = hash_password(ADMIN_INITIAL_PASSWORD)
+            session.commit()
+            session.refresh(legacy_user)
+            return legacy_user
+        else:
+            admin_user = User(
+                name="Rahul Karthik",
+                email=ADMIN_EMAIL,
+                target_role="Python Backend Engineer",
+                is_active=True,
+                hashed_password=hash_password(ADMIN_INITIAL_PASSWORD) if ADMIN_INITIAL_PASSWORD else None,
+            )
+            session.add(admin_user)
+            session.commit()
+            session.refresh(admin_user)
+            return admin_user
+    else:
+        if not admin_user.hashed_password and ADMIN_INITIAL_PASSWORD:
+            admin_user.hashed_password = hash_password(ADMIN_INITIAL_PASSWORD)
+            session.commit()
+            session.refresh(admin_user)
+        return admin_user
 
 
 def init_db() -> bool:
@@ -118,6 +138,7 @@ def init_db() -> bool:
             from sqlalchemy import text
             with engine.begin() as conn:
                 conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS preferences_json JSONB DEFAULT '{}'::jsonb;"))
+                conn.execute(text("ALTER TABLE users ADD COLUMN IF NOT EXISTS hashed_password VARCHAR(255);"))
         with get_db() as session:
             seed_default_user(session)
         print(f"[DATABASE] Connected & schema verified on '{DATABASE_URL.split('/')[-1]}'")
@@ -125,3 +146,4 @@ def init_db() -> bool:
     except Exception as e:
         print(f"[ERROR] Database initialization failed: {e}")
         return False
+

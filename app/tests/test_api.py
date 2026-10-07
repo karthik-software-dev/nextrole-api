@@ -234,6 +234,11 @@ class TestFastAPIBackend(unittest.TestCase):
         self.assertEqual(updated_data["scoring"]["min_score"], 10.5)
         self.assertIn("Hyderabad", updated_data["scoring"]["target_locations"])
 
+        # Clean up / restore default admin profile
+        from config import ADMIN_EMAIL
+        self.client.put("/api/v1/settings", json={"profile": {"name": "Rahul Karthik", "email": ADMIN_EMAIL}})
+
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -18,11 +18,15 @@ import {
   Sparkles,
   ArrowRight,
   Menu,
+  LogOut,
+  User as UserIcon,
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useDiscovery } from '../../context/DiscoveryContext';
+import { useAuth } from '../../context/AuthContext';
 import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../../api';
 import { getSettings } from '../../api/settings';
+
 import type { NotificationItem } from '../../types';
 
 interface TopHeaderProps {
@@ -42,6 +46,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
     useCache,
     setIsModalOpen,
   } = useDiscovery();
+  const { user, logout } = useAuth();
   const navigate = useNavigate();
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -49,9 +54,12 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
   const [unreadCount, setUnreadCount] = useState(0);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [isLoadingNotifs, setIsLoadingNotifs] = useState(false);
-  const [userName, setUserName] = useState('Karthik');
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const [userName, setUserName] = useState('Rahul Karthik');
 
   const notifRef = useRef<HTMLDivElement>(null);
+  const profileRef = useRef<HTMLDivElement>(null);
+
 
   useEffect(() => {
     let isMounted = true;
@@ -108,6 +116,20 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isNotifOpen]);
+
+  // Close profile menu on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (profileRef.current && !profileRef.current.contains(e.target as Node)) {
+        setIsProfileOpen(false);
+      }
+    };
+    if (isProfileOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isProfileOpen]);
+
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -483,22 +505,69 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
 
         <div className="h-5 w-px bg-slate-200 dark:bg-slate-800 hidden sm:block shrink-0 mx-1" />
 
-        {/* User Profile */}
-        <div
-          onClick={() => navigate('/settings')}
-          className="flex items-center gap-2 cursor-pointer select-none shrink-0 pl-0 sm:pl-1 group"
-          title="Account Settings"
-        >
-          <div className="h-[30px] w-[30px] rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold text-[12px] flex items-center justify-center border border-indigo-200/80 dark:border-indigo-800/60 shadow-2xs shrink-0">
-            {userName ? userName.charAt(0).toUpperCase() : 'U'}
-          </div>
-          <span className="text-[14px] font-bold text-slate-900 dark:text-slate-100 hidden md:inline-block leading-none tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
-            {userName ? userName.split(' ')[0] : 'Karthik'}
-          </span>
-          <ChevronDown className="h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-colors shrink-0 hidden md:inline-block" />
+        {/* User Profile Dropdown Menu */}
+        <div className="relative shrink-0 pl-0 sm:pl-1" ref={profileRef}>
+          <button
+            type="button"
+            onClick={() => setIsProfileOpen(!isProfileOpen)}
+            className="flex items-center gap-2 cursor-pointer select-none rounded-xl p-1 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
+            title="User Profile Menu"
+          >
+            <div className="h-[30px] w-[30px] rounded-full bg-indigo-100 dark:bg-indigo-950/80 text-indigo-700 dark:text-indigo-300 font-bold text-[12px] flex items-center justify-center border border-indigo-200/80 dark:border-indigo-800/60 shadow-2xs shrink-0">
+              {(user?.name || userName || 'Rahul').charAt(0).toUpperCase()}
+            </div>
+            <span className="text-[14px] font-bold text-slate-900 dark:text-slate-100 hidden md:inline-block leading-none tracking-tight group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+              {(user?.name || userName || 'Rahul').split(' ')[0]}
+            </span>
+            <ChevronDown className={`h-3.5 w-3.5 text-slate-400 group-hover:text-slate-600 dark:group-hover:text-slate-200 transition-transform hidden md:inline-block ${isProfileOpen ? 'rotate-180' : ''}`} />
+          </button>
+
+          {isProfileOpen && (
+            <div className="absolute right-0 top-full mt-2 w-64 rounded-2xl bg-white dark:bg-[#0E131F] border border-slate-200 dark:border-slate-800 shadow-2xl z-50 py-2 animate-in fade-in zoom-in-95 duration-150">
+              <div className="px-4 py-3 border-b border-slate-100 dark:border-slate-800/70">
+                <p className="text-sm font-bold text-slate-900 dark:text-white truncate">
+                  {user?.name || userName || 'Rahul Karthik'}
+                </p>
+                <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                  {user?.email || 'rahulkarthik056@gmail.com'}
+                </p>
+                <span className="inline-block mt-1.5 px-2 py-0.5 rounded-md text-[10.5px] font-medium bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50">
+                  {user?.target_role || 'Python Backend Engineer'}
+                </span>
+              </div>
+
+              <div className="p-1 space-y-0.5">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    navigate('/settings');
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-slate-50 dark:hover:bg-slate-800/60 rounded-xl transition-colors cursor-pointer text-left"
+                >
+                  <UserIcon className="h-4 w-4 text-slate-400" />
+                  <span>Account Settings</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsProfileOpen(false);
+                    logout();
+                    navigate('/login');
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/40 rounded-xl transition-colors cursor-pointer text-left"
+                >
+                  <LogOut className="h-4 w-4" />
+                  <span>Sign Out</span>
+                </button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </header>
+
   );
 };
 

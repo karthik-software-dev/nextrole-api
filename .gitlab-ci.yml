@@ -1,0 +1,16 @@
+stages:
+  - schedule
+
+trigger_job_discovery:
+  stage: schedule
+  image: curlimages/curl:latest
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "schedule"
+    - if: $CI_PIPELINE_SOURCE == "web"
+  script:
+    - echo "Triggering NextRole automated job discovery..."
+    - >
+      curl -f -s -X POST "https://nextrole-api-vyzp.onrender.com/api/v1/discovery/run" \
+        -H "Content-Type: application/json" \
+        -d '{"source": "all", "location": "all", "use_cache": false}'
+    - echo "Job discovery successfully initiated on live API."

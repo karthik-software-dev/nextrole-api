@@ -1,16 +1,18 @@
 stages:
-  - schedule
+  - scrape
 
-trigger_job_discovery:
-  stage: schedule
-  image: curlimages/curl:latest
+run_job_discovery:
+  stage: scrape
+  image: mcr.microsoft.com/playwright/python:v1.40.0-jammy
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
     - if: $CI_PIPELINE_SOURCE == "web"
+  variables:
+    PYTHONUNBUFFERED: "1"
+    PYTHONPATH: "."
   script:
-    - echo "Triggering NextRole automated job discovery..."
-    - >
-      curl -f -s -X POST "https://nextrole-api-vyzp.onrender.com/api/v1/discovery/run" \
-        -H "Content-Type: application/json" \
-        -d '{"source": "all", "location": "all", "use_cache": false}'
-    - echo "Job discovery successfully initiated on live API."
+    - echo "Installing dependencies in 4GB Playwright runner..."
+    - pip install -r requirements.txt
+    - echo "Running full multi-source job discovery against PostgreSQL..."
+    - python main.py --source=all --live
+    - echo "Discovery completed and synced to Aiven cloud database."

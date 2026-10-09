@@ -322,7 +322,7 @@ class DiscoveryService:
                         logger.warning(f"[{n.upper()}] Fetch encountered error: {src_err}. Proceeding with remaining sources.")
                         return n, []
 
-                max_workers = min(len(active_fetchers), int(os.getenv("DISCOVERY_MAX_WORKERS", "10")))
+                max_workers = min(len(active_fetchers), int(os.getenv("DISCOVERY_MAX_WORKERS", "3")))
                 with ThreadPoolExecutor(max_workers=max_workers) as executor:
                     future_to_name = {
                         executor.submit(_execute_fetcher, item): item[0]
@@ -333,19 +333,36 @@ class DiscoveryService:
                         try:
                             _, fetched_list = future.result()
                             jobs.extend(fetched_list)
+                            # Incrementally save jobs to database as each source completes
+                            if fetched_list:
+                                sub_prioritized, _ = CentralJobProcessor.process_jobs(
+                                    jobs=fetched_list,
+                                    location=location,
+                                    max_days=int(os.getenv("DISCOVERY_MAX_DAYS", "30")),
+                                    min_relevance_score=8.0,
+                                    check_liveness=False,
+                                )
+                                with get_db() as session:
+                                    for job in sub_prioritized:
+                                        try:
+                                            with session.begin_nested():
+                                                JobRepository.upsert_job(session, job)
+                                        except Exception as job_err:
+                                            logger.debug(f"Incremental upsert skipped: {job_err}")
                         except Exception as fut_err:
                             logger.warning(f"[{src_name.upper()}] Unhandled worker error: {fut_err}")
 
             cls._last_jobs_found = len(jobs)
 
-            # Unified Central Processing: Single Source of Truth for Filtering & Scoring
+            # Unified Central Processing: Single Source of Truth for Final Deduplication & Scoring
             max_days = int(os.getenv("DISCOVERY_MAX_DAYS", "30"))
+            check_live = os.getenv("CHECK_LIVENESS", "false").lower() in ("true", "1")
             prioritized_jobs, irrelevant_jobs = CentralJobProcessor.process_jobs(
                 jobs=jobs,
                 location=location,
                 max_days=max_days,
                 min_relevance_score=8.0,
-                check_liveness=True,
+                check_liveness=check_live,
             )
 
             # Deactivate any existing DB records that have become irrelevant (never inserts new irrelevant jobs)

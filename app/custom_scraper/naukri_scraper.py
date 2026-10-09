@@ -130,15 +130,21 @@ class NaukriScraper:
 
         try:
             with sync_playwright() as p:
-                browser = p.chromium.launch(
-                    channel="chrome",
-                    headless=self.headless,
-                    args=[
-                        "--disable-blink-features=AutomationControlled",
-                        "--no-sandbox",
-                        "--disable-infobars",
-                    ],
-                )
+                launch_args = [
+                    "--disable-blink-features=AutomationControlled",
+                    "--no-sandbox",
+                    "--disable-infobars",
+                    "--disable-dev-shm-usage",
+                ]
+                browser = None
+                try:
+                    browser = p.chromium.launch(headless=self.headless, args=launch_args)
+                except Exception:
+                    try:
+                        browser = p.chromium.launch(channel="chrome", headless=self.headless, args=launch_args)
+                    except Exception as b_err:
+                        logger.warning(f"[Naukri] Browser launch unavailable on this environment: {b_err}")
+                        return NaukriScrapeResult(search_query=search_term, location=location, jobs=[], total_found=0, bot_detected=False, error=str(b_err), status="UNAVAILABLE")
                 context = browser.new_context(
                     user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
                     viewport={"width": 1280, "height": 800},

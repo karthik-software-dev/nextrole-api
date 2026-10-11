@@ -231,24 +231,12 @@ export const CompaniesPage: React.FC = () => {
               <div>
                 <div className="flex items-start justify-between gap-2 min-h-[48px]">
                   <CompanyAvatar name={company.name} size="lg" />
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    {company.active_jobs_count >= 5 ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 shadow-xs">
-                        <Flame className="h-3 w-3 fill-current text-amber-500" />
-                        Hiring Spree
-                      </span>
-                    ) : company.active_jobs_count >= 3 ? (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/20 shadow-2xs">
-                        <span>3+ Roles</span>
-                      </span>
-                    ) : null}
-                    {company.is_target && (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/80 shadow-xs">
-                        <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                        Target
-                      </span>
-                    )}
-                  </div>
+                  {company.is_target && (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/80 shadow-xs">
+                      <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                      Target
+                    </span>
+                  )}
                 </div>
 
                 <h3 className="text-[16px] sm:text-[17px] font-bold text-slate-900 dark:text-white mt-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
@@ -257,6 +245,19 @@ export const CompaniesPage: React.FC = () => {
                 <p className="text-[12.5px] text-slate-600 dark:text-slate-400 mt-1">
                   ATS: <span className="font-semibold text-slate-700 dark:text-slate-300">{company.ats_provider || 'Direct Career Site'}</span>
                 </p>
+
+                <div className="mt-3 flex items-center gap-1.5 min-h-[24px]">
+                  {company.active_jobs_count >= 5 ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 shadow-xs">
+                      <Flame className="h-3 w-3 fill-current text-amber-500" />
+                      Hiring Spree
+                    </span>
+                  ) : company.active_jobs_count >= 3 ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/20 shadow-2xs">
+                      <span>3+ Roles</span>
+                    </span>
+                  ) : null}
+                </div>
               </div>
 
               <div className="mt-5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between">

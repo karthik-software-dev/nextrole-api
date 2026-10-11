@@ -1,5 +1,10 @@
 import { apiClient } from './client';
-import type { DiscoveryStatus, DiscoverySource } from '../types';
+import type { DiscoveryStatus, DiscoverySource, SystemHealth } from '../types';
+
+export const getSystemHealth = async (): Promise<SystemHealth> => {
+  const response = await apiClient.get<SystemHealth>('/health');
+  return response.data;
+};
 
 export const getDiscoveryStatus = async (): Promise<DiscoveryStatus> => {
   const response = await apiClient.get<DiscoveryStatus>('/discovery/status');

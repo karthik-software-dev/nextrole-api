@@ -231,6 +231,13 @@ export interface NotificationListResponse {
   unread_count: number;
 }
 
+export interface SystemHealth {
+  status: string;
+  database: string;
+  version: string;
+  memory_rss_mb: number | null;
+}
+
 export * from './analytics';
 export * from './settings';
 

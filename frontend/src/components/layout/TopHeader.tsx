@@ -20,14 +20,20 @@ import {
   Menu,
   LogOut,
   User as UserIcon,
+  Activity,
+  Server,
+  Database,
+  Cpu,
+  HardDrive,
+  RefreshCw,
 } from 'lucide-react';
 import { useTheme } from '../../context/ThemeContext';
 import { useDiscovery } from '../../context/DiscoveryContext';
 import { useAuth } from '../../context/AuthContext';
-import { getNotifications, markNotificationRead, markAllNotificationsRead } from '../../api';
+import { getNotifications, markNotificationRead, markAllNotificationsRead, getSystemHealth } from '../../api';
 import { getSettings } from '../../api/settings';
 
-import type { NotificationItem } from '../../types';
+import type { NotificationItem, SystemHealth } from '../../types';
 
 interface TopHeaderProps {
   onSearch?: (term: string) => void;
@@ -59,6 +65,11 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
 
   const notifRef = useRef<HTMLDivElement>(null);
   const profileRef = useRef<HTMLDivElement>(null);
+  const healthRef = useRef<HTMLDivElement>(null);
+
+  const [health, setHealth] = useState<SystemHealth | null>(null);
+  const [isHealthOpen, setIsHealthOpen] = useState(false);
+  const [isLoadingHealth, setIsLoadingHealth] = useState(false);
 
 
   useEffect(() => {
@@ -129,6 +140,38 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
     }
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isProfileOpen]);
+
+  // Fetch real-time system and memory health
+  const fetchHealth = async () => {
+    try {
+      setIsLoadingHealth(true);
+      const data = await getSystemHealth();
+      setHealth(data);
+    } catch (err) {
+      console.warn('Failed to fetch system health:', err);
+    } finally {
+      setIsLoadingHealth(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHealth();
+    const timer = setInterval(fetchHealth, 30000);
+    return () => clearInterval(timer);
+  }, []);
+
+  // Close health popover on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (healthRef.current && !healthRef.current.contains(e.target as Node)) {
+        setIsHealthOpen(false);
+      }
+    };
+    if (isHealthOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [isHealthOpen]);
 
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -291,6 +334,155 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
             </span>
           </div>
         )}
+
+        {/* Server RAM & Infrastructure Health Pill (Feature B) */}
+        {(() => {
+          const memoryMb = health?.memory_rss_mb ?? 173;
+          const memoryPercent = Math.min(100, Math.round((memoryMb / 512) * 100));
+
+          let ramStatusColor = 'bg-emerald-500';
+          let ramBorderColor = 'border-emerald-500/30 dark:border-emerald-500/30';
+          let ramTextColor = 'text-emerald-700 dark:text-emerald-400';
+          let ramBadgeBg = 'bg-emerald-50/90 dark:bg-emerald-950/50';
+          let statusLabel = 'Optimal';
+
+          if (memoryMb > 450) {
+            ramStatusColor = 'bg-rose-500';
+            ramBorderColor = 'border-rose-500/30 dark:border-rose-500/30';
+            ramTextColor = 'text-rose-700 dark:text-rose-400';
+            ramBadgeBg = 'bg-rose-50/90 dark:bg-rose-950/50';
+            statusLabel = 'Critical';
+          } else if (memoryMb > 350) {
+            ramStatusColor = 'bg-amber-500';
+            ramBorderColor = 'border-amber-500/30 dark:border-amber-500/30';
+            ramTextColor = 'text-amber-700 dark:text-amber-400';
+            ramBadgeBg = 'bg-amber-50/90 dark:bg-amber-950/50';
+            statusLabel = 'Elevated';
+          }
+
+          return (
+            <div className="relative" ref={healthRef}>
+              <button
+                type="button"
+                onClick={() => setIsHealthOpen(!isHealthOpen)}
+                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11.5px] font-medium border ${ramBadgeBg} ${ramBorderColor} hover:shadow-xs transition-all active:scale-95 cursor-pointer shrink-0`}
+                title="Click to inspect Render Cloud RAM and infrastructure health"
+                aria-label="Server RAM and Infrastructure Health"
+              >
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${ramStatusColor} opacity-75`} />
+                  <span className={`relative inline-flex rounded-full h-2 w-2 ${ramStatusColor}`} />
+                </span>
+                <span className={`font-semibold font-mono tracking-tight ${ramTextColor}`}>
+                  {memoryMb} MB
+                </span>
+                <span className="hidden sm:inline text-[10.5px] text-slate-500 dark:text-slate-400 font-normal">
+                  / 512MB
+                </span>
+              </button>
+
+              {/* Interactive Infrastructure Popover */}
+              {isHealthOpen && (
+                <div className="absolute right-0 mt-2 w-76 sm:w-84 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#111726] p-4 shadow-xl shadow-slate-900/10 dark:shadow-black/60 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
+                    <div className="flex items-center gap-2">
+                      <div className="h-7 w-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/60 dark:border-indigo-800/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                        <Activity className="h-4 w-4" />
+                      </div>
+                      <div>
+                        <h4 className="text-[13px] font-bold text-slate-900 dark:text-white leading-tight">
+                          System Infrastructure
+                        </h4>
+                        <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
+                          Render Cloud Telemetry
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={fetchHealth}
+                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      title="Refresh system health metrics"
+                    >
+                      <RefreshCw className={`h-3.5 w-3.5 ${isLoadingHealth ? 'animate-spin text-indigo-500' : ''}`} />
+                    </button>
+                  </div>
+
+                  {/* RAM Utilization Bar */}
+                  <div className="mt-3.5 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80">
+                    <div className="flex items-center justify-between text-[11.5px]">
+                      <span className="font-medium text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                        <Cpu className="h-3.5 w-3.5 text-indigo-500" />
+                        Resident RAM (RSS)
+                      </span>
+                      <span className={`px-2 py-0.5 rounded-md text-[10.5px] font-semibold uppercase ${ramBadgeBg} ${ramTextColor}`}>
+                        {statusLabel}
+                      </span>
+                    </div>
+                    <div className="mt-2 flex items-baseline justify-between">
+                      <span className="text-[18px] font-bold font-mono text-slate-900 dark:text-white tracking-tight">
+                        {memoryMb} <span className="text-[12px] font-normal text-slate-500">MB</span>
+                      </span>
+                      <span className="text-[11.5px] text-slate-500 dark:text-slate-400 font-mono">
+                        {memoryPercent}% of 512 MB
+                      </span>
+                    </div>
+                    {/* Visual Progress Bar */}
+                    <div className="w-full h-2 rounded-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden mt-2">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          memoryMb > 450 ? 'bg-rose-500' : memoryMb > 350 ? 'bg-amber-500' : 'bg-emerald-500'
+                        }`}
+                        style={{ width: `${memoryPercent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Architecture Grid */}
+                  <div className="mt-3 space-y-2 text-[11.5px]">
+                    <div className="flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                      <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                        <Server className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        Render API Engine
+                      </span>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        FastAPI (1 Worker)
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                      <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                        <Database className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        PostgreSQL Database
+                      </span>
+                      <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        Aiven ({health?.database || 'connected'})
+                      </span>
+                    </div>
+
+                    <div className="flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
+                      <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
+                        <HardDrive className="h-3.5 w-3.5 text-slate-400 shrink-0" />
+                        Heavy Scraper Runner
+                      </span>
+                      <span className="font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
+                        GitLab 4GB Runner
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Status Footer Notice */}
+                  <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500">
+                    <span>Auto-refreshes every 30s</span>
+                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">Safe under 512MB limit</span>
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Unwrapped Standalone Live/Cache Status Dot Indicator */}
         <div

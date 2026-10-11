@@ -67,6 +67,12 @@ def get_memory_rss_mb() -> float | None:
     summary="Service Health Check",
     tags=["Health"],
 )
+@app.get(
+    "/api/v1/health",
+    response_model=HealthResponse,
+    summary="Service Health Check Alias",
+    tags=["Health"],
+)
 def health_check() -> HealthResponse:
     """Verifies service health, database connectivity, and resident memory footprint."""
     db_ok = check_db_connection()

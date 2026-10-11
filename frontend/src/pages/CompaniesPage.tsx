@@ -229,9 +229,9 @@ export const CompaniesPage: React.FC = () => {
               className="p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#111726] shadow-sm hover:border-indigo-300 dark:hover:border-indigo-700/60 hover:shadow-md hover:-translate-y-0.5 transition-[transform,box-shadow,border-color] duration-180 ease-out cursor-pointer flex flex-col justify-between group"
             >
               <div>
-                <div className="flex items-start justify-between gap-2 flex-wrap">
+                <div className="flex items-start justify-between gap-2 min-h-[48px]">
                   <CompanyAvatar name={company.name} size="lg" />
-                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                  <div className="flex flex-col items-end gap-1 shrink-0">
                     {company.active_jobs_count >= 5 ? (
                       <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 shadow-xs">
                         <Flame className="h-3 w-3 fill-current text-amber-500" />

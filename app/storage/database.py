@@ -1,4 +1,5 @@
 import logging
+import os
 from contextlib import contextmanager
 from urllib.parse import urlparse
 import psycopg2
@@ -67,8 +68,8 @@ else:
     engine = create_engine(
         _get_sqlalchemy_url(DATABASE_URL),
         pool_pre_ping=True,
-        pool_size=5,
-        max_overflow=10,
+        pool_size=int(os.getenv("DB_POOL_SIZE", "3" if os.getenv("RENDER") else "5")),
+        max_overflow=int(os.getenv("DB_MAX_OVERFLOW", "5" if os.getenv("RENDER") else "10")),
     )
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)

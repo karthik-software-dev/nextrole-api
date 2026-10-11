@@ -5,6 +5,7 @@ Maps scraped job tuples directly into canonical models.job.Job.
 """
 
 import logging
+import os
 import re
 import time
 from datetime import datetime, timedelta, timezone
@@ -126,7 +127,17 @@ class NaukriScraper:
         collected_jobs: list[Job] = []
         bot_detected = False
         error_msg: str | None = None
-        status = "SUCCESS"
+        if os.getenv("RENDER"):
+            logger.info("[Naukri] Headless browser execution bypassed in memory-constrained cloud container (512MB RAM). Handled via GitLab CI 4GB Playwright runner.")
+            return NaukriScrapeResult(
+                search_query=search_term,
+                location=location,
+                jobs=[],
+                total_found=0,
+                bot_detected=False,
+                error="Bypassed on Render 512MB container to prevent OOM. Handled by GitLab CI runner.",
+                status="SKIPPED_LOW_RAM",
+            )
 
         try:
             with sync_playwright() as p:

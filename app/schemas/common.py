@@ -26,3 +26,4 @@ class HealthResponse(BaseModel):
     status: str = "ok"
     database: str = "connected"
     version: str = "1.0.0"
+    memory_rss_mb: float | None = None

@@ -48,6 +48,19 @@ app.add_middleware(
 app.include_router(api_v1_router, prefix="/api")
 
 
+def get_memory_rss_mb() -> float | None:
+    """Reads resident set size (RSS) memory in megabytes from Linux /proc/self/status without dependencies."""
+    try:
+        with open("/proc/self/status", "r") as f:
+            for line in f:
+                if line.startswith("VmRSS:"):
+                    parts = line.split()
+                    return round(int(parts[1]) / 1024.0, 1)
+    except Exception:
+        pass
+    return None
+
+
 @app.get(
     "/health",
     response_model=HealthResponse,
@@ -55,12 +68,13 @@ app.include_router(api_v1_router, prefix="/api")
     tags=["Health"],
 )
 def health_check() -> HealthResponse:
-    """Verifies service health and connectivity."""
+    """Verifies service health, database connectivity, and resident memory footprint."""
     db_ok = check_db_connection()
     return HealthResponse(
         status="ok" if db_ok else "degraded",
         database="connected" if db_ok else "disconnected",
         version="1.0.0",
+        memory_rss_mb=get_memory_rss_mb(),
     )
 
 

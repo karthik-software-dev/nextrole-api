@@ -3,6 +3,7 @@ import logging
 import os
 import threading
 import time
+import urllib.parse
 from typing import Any
 
 from processing.central_processor import CentralJobProcessor
@@ -205,6 +206,19 @@ class DiscoveryService:
             cls._last_jobs_found = 0
             cls._last_jobs_synced = 0
 
+        # Check if GitLab CI Trigger is configured (Option B: offload heavy scraping to 4GB runner)
+        gitlab_token = os.getenv("GITLAB_TRIGGER_TOKEN")
+        if gitlab_token:
+            gitlab_project = os.getenv("GITLAB_PROJECT_ID", "karthik-software-dev%2Fnextrole-api")
+            background_tasks.add_task(
+                cls._dispatch_gitlab_pipeline,
+                gitlab_token=gitlab_token,
+                gitlab_project=gitlab_project,
+                source=source,
+                location=location,
+            )
+            return True
+
         background_tasks.add_task(
             cls._execute_pipeline,
             source=source,
@@ -212,6 +226,66 @@ class DiscoveryService:
             use_cache=use_cache,
         )
         return True
+
+    @classmethod
+    def _dispatch_gitlab_pipeline(
+        cls,
+        gitlab_token: str,
+        gitlab_project: str,
+        source: str = "all",
+        location: str = "all",
+    ) -> None:
+        """Dispatches an asynchronous scraper pipeline to the GitLab 4GB Playwright CI runner."""
+        import httpx
+        from services.notification_service import NotificationService
+
+        start_time = time.perf_counter()
+        encoded_project = urllib.parse.quote(gitlab_project, safe="") if "/" in gitlab_project else gitlab_project
+        trigger_url = f"https://gitlab.com/api/v4/projects/{encoded_project}/trigger/pipeline"
+        ref = os.getenv("GITLAB_TRIGGER_REF", "main")
+
+        try:
+            logger.info(f"Dispatching discovery job to GitLab CI 4GB runner ({trigger_url}, ref={ref}, source={source})...")
+            NotificationService.create_notification(
+                title="Job Discovery Dispatched",
+                message=f"Scraper job dispatched to GitLab 4GB Playwright runner (Source: {source}).",
+                type="discovery",
+                link="/discovery",
+            )
+            resp = httpx.post(
+                trigger_url,
+                data={
+                    "token": gitlab_token,
+                    "ref": ref,
+                    "variables[SCRAPER_SOURCE]": source,
+                    "variables[SCRAPER_LOCATION]": location,
+                },
+                timeout=15.0,
+            )
+            if resp.status_code in (200, 201):
+                p_data = resp.json()
+                pipeline_id = p_data.get("id")
+                pipeline_web_url = p_data.get("web_url")
+                logger.info(f"GitLab CI pipeline #{pipeline_id} created successfully: {pipeline_web_url}")
+                cls._last_status = "running"
+                cls._last_duration_seconds = round(time.perf_counter() - start_time, 1)
+                NotificationService.create_notification(
+                    title="GitLab 4GB Runner Active",
+                    message=f"Pipeline #{pipeline_id} running with Playwright browser automation. Jobs will stream to dashboard.",
+                    type="discovery",
+                    link="/discovery",
+                )
+            else:
+                err_msg = f"GitLab API returned HTTP {resp.status_code}: {resp.text[:120]}"
+                logger.error(err_msg)
+                cls._last_status = "failed"
+                cls._last_error = err_msg
+        except Exception as e:
+            cls._last_status = "failed"
+            cls._last_error = str(e)
+            logger.error(f"Failed to dispatch pipeline to GitLab CI: {e}", exc_info=True)
+        finally:
+            cls._is_running = False
 
     @classmethod
     def run_pipeline(
@@ -322,7 +396,7 @@ class DiscoveryService:
                         logger.warning(f"[{n.upper()}] Fetch encountered error: {src_err}. Proceeding with remaining sources.")
                         return n, []
 
-                max_workers = min(len(active_fetchers), int(os.getenv("DISCOVERY_MAX_WORKERS", "3")))
+                max_workers = min(len(active_fetchers), int(os.getenv("DISCOVERY_MAX_WORKERS", "2" if os.getenv("RENDER") else "3")))
                 with ThreadPoolExecutor(max_workers=max_workers) as executor:
                     future_to_name = {
                         executor.submit(_execute_fetcher, item): item[0]
@@ -413,3 +487,10 @@ class DiscoveryService:
             )
         finally:
             cls._is_running = False
+            try:
+                import gc
+                gc.collect()
+                import ctypes
+                ctypes.CDLL("libc.so.6").malloc_trim(0)
+            except Exception:
+                pass

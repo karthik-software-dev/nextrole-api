@@ -7,6 +7,8 @@ run_job_discovery:
   rules:
     - if: $CI_PIPELINE_SOURCE == "schedule"
     - if: $CI_PIPELINE_SOURCE == "web"
+    - if: $CI_PIPELINE_SOURCE == "trigger"
+    - if: $CI_PIPELINE_SOURCE == "pipeline"
   variables:
     PYTHONUNBUFFERED: "1"
     PYTHONPATH: "."
@@ -14,5 +16,5 @@ run_job_discovery:
     - echo "Installing dependencies in 4GB Playwright runner..."
     - pip install -r requirements.txt
     - echo "Running full multi-source job discovery against PostgreSQL..."
-    - python main.py --source=all --live
+    - python main.py --source=${SCRAPER_SOURCE:-all} --live
     - echo "Discovery completed and synced to Aiven cloud database."

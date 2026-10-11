@@ -1,5 +1,6 @@
 import json
 import logging
+import os
 import re
 import urllib.parse
 import urllib.request
@@ -110,7 +111,8 @@ def fetch_smartrecruiters_postings(company: TargetCompany) -> list[dict[str, Any
 
     # Hydrate full descriptions in parallel
     hydrated_items: list[dict[str, Any]] = []
-    with ThreadPoolExecutor(max_workers=8) as executor:
+    ats_workers = min(3 if os.getenv("RENDER") else 8, len(candidate_items))
+    with ThreadPoolExecutor(max_workers=max(1, ats_workers)) as executor:
         future_map = {
             executor.submit(_fetch_single_smartrecruiters_detail, company.identifier, it): it
             for it in candidate_items
@@ -267,7 +269,7 @@ def fetch_target_company_jobs(
     collected_records: list[dict[str, Any]] = []
     jobs: list[Job] = []
 
-    max_workers = min(15, len(target_list)) if target_list else 1
+    max_workers = min(3 if os.getenv("RENDER") else 15, len(target_list)) if target_list else 1
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         future_to_comp = {executor.submit(_fetch_single_target_company, comp): comp for comp in target_list}
         for future in as_completed(future_to_comp):

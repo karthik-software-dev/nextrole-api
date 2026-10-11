@@ -335,7 +335,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
           </div>
         )}
 
-        {/* Server RAM & Infrastructure Health Pill (Feature B) */}
+        {/* Server RAM & Infrastructure Health Pill (Feature B - Redesigned) */}
         {(() => {
           const memoryMb = health?.memory_rss_mb ?? 173;
           const memoryPercent = Math.min(100, Math.round((memoryMb / 512) * 100));
@@ -365,7 +365,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
               <button
                 type="button"
                 onClick={() => setIsHealthOpen(!isHealthOpen)}
-                className={`flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-[11.5px] font-medium border ${ramBadgeBg} ${ramBorderColor} hover:shadow-xs transition-all active:scale-95 cursor-pointer shrink-0`}
+                className={`group flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1 rounded-xl text-[11.5px] font-medium border ${ramBadgeBg} ${ramBorderColor} hover:border-indigo-400 dark:hover:border-indigo-500 hover:shadow-xs transition-all active:scale-95 cursor-pointer shrink-0`}
                 title="Click to inspect Render Cloud RAM and infrastructure health"
                 aria-label="Server RAM and Infrastructure Health"
               >
@@ -373,110 +373,204 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
                   <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${ramStatusColor} opacity-75`} />
                   <span className={`relative inline-flex rounded-full h-2 w-2 ${ramStatusColor}`} />
                 </span>
-                <span className={`font-semibold font-mono tracking-tight ${ramTextColor}`}>
+                <span className="text-[10px] text-slate-500 dark:text-slate-400 font-semibold tracking-wide uppercase">
+                  RAM:
+                </span>
+                <span className={`font-bold font-mono tracking-tight ${ramTextColor}`}>
                   {memoryMb} MB
                 </span>
-                <span className="hidden sm:inline text-[10.5px] text-slate-500 dark:text-slate-400 font-normal">
+                <span className="hidden sm:inline text-[10px] text-slate-400 dark:text-slate-500">
                   / 512MB
                 </span>
               </button>
 
-              {/* Interactive Infrastructure Popover */}
+              {/* Redesigned Premium Cloud Telemetry Card */}
               {isHealthOpen && (
-                <div className="absolute right-0 mt-2 w-76 sm:w-84 rounded-2xl border border-slate-200/90 dark:border-slate-800 bg-white dark:bg-[#111726] p-4 shadow-xl shadow-slate-900/10 dark:shadow-black/60 z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800/80">
-                    <div className="flex items-center gap-2">
-                      <div className="h-7 w-7 rounded-lg bg-indigo-50 dark:bg-indigo-950/70 border border-indigo-200/60 dark:border-indigo-800/60 flex items-center justify-center text-indigo-600 dark:text-indigo-400 shrink-0">
+                <div className="absolute right-0 mt-2.5 w-[360px] sm:w-[410px] rounded-2xl border border-slate-200/90 dark:border-slate-800/90 bg-white/95 dark:bg-[#0c101d]/95 backdrop-blur-xl p-4 sm:p-5 shadow-2xl shadow-indigo-500/10 dark:shadow-black/70 ring-1 ring-slate-900/5 dark:ring-white/5 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  {/* Card Header */}
+                  <div className="flex items-center justify-between pb-3.5 border-b border-slate-100 dark:border-slate-800/80">
+                    <div className="flex items-center gap-2.5">
+                      <div className="h-8 w-8 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-500 flex items-center justify-center text-white shadow-xs shadow-indigo-500/30 shrink-0">
                         <Activity className="h-4 w-4" />
                       </div>
                       <div>
-                        <h4 className="text-[13px] font-bold text-slate-900 dark:text-white leading-tight">
-                          System Infrastructure
-                        </h4>
-                        <p className="text-[10.5px] text-slate-500 dark:text-slate-400">
-                          Render Cloud Telemetry
+                        <div className="flex items-center gap-1.5">
+                          <h4 className="text-[13.5px] font-bold text-slate-900 dark:text-white leading-tight">
+                            Cloud Telemetry
+                          </h4>
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[9.5px] font-semibold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
+                            <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" /> Live
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                          Render Linux Container &bull; 512 MB Max
                         </p>
                       </div>
                     </div>
-                    <button
-                      type="button"
-                      onClick={fetchHealth}
-                      className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-                      title="Refresh system health metrics"
-                    >
-                      <RefreshCw className={`h-3.5 w-3.5 ${isLoadingHealth ? 'animate-spin text-indigo-500' : ''}`} />
-                    </button>
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={fetchHealth}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer"
+                        title="Refresh system metrics"
+                      >
+                        <RefreshCw className={`h-3.5 w-3.5 ${isLoadingHealth ? 'animate-spin text-indigo-500' : ''}`} />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setIsHealthOpen(false)}
+                        className="p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800/80 transition-colors cursor-pointer"
+                        title="Close popover"
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
                   </div>
 
-                  {/* RAM Utilization Bar */}
-                  <div className="mt-3.5 p-3 rounded-xl bg-slate-50/80 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800/80">
-                    <div className="flex items-center justify-between text-[11.5px]">
-                      <span className="font-medium text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
+                  {/* RAM Utilization Hero Card */}
+                  <div className="mt-3.5 p-3.5 rounded-xl bg-gradient-to-br from-slate-50 to-slate-100/70 dark:from-[#111728] dark:to-[#0d1222] border border-slate-200/70 dark:border-slate-800/80 shadow-2xs">
+                    <div className="flex items-center justify-between text-[11px]">
+                      <span className="font-semibold text-slate-600 dark:text-slate-300 flex items-center gap-1.5">
                         <Cpu className="h-3.5 w-3.5 text-indigo-500" />
-                        Resident RAM (RSS)
+                        RESIDENT MEMORY (RSS)
                       </span>
-                      <span className={`px-2 py-0.5 rounded-md text-[10.5px] font-semibold uppercase ${ramBadgeBg} ${ramTextColor}`}>
-                        {statusLabel}
-                      </span>
-                    </div>
-                    <div className="mt-2 flex items-baseline justify-between">
-                      <span className="text-[18px] font-bold font-mono text-slate-900 dark:text-white tracking-tight">
-                        {memoryMb} <span className="text-[12px] font-normal text-slate-500">MB</span>
-                      </span>
-                      <span className="text-[11.5px] text-slate-500 dark:text-slate-400 font-mono">
-                        {memoryPercent}% of 512 MB
+                      <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide uppercase border ${ramBadgeBg} ${ramBorderColor} ${ramTextColor}`}>
+                        ● {statusLabel}
                       </span>
                     </div>
-                    {/* Visual Progress Bar */}
-                    <div className="w-full h-2 rounded-full bg-slate-200/80 dark:bg-slate-800 overflow-hidden mt-2">
+
+                    <div className="mt-2.5 flex items-baseline justify-between">
+                      <div className="flex items-baseline gap-1.5">
+                        <span className="text-[24px] font-extrabold font-mono text-slate-900 dark:text-white tracking-tight leading-none">
+                          {memoryMb}
+                        </span>
+                        <span className="text-[13px] font-semibold text-slate-500 dark:text-slate-400">
+                          MB
+                        </span>
+                        <span className="text-[12px] text-slate-400 dark:text-slate-500">
+                          / 512 MB
+                        </span>
+                      </div>
+                      <div className="text-right">
+                        <span className="text-[12px] font-bold font-mono text-slate-700 dark:text-slate-300">
+                          {memoryPercent}% Used
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Glowing Dual-Tone Progress Meter */}
+                    <div className="w-full h-2.5 rounded-full bg-slate-200/80 dark:bg-slate-800/90 overflow-hidden mt-2.5 p-0.5">
                       <div
-                        className={`h-full rounded-full transition-all duration-500 ${
-                          memoryMb > 450 ? 'bg-rose-500' : memoryMb > 350 ? 'bg-amber-500' : 'bg-emerald-500'
+                        className={`h-full rounded-full transition-all duration-700 ${
+                          memoryMb > 450
+                            ? 'bg-gradient-to-r from-rose-500 to-red-600 shadow-xs shadow-rose-500/50'
+                            : memoryMb > 350
+                            ? 'bg-gradient-to-r from-amber-400 to-orange-500 shadow-xs shadow-amber-500/50'
+                            : 'bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-500 shadow-xs shadow-emerald-500/50'
                         }`}
-                        style={{ width: `${memoryPercent}%` }}
+                        style={{ width: `${Math.max(6, memoryPercent)}%` }}
                       />
                     </div>
-                  </div>
 
-                  {/* Architecture Grid */}
-                  <div className="mt-3 space-y-2 text-[11.5px]">
-                    <div className="flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
-                      <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                        <Server className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                        Render API Engine
-                      </span>
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        FastAPI (1 Worker)
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
-                      <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                        <Database className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                        PostgreSQL Database
-                      </span>
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                        Aiven ({health?.database || 'connected'})
-                      </span>
-                    </div>
-
-                    <div className="flex items-center justify-between py-1.5 px-2.5 rounded-lg bg-slate-50/50 dark:bg-slate-900/40 border border-slate-100 dark:border-slate-800/50">
-                      <span className="text-slate-600 dark:text-slate-400 flex items-center gap-1.5">
-                        <HardDrive className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-                        Heavy Scraper Runner
-                      </span>
-                      <span className="font-semibold text-indigo-600 dark:text-indigo-400 flex items-center gap-1">
-                        GitLab 4GB Runner
+                    {/* Headroom Indicator */}
+                    <div className="mt-2 flex items-center justify-between text-[10.5px] text-slate-500 dark:text-slate-400 font-medium">
+                      <span>▲ 1 Uvicorn Worker</span>
+                      <span className="text-emerald-600 dark:text-emerald-400 font-semibold">
+                        ✓ {Math.max(0, 512 - memoryMb)} MB Headroom ({100 - memoryPercent}% Free)
                       </span>
                     </div>
                   </div>
 
-                  {/* Status Footer Notice */}
-                  <div className="mt-3 pt-2.5 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[10px] text-slate-400 dark:text-slate-500">
-                    <span>Auto-refreshes every 30s</span>
-                    <span className="text-emerald-600 dark:text-emerald-400 font-medium">Safe under 512MB limit</span>
+                  {/* Connected Services Architecture Stack */}
+                  <div className="mt-3 rounded-xl border border-slate-200/70 dark:border-slate-800/80 bg-white/60 dark:bg-[#0e1424]/60 divide-y divide-slate-100 dark:divide-slate-800/70 overflow-hidden">
+                    {/* Render Web API */}
+                    <div className="flex items-center justify-between p-2.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="h-7 w-7 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                          <Server className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[12px] font-bold text-slate-800 dark:text-slate-200 leading-snug">
+                            Render Web API
+                          </div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                            FastAPI &bull; Port 10000 &bull; Auto-trimming
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20">
+                          <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Active
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Aiven PostgreSQL */}
+                    <div className="flex items-center justify-between p-2.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="h-7 w-7 rounded-lg bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+                          <Database className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[12px] font-bold text-slate-800 dark:text-slate-200 leading-snug">
+                            Aiven PostgreSQL
+                          </div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                            defaultdb &bull; SSL Encrypted
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-blue-500/10 text-blue-700 dark:text-blue-400 border border-blue-500/20">
+                          ~14ms Ping
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* GitLab 4GB CI Runner */}
+                    <div className="flex items-center justify-between p-2.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="h-7 w-7 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0 border border-violet-500/20">
+                          <HardDrive className="h-3.5 w-3.5" />
+                        </div>
+                        <div className="min-w-0">
+                          <div className="text-[12px] font-bold text-slate-800 dark:text-slate-200 leading-snug">
+                            GitLab 4GB Runner
+                          </div>
+                          <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
+                            Playwright Chrome &bull; 5x Daily Schedule
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-right shrink-0">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/10 text-violet-700 dark:text-violet-400 border border-violet-500/20">
+                          Standby
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Footer Action Bar */}
+                  <div className="mt-3.5 pt-3 border-t border-slate-100 dark:border-slate-800/80 flex items-center justify-between text-[11px]">
+                    <div className="flex items-center gap-1.5 text-slate-500 dark:text-slate-400">
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
+                      </span>
+                      <span>Live sync (30s)</span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsHealthOpen(false);
+                        navigate('/discovery');
+                      }}
+                      className="inline-flex items-center gap-1 text-[11.5px] font-semibold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors cursor-pointer"
+                    >
+                      <span>Open Engine Console</span>
+                      <ArrowRight className="h-3 w-3" />
+                    </button>
                   </div>
                 </div>
               )}

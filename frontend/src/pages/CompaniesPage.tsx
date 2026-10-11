@@ -12,6 +12,7 @@ import {
   X,
   MapPin,
   Plane,
+  Flame,
 } from 'lucide-react';
 import { getCompanies, getCompanyById } from '../api';
 import type { Company, CompanyDetail } from '../types';
@@ -26,6 +27,7 @@ export const CompaniesPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [targetOnly, setTargetOnly] = useState(false);
+  const [highVelocityOnly, setHighVelocityOnly] = useState(false);
   const [locationFilter, setLocationFilter] = useState<'all' | 'INDIA' | 'ABROAD'>('all');
 
   // Pagination state
@@ -40,7 +42,7 @@ export const CompaniesPage: React.FC = () => {
 
   useEffect(() => {
     fetchCompanies();
-  }, [currentPage, pageSize, targetOnly, searchQuery, locationFilter]);
+  }, [currentPage, pageSize, targetOnly, highVelocityOnly, searchQuery, locationFilter]);
 
   const fetchCompanies = async () => {
     try {
@@ -50,6 +52,7 @@ export const CompaniesPage: React.FC = () => {
         page_size: pageSize,
       };
       if (targetOnly) params.is_target = true;
+      if (highVelocityOnly) params.min_jobs = 3;
       if (searchQuery.trim()) params.search = searchQuery.trim();
       if (locationFilter !== 'all') params.location = locationFilter;
       const res = await getCompanies(params);
@@ -187,6 +190,23 @@ export const CompaniesPage: React.FC = () => {
             <Star className={`h-3.5 w-3.5 ${targetOnly ? 'fill-amber-500 text-amber-500' : ''}`} />
             <span>Target Only</span>
           </button>
+
+          {/* High Velocity (3+ Roles) Filter Button */}
+          <button
+            onClick={() => {
+              setHighVelocityOnly(!highVelocityOnly);
+              setCurrentPage(1);
+            }}
+            className={`h-9 px-3.5 text-xs font-semibold rounded-xl flex items-center gap-1.5 transition-all cursor-pointer ${
+              highVelocityOnly
+                ? 'bg-amber-500/10 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 border border-amber-300 dark:border-amber-700/80 shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
+            }`}
+            title="Filter companies aggressively hiring with 3+ open active roles"
+          >
+            <Flame className={`h-3.5 w-3.5 ${highVelocityOnly ? 'fill-amber-500 text-amber-500' : 'text-slate-400'}`} />
+            <span>3+ Roles (High Velocity)</span>
+          </button>
         </div>
       </div>
 
@@ -209,14 +229,26 @@ export const CompaniesPage: React.FC = () => {
               className="p-5 sm:p-6 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#111726] shadow-sm hover:border-indigo-300 dark:hover:border-indigo-700/60 hover:shadow-md hover:-translate-y-0.5 transition-[transform,box-shadow,border-color] duration-180 ease-out cursor-pointer flex flex-col justify-between group"
             >
               <div>
-                <div className="flex items-start justify-between gap-3">
+                <div className="flex items-start justify-between gap-2 flex-wrap">
                   <CompanyAvatar name={company.name} size="lg" />
-                  {company.is_target && (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/80 shadow-xs">
-                      <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
-                      Target
-                    </span>
-                  )}
+                  <div className="flex items-center gap-1.5 flex-wrap justify-end">
+                    {company.active_jobs_count >= 5 ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-amber-500/10 text-amber-700 dark:text-amber-400 border border-amber-500/20 shadow-xs">
+                        <Flame className="h-3 w-3 fill-current text-amber-500" />
+                        Hiring Spree
+                      </span>
+                    ) : company.active_jobs_count >= 3 ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10.5px] font-semibold bg-indigo-500/10 text-indigo-700 dark:text-indigo-400 border border-indigo-500/20 shadow-2xs">
+                        <span>3+ Roles</span>
+                      </span>
+                    ) : null}
+                    {company.is_target && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-50 dark:bg-amber-950/80 text-amber-700 dark:text-amber-400 border border-amber-200 dark:border-amber-800/80 shadow-xs">
+                        <Star className="h-3 w-3 fill-amber-500 text-amber-500" />
+                        Target
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <h3 className="text-[16px] sm:text-[17px] font-bold text-slate-900 dark:text-white mt-3 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">

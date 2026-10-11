@@ -20,6 +20,7 @@ class CompanyService:
         is_target: bool | None = None,
         search: str | None = None,
         location: str | None = None,
+        min_jobs: int | None = None,
     ) -> PaginatedResponse[CompanyOut]:
         """Fetches a paginated directory of companies with open active jobs count."""
         page = max(1, page)
@@ -41,6 +42,9 @@ class CompanyService:
             .outerjoin(active_jobs_sub, Company.id == active_jobs_sub.c.company_id)
             .where(Company.is_active.is_(True))
         )
+
+        if min_jobs is not None and min_jobs > 0:
+            stmt = stmt.where(func.coalesce(active_jobs_sub.c.job_count, 0) >= min_jobs)
 
         from config.target_companies import TARGET_COMPANIES
         target_names_set = {c.name.strip().lower() for c in TARGET_COMPANIES}

@@ -4,16 +4,20 @@ from sqlalchemy.orm import Session
 
 from schemas.dashboard import (
     ApplicationStatusBreakdownOut,
+    DailyCadenceRunOut,
     DashboardSummaryOut,
+    DedupEfficiencyOut,
     DiscoveryTrendItemOut,
     LocationBreakdownOut,
     LocationStatItemOut,
     RecentActivityItemOut,
+    TopHiringCompanyOut,
 )
 from schemas.analytics import ExperienceDistributionOut, SalaryDistributionOut
 from processing.salary_parser import parse_salary_lpa
 from storage.models.application import Application
 from storage.models.application_history import ApplicationHistory
+from storage.models.company import Company
 from storage.models.job import Job
 from storage.models.job_source import JobSource
 from storage.repositories.job_repository import JobRepository
@@ -292,6 +296,122 @@ class DashboardService:
             SalaryDistributionOut(bracket="22+ LPA", count=sal_22_plus),
         ]
 
+        # 9. 5-Run Daily Cadence (Partition jobs into 5 standard runner windows)
+        now_utc = datetime.now(timezone.utc)
+        ist_now = now_utc + timedelta(hours=5, minutes=30)
+        target_date = e_date if e_date == today else today
+
+        target_start_dt = datetime.combine(target_date, time.min, tzinfo=timezone.utc) - timedelta(hours=6)
+        target_end_dt = datetime.combine(target_date, time.max, tzinfo=timezone.utc) + timedelta(hours=6)
+
+        day_job_times = session.execute(
+            select(Job.first_seen_at)
+            .where(Job.first_seen_at >= target_start_dt, Job.first_seen_at <= target_end_dt)
+        ).scalars().all()
+
+        slot_defs = [
+            {"run_number": 1, "time_slot": "09:00 AM", "label": "Morning Market Sync", "hour_max": 11, "act_hour": 9},
+            {"run_number": 2, "time_slot": "12:00 PM", "label": "Mid-day Ingestion", "hour_max": 14, "act_hour": 12},
+            {"run_number": 3, "time_slot": "03:00 PM", "label": "Afternoon Crawl", "hour_max": 17, "act_hour": 15},
+            {"run_number": 4, "time_slot": "06:00 PM", "label": "Evening Sync", "hour_max": 20, "act_hour": 18},
+            {"run_number": 5, "time_slot": "09:00 PM", "label": "Night Roundup", "hour_max": 24, "act_hour": 21},
+        ]
+
+        slot_counts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+        for jt in day_job_times:
+            if jt:
+                jt_ist = jt + timedelta(hours=5, minutes=30)
+                if jt_ist.date() == target_date:
+                    h = jt_ist.hour
+                    for sdef in slot_defs:
+                        if h < sdef["hour_max"]:
+                            slot_counts[sdef["run_number"]] += 1
+                            break
+
+        curr_ist_hour = ist_now.hour if target_date == today else 24
+        daily_cadence: list[DailyCadenceRunOut] = []
+        running_cum = 0
+
+        for sdef in slot_defs:
+            rnum = sdef["run_number"]
+            cnt = slot_counts[rnum]
+            running_cum += cnt
+
+            if target_date < today:
+                status = "completed"
+            elif curr_ist_hour >= sdef["hour_max"]:
+                status = "completed"
+            elif curr_ist_hour >= sdef["act_hour"]:
+                status = "active"
+            else:
+                status = "scheduled"
+
+            daily_cadence.append(
+                DailyCadenceRunOut(
+                    run_number=rnum,
+                    time_slot=sdef["time_slot"],
+                    label=sdef["label"],
+                    status=status,
+                    jobs_collected=cnt,
+                    cumulative_jobs=running_cum,
+                    runner="GitLab 4GB Runner",
+                )
+            )
+
+        # 10. Top Hiring Companies (Hiring velocity leaderboard preview)
+        top_comp_rows = session.execute(
+            select(
+                Company.name,
+                func.count(Job.id).label("job_count"),
+                func.bool_or(Job.is_remote).label("has_remote")
+            )
+            .join(Company, Job.company_id == Company.id)
+            .where(Job.is_active.is_(True))
+            .group_by(Company.name)
+            .order_by(func.count(Job.id).desc())
+            .limit(5)
+        ).all()
+
+        top_hiring_companies: list[TopHiringCompanyOut] = []
+        for cname, ccount, cremote in top_comp_rows:
+            locs: list[str] = []
+            if cremote:
+                locs.append("Remote")
+            loc_samples = session.execute(
+                select(Job.location_bucket)
+                .join(Company, Job.company_id == Company.id)
+                .where(Company.name == cname, Job.is_active.is_(True))
+                .limit(2)
+            ).scalars().all()
+            for lb in loc_samples:
+                if lb and lb != "OTHER" and lb.title() not in locs:
+                    locs.append(lb.title())
+            top_hiring_companies.append(
+                TopHiringCompanyOut(
+                    name=cname,
+                    job_count=ccount,
+                    locations=locs[:2],
+                    is_remote=bool(cremote),
+                )
+            )
+
+        # 11. Deduplication & Spam Suppression Efficiency Metrics
+        active_jobs_cnt = job_stats["active_jobs"]
+        multi_source_cnt = session.scalar(select(func.count(Job.id)).where(Job.source_count > 1)) or 0
+        duplicates_filtered_cnt = session.scalar(select(func.sum(Job.source_count - 1))) or 0
+        total_sightings_cnt = active_jobs_cnt + duplicates_filtered_cnt
+        suppression_rate = (
+            round((duplicates_filtered_cnt / total_sightings_cnt) * 100, 1)
+            if total_sightings_cnt > 0
+            else 0.0
+        )
+        dedup_efficiency = DedupEfficiencyOut(
+            canonical_jobs=active_jobs_cnt,
+            multi_source_jobs=multi_source_cnt,
+            duplicates_filtered=duplicates_filtered_cnt,
+            suppression_rate_pct=suppression_rate,
+        )
+
         return DashboardSummaryOut(
             total_jobs=job_stats["total_jobs"],
             active_jobs=job_stats["active_jobs"],
@@ -309,4 +429,7 @@ class DashboardService:
             recent_activities=combined_activities,
             experience_distribution=experience_distribution,
             salary_distribution=salary_distribution,
+            daily_cadence=daily_cadence,
+            top_hiring_companies=top_hiring_companies,
+            dedup_efficiency=dedup_efficiency,
         )

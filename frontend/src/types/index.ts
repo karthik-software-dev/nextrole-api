@@ -154,6 +154,30 @@ export interface RecentActivityItem {
   activity_type: string;
 }
 
+export interface DailyCadenceRun {
+  run_number: number;
+  time_slot: string;
+  label: string;
+  status: 'completed' | 'active' | 'scheduled';
+  jobs_collected: number;
+  cumulative_jobs: number;
+  runner: string;
+}
+
+export interface TopHiringCompany {
+  name: string;
+  job_count: number;
+  locations: string[];
+  is_remote: boolean;
+}
+
+export interface DedupEfficiency {
+  canonical_jobs: number;
+  multi_source_jobs: number;
+  duplicates_filtered: number;
+  suppression_rate_pct: number;
+}
+
 export interface DashboardSummary {
   total_jobs: number;
   active_jobs: number;
@@ -187,6 +211,9 @@ export interface DashboardSummary {
   recent_activities?: RecentActivityItem[];
   experience_distribution?: ExperienceDistribution[];
   salary_distribution?: SalaryDistribution[];
+  daily_cadence?: DailyCadenceRun[];
+  top_hiring_companies?: TopHiringCompany[];
+  dedup_efficiency?: DedupEfficiency | null;
 }
 
 export interface DiscoveryStatus {

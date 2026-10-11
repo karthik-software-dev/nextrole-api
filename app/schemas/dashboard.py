@@ -54,6 +54,36 @@ class RecentActivityItemOut(BaseModel):
     activity_type: str
 
 
+class DailyCadenceRunOut(BaseModel):
+    """Execution status and job ingestion count for a scheduled daily runner window."""
+
+    run_number: int
+    time_slot: str
+    label: str
+    status: str
+    jobs_collected: int
+    cumulative_jobs: int
+    runner: str = "GitLab 4GB Runner"
+
+
+class TopHiringCompanyOut(BaseModel):
+    """Company with active hiring volume and job counts."""
+
+    name: str
+    job_count: int
+    locations: list[str] = []
+    is_remote: bool = False
+
+
+class DedupEfficiencyOut(BaseModel):
+    """Cross-source deduplication and spam suppression efficiency metrics."""
+
+    canonical_jobs: int
+    multi_source_jobs: int
+    duplicates_filtered: int
+    suppression_rate_pct: float
+
+
 from schemas.analytics import ExperienceDistributionOut, SalaryDistributionOut
 
 
@@ -76,3 +106,7 @@ class DashboardSummaryOut(BaseModel):
     recent_activities: list[RecentActivityItemOut] = []
     experience_distribution: list[ExperienceDistributionOut] = []
     salary_distribution: list[SalaryDistributionOut] = []
+    daily_cadence: list[DailyCadenceRunOut] = []
+    top_hiring_companies: list[TopHiringCompanyOut] = []
+    dedup_efficiency: DedupEfficiencyOut | None = None
+

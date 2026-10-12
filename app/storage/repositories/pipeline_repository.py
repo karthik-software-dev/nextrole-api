@@ -63,6 +63,8 @@ class PipelineRepository:
         try:
             from services.dashboard_service import DashboardService
             DashboardService.clear_cache()
+            from services.analytics_service import AnalyticsService
+            AnalyticsService.clear_cache()
         except Exception:
             pass
         return run

@@ -3,7 +3,7 @@ from datetime import datetime, timedelta, timezone
 import re
 from typing import Any
 
-from sqlalchemy import func
+from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from schemas.analytics import (
@@ -32,6 +32,7 @@ from schemas.analytics import (
     WorkModeStatOut,
 )
 from storage.models.application import Application
+from storage.models.company import Company
 from storage.models.job import Job
 from storage.models.job_source import JobSource
 from storage.models.pipeline_run import PipelineRun
@@ -107,6 +108,14 @@ from processing.prioritization import calculate_match_percentage
 class AnalyticsService:
     """Service generating comprehensive, non-fabricated metrics for Analytics (Tab 2)."""
 
+    _analytics_cache: dict[str, tuple[float, AnalyticsSummaryOut]] = {}
+    CACHE_TTL_SECONDS = 30.0
+
+    @classmethod
+    def clear_cache(cls) -> None:
+        """Clears in-memory analytics cache."""
+        cls._analytics_cache.clear()
+
     @classmethod
     def get_date_windows(
         cls,
@@ -129,6 +138,14 @@ class AnalyticsService:
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> AnalyticsSummaryOut:
+        import time as _py_time
+        cache_key = f"{range_val}:{start_date}:{end_date}"
+        now_ts = _py_time.time()
+        if cache_key in cls._analytics_cache:
+            ts, cached_val = cls._analytics_cache[cache_key]
+            if now_ts - ts < cls.CACHE_TTL_SECONDS:
+                return cached_val
+
         curr_start, curr_end, prev_start, prev_end = cls.get_date_windows(
             range_val, start_date, end_date
         )
@@ -137,26 +154,31 @@ class AnalyticsService:
         # 1. TOP KPI CARDS (Applications, Interviews, Rates with real comparison)
         # ------------------------------------------------------------------
         # Applications in current window (excluding drafts)
-        curr_apps = (
-            session.query(Application)
-            .filter(
+        curr_apps = session.execute(
+            select(
+                Application.id,
+                Application.status,
+                Application.created_at,
+                Application.applied_at,
+                Application.portal_type,
+            ).where(
                 Application.created_at >= curr_start,
                 Application.created_at <= curr_end,
                 Application.status != "drafted",
             )
-            .all()
-        )
+        ).all()
         total_apps = len(curr_apps)
 
-        prev_apps = (
-            session.query(Application)
-            .filter(
+        prev_apps = session.execute(
+            select(
+                Application.id,
+                Application.status,
+            ).where(
                 Application.created_at >= prev_start,
                 Application.created_at < prev_end,
                 Application.status != "drafted",
             )
-            .all()
-        )
+        ).all()
         total_prev_apps = len(prev_apps)
 
         if total_prev_apps > 0:
@@ -239,15 +261,35 @@ class AnalyticsService:
         # ------------------------------------------------------------------
         # 2. JOB INTELLIGENCE (Match Scores, Top Skills, Experience, Salary)
         # ------------------------------------------------------------------
-        # Query jobs discovered in current period
-        jobs_in_window = (
-            session.query(Job)
-            .filter(
+        # Query jobs discovered in current period (single query joining Company to eliminate N+1 queries)
+        jobs_in_window = session.execute(
+            select(
+                Job.id,
+                Job.priority_score,
+                Job.relevance_score,
+                Job.matched_skills,
+                Job.experience_min,
+                Job.experience_max,
+                Job.salary_min,
+                Job.salary_max,
+                Job.salary_raw,
+                Job.currency,
+                Job.apply_type,
+                Job.location,
+                Job.is_remote,
+                Job.location_bucket,
+                Job.title,
+                Job.normalized_title,
+                Job.priority_tier,
+                Job.description,
+                Company.name.label("company_name"),
+            )
+            .outerjoin(Company, Job.company_id == Company.id)
+            .where(
                 Job.first_seen_at >= curr_start,
                 Job.first_seen_at <= curr_end,
             )
-            .all()
-        )
+        ).all()
 
         total_int_jobs = len(jobs_in_window)
 
@@ -387,8 +429,8 @@ class AnalyticsService:
         # Top Hiring Companies in window
         comp_counter: Counter[str] = Counter()
         for j in jobs_in_window:
-            if j.company and j.company.name:
-                comp_counter[j.company.name] += 1
+            if j.company_name:
+                comp_counter[j.company_name] += 1
 
         top_hiring_companies = [
             TopHiringCompanyOut(name=c, active_jobs=cnt)
@@ -496,9 +538,15 @@ class AnalyticsService:
         # ------------------------------------------------------------------
         # Group applications in current window by date
         # If fewer than 2 days in curr_apps, we inspect all non-draft applications to provide a rich chart
-        target_apps = curr_apps if len(curr_apps) > 0 else (
-            session.query(Application).filter(Application.status != "drafted").all()
-        )
+        target_apps = curr_apps if len(curr_apps) > 0 else session.execute(
+            select(
+                Application.id,
+                Application.status,
+                Application.created_at,
+                Application.applied_at,
+                Application.portal_type,
+            ).where(Application.status != "drafted")
+        ).all()
 
         date_counts: Counter[str] = Counter()
         for a in target_apps:
@@ -605,33 +653,36 @@ class AnalyticsService:
         # 4. AGENT PERFORMANCE (Processing Funnel & Filtering Efficiency)
         # ------------------------------------------------------------------
         # Real scraper telemetry in window from PipelineRun
-        raw_scraped_in_window = (
-            session.query(func.sum(PipelineRun.jobs_collected))
-            .filter(
+        raw_scraped_in_window = session.scalar(
+            select(func.sum(PipelineRun.jobs_collected)).where(
                 PipelineRun.started_at >= curr_start,
                 PipelineRun.started_at <= curr_end,
             )
-            .scalar()
         )
         if not raw_scraped_in_window:
-            raw_scraped_in_window = session.query(func.sum(PipelineRun.jobs_collected)).scalar() or 0
+            raw_scraped_in_window = session.scalar(select(func.sum(PipelineRun.jobs_collected))) or 0
 
-        jobs_count = (
-            session.query(func.count(Job.id))
-            .filter(
+        jobs_count = session.scalar(
+            select(func.count(Job.id)).where(
                 Job.first_seen_at >= curr_start,
                 Job.first_seen_at <= curr_end,
             )
-            .scalar()
-            or 0
-        )
+        ) or 0
         if jobs_count == 0:
-            jobs_count = session.query(func.count(Job.id)).scalar() or 0
+            jobs_count = session.scalar(select(func.count(Job.id))) or 0
 
         total_collected = max(int(raw_scraped_in_window), jobs_count)
         duplicates_removed = max(0, total_collected - jobs_count)
 
-        target_pipe_jobs = jobs_in_window if len(jobs_in_window) > 0 else session.query(Job).all()
+        target_pipe_jobs = jobs_in_window if len(jobs_in_window) > 0 else session.execute(
+            select(
+                Job.id,
+                Job.priority_score,
+                Job.relevance_score,
+                Job.priority_tier,
+                Job.apply_type,
+            )
+        ).all()
 
         relevant_jobs_count = sum(
             1 for j in target_pipe_jobs
@@ -659,12 +710,11 @@ class AnalyticsService:
         )
 
         # Ingestion sources breakdown
-        source_records = (
-            session.query(JobSource.source_name, func.count(JobSource.id))
+        source_records = session.execute(
+            select(JobSource.source_name, func.count(JobSource.id))
             .group_by(JobSource.source_name)
             .order_by(func.count(JobSource.id).desc())
-            .all()
-        )
+        ).all()
         total_source_sightings = sum(cnt for _, cnt in source_records) or 1
         sources_breakdown = [
             SourceContributionItemOut(
@@ -753,10 +803,12 @@ class AnalyticsService:
             gateways_breakdown=gateways_breakdown,
         )
 
-        return AnalyticsSummaryOut(
+        summary_out = AnalyticsSummaryOut(
             kpis=kpis,
             job_intelligence=job_intelligence,
             application_analytics=application_analytics,
             agent_performance=pipeline_analytics,
             pipeline_analytics=pipeline_analytics,
         )
+        cls._analytics_cache[cache_key] = (now_ts, summary_out)
+        return summary_out

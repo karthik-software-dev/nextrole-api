@@ -355,9 +355,10 @@ class DiscoveryService:
                 type="discovery",
                 link="/discovery",
             )
+            auth_prefix = "token" if github_token.startswith("ghp_") else "Bearer"
             headers = {
                 "Accept": "application/vnd.github+json",
-                "Authorization": f"Bearer {github_token}",
+                "Authorization": f"{auth_prefix} {github_token.replace('Bearer ', '').replace('token ', '')}",
                 "X-GitHub-Api-Version": "2022-11-28",
                 "User-Agent": "NextRole-Ingestion-Dispatch",
             }

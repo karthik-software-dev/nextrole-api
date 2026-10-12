@@ -1,5 +1,6 @@
 import React from 'react';
-import { Zap, Clock, Calendar, Hourglass } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Zap, Clock, Calendar, Hourglass, ChevronRight } from 'lucide-react';
 import type { DiscoverySpeedData } from '../../types';
 
 interface DiscoverySpeedCardProps {
@@ -51,6 +52,8 @@ const BUCKET_CONFIG: Record<
 };
 
 export const DiscoverySpeedCard: React.FC<DiscoverySpeedCardProps> = ({ data }) => {
+  const navigate = useNavigate();
+
   const speedData: DiscoverySpeedData = data ?? {
     captured_under_4h_pct: 74.0,
     avg_latency_hours: 2.1,
@@ -72,6 +75,11 @@ export const DiscoverySpeedCard: React.FC<DiscoverySpeedCardProps> = ({ data }) 
 
   const maxCount = Math.max(...buckets.map((b) => b.count), 1);
 
+  const handleBucketClick = () => {
+    // Navigate to Job Feed filtered to fresh opportunities discovered in the past 24 hours
+    navigate('/jobs?days=1');
+  };
+
   return (
     <div className="p-4 sm:p-5 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#111726] shadow-sm flex flex-col justify-between h-[295px] sm:h-[280px] transition-[transform,box-shadow,border-color] duration-180 ease-out hover:-translate-y-0.5 hover:shadow-md">
       {/* Header */}
@@ -85,25 +93,30 @@ export const DiscoverySpeedCard: React.FC<DiscoverySpeedCardProps> = ({ data }) 
       </div>
 
       {/* Speed Buckets */}
-      <div className="flex-1 w-full flex flex-col justify-center space-y-2.5 py-1">
+      <div className="flex-1 w-full flex flex-col justify-center space-y-3 py-1">
         {buckets.map((bucket) => {
           const config = BUCKET_CONFIG[bucket.key] || BUCKET_CONFIG.under_1h;
           const Icon = config.icon;
           const barWidth = Math.max(8, Math.round((bucket.count / maxCount) * 100));
 
           return (
-            <div key={bucket.key} className="flex items-center gap-2.5 text-xs">
+            <div
+              key={bucket.key}
+              onClick={handleBucketClick}
+              title="Click to view and apply to fresh jobs in Job Feed"
+              className="group flex items-center gap-2.5 text-xs p-1.5 -mx-1.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-all duration-150 cursor-pointer"
+            >
               {/* Icon & Label */}
               <div className="flex items-center gap-1.5 w-[110px] sm:w-[125px] shrink-0">
-                <Icon className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 shrink-0" />
-                <span className="font-semibold text-slate-800 dark:text-slate-200 truncate">
+                <Icon className="h-3.5 w-3.5 text-slate-400 dark:text-slate-500 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors shrink-0" />
+                <span className="font-semibold text-slate-800 dark:text-slate-200 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
                   {bucket.label || config.defaultLabel}
                 </span>
               </div>
 
               {/* Tag Pill */}
               <span
-                className={`hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10.5px] font-semibold border shrink-0 ${config.tagClass}`}
+                className={`hidden sm:inline-flex items-center px-1.5 py-0.5 rounded text-[10.5px] font-semibold border shrink-0 transition-transform group-hover:scale-105 ${config.tagClass}`}
               >
                 {bucket.tag || config.defaultTag}
               </span>
@@ -116,28 +129,23 @@ export const DiscoverySpeedCard: React.FC<DiscoverySpeedCardProps> = ({ data }) 
                 />
               </div>
 
-              {/* Count */}
-              <div className="w-[58px] text-right shrink-0">
-                <span className="font-bold text-[12.5px] text-slate-900 dark:text-slate-100">
+              {/* Count & Hint */}
+              <div className="flex items-center gap-1 shrink-0">
+                <span className="font-bold text-[12.5px] text-slate-900 dark:text-slate-100 group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                   {bucket.count}
                 </span>{' '}
                 <span className="text-[11px] text-slate-400 dark:text-slate-500 font-medium">
                   {bucket.count === 1 ? 'job' : 'jobs'}
                 </span>
+                <ChevronRight className="h-3 w-3 text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
               </div>
             </div>
           );
         })}
-      </div>
-
-      {/* Footer Meta Note */}
-      <div className="flex items-center justify-end pt-2 border-t border-slate-100/80 dark:border-slate-800/80">
-        <span className="text-[11.5px] font-medium text-slate-700 dark:text-slate-300">
-          Average Ingestion Latency: {speedData.avg_latency_hours} hrs from employer publish
-        </span>
       </div>
     </div>
   );
 };
 
 export default DiscoverySpeedCard;
+

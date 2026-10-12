@@ -231,21 +231,25 @@ def main():
     try:
         if init_db():
             with get_db() as session:
-                for job in irrelevant_jobs:
-                    try:
-                        with session.begin_nested():
-                            JobRepository.deactivate_irrelevant_job(session, job)
-                    except Exception:
-                        pass
+                # 1. Efficient batch check to deactivate only existing active jobs that became irrelevant
+                if irrelevant_jobs:
+                    deactivated = JobRepository.deactivate_irrelevant_jobs_batch(session, irrelevant_jobs)
+                    if deactivated > 0:
+                        print(f"[DATABASE] Reconciled and deactivated {deactivated} existing jobs that became irrelevant.", flush=True)
 
-                for job in prioritized_jobs:
+                # 2. Sync prioritized opportunities with live progress
+                total_prioritized = len(prioritized_jobs)
+                print(f"[DATABASE] Synchronizing {total_prioritized} actionable opportunities to PostgreSQL...", flush=True)
+                for idx, job in enumerate(prioritized_jobs, start=1):
                     try:
                         with session.begin_nested():
                             JobRepository.upsert_job(session, job)
                         synced_count += 1
+                        if idx % 20 == 0 or idx == total_prioritized:
+                            print(f"[DATABASE] Progress: {idx}/{total_prioritized} opportunities synced...", flush=True)
                     except Exception as job_err:
-                        print(f"[WARN] Failed to sync job '{job.title}': {job_err}")
-                print(f"\n[DATABASE] Successfully synced {synced_count} opportunities to PostgreSQL ('job_agent')")
+                        print(f"[WARN] Failed to sync job '{job.title}': {job_err}", flush=True)
+                print(f"\n[DATABASE] Successfully synced {synced_count} opportunities to PostgreSQL ('job_agent')", flush=True)
 
                 if active_run_id:
                     duration = round(time.perf_counter() - start_perf, 2)

@@ -238,6 +238,35 @@ class JobRepository:
         return False
 
     @staticmethod
+    def deactivate_irrelevant_jobs_batch(session: Session, irrelevant_jobs: list[JobDataclass]) -> int:
+        """Batch-checks whether any irrelevant jobs already exist and are active in PostgreSQL,
+        deactivating only existing active records in single bulk queries instead of sequential per-job lookups."""
+        if not irrelevant_jobs:
+            return 0
+
+        hash_to_job = {compute_dedup_hash(j): j for j in irrelevant_jobs}
+        all_hashes = list(hash_to_job.keys())
+        deactivated_count = 0
+        chunk_size = 500
+        now = datetime.now(timezone.utc)
+
+        for i in range(0, len(all_hashes), chunk_size):
+            chunk = all_hashes[i:i + chunk_size]
+            stmt = select(Job).where(Job.dedup_hash.in_(chunk), Job.is_active.is_(True))
+            existing_jobs = session.scalars(stmt).all()
+            for existing in existing_jobs:
+                job_dc = hash_to_job.get(existing.dedup_hash)
+                if job_dc:
+                    existing.relevance_score = job_dc.relevance_score
+                existing.is_active = False
+                existing.last_seen_at = now
+                deactivated_count += 1
+            if existing_jobs:
+                session.flush()
+
+        return deactivated_count
+
+    @staticmethod
     def get_active_jobs(
         session: Session,
         limit: int = 50,

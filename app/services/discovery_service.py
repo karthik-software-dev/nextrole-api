@@ -541,12 +541,10 @@ class DiscoveryService:
 
             # Deactivate any existing DB records that have become irrelevant (never inserts new irrelevant jobs)
             with get_db() as session:
-                for job in irrelevant_jobs:
-                    try:
-                        with session.begin_nested():
-                            JobRepository.deactivate_irrelevant_job(session, job)
-                    except Exception as deact_err:
-                        logger.warning(f"Failed to check/deactivate job '{job.title}' ({job.id}): {deact_err}")
+                try:
+                    JobRepository.deactivate_irrelevant_jobs_batch(session, irrelevant_jobs)
+                except Exception as deact_err:
+                    logger.warning(f"Failed to batch deactivate irrelevant jobs: {deact_err}")
 
             # Persist to PostgreSQL safely using nested transaction savepoints
             cls.add_log("db", "POSTGRES", "Writing transactional upserts to PostgreSQL (localhost:5432 / job_agent)...")

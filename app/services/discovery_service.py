@@ -296,7 +296,20 @@ class DiscoveryService:
             cls._last_jobs_found = 0
             cls._last_jobs_synced = 0
 
-        # Check if GitLab CI Trigger is configured (Option B: offload heavy scraping to 4GB runner)
+        # Check if GitHub Actions Dispatch is configured (offload heavy scraping to GitHub 7GB runner)
+        github_token = os.getenv("GITHUB_TRIGGER_TOKEN") or os.getenv("GITHUB_TOKEN")
+        if github_token:
+            github_repo = os.getenv("GITHUB_REPOSITORY", "karthik-software-dev/nextrole-api")
+            background_tasks.add_task(
+                cls._dispatch_github_workflow,
+                github_token=github_token,
+                github_repo=github_repo,
+                source=source,
+                location=location,
+            )
+            return True
+
+        # Check if GitLab CI Trigger is configured (legacy fallback)
         gitlab_token = os.getenv("GITLAB_TRIGGER_TOKEN")
         if gitlab_token:
             gitlab_project = os.getenv("GITLAB_PROJECT_ID", "karthik-software-dev%2Fnextrole-api")
@@ -316,6 +329,70 @@ class DiscoveryService:
             use_cache=use_cache,
         )
         return True
+
+    @classmethod
+    def _dispatch_github_workflow(
+        cls,
+        github_token: str,
+        github_repo: str = "karthik-software-dev/nextrole-api",
+        workflow_id: str = "daily_discovery.yml",
+        ref: str = "main",
+        source: str = "all",
+        location: str = "all",
+    ) -> None:
+        """Dispatches an asynchronous scraper pipeline to the GitHub Actions 7GB runner."""
+        import httpx
+        from services.notification_service import NotificationService
+
+        start_time = time.perf_counter()
+        trigger_url = f"https://api.github.com/repos/{github_repo}/actions/workflows/{workflow_id}/dispatches"
+
+        try:
+            logger.info(f"Dispatching discovery job to GitHub Actions runner ({trigger_url}, ref={ref}, source={source})...")
+            NotificationService.create_notification(
+                title="Job Discovery Dispatched",
+                message=f"Scraper job dispatched to GitHub Actions Cloud runner (Source: {source}).",
+                type="discovery",
+                link="/discovery",
+            )
+            headers = {
+                "Accept": "application/vnd.github+json",
+                "Authorization": f"Bearer {github_token}",
+                "X-GitHub-Api-Version": "2022-11-28",
+                "User-Agent": "NextRole-Ingestion-Dispatch",
+            }
+            resp = httpx.post(
+                trigger_url,
+                headers=headers,
+                json={
+                    "ref": ref,
+                    "inputs": {
+                        "source": source,
+                    },
+                },
+                timeout=15.0,
+            )
+            if resp.status_code in (204, 201, 200):
+                logger.info(f"GitHub Actions workflow dispatch accepted: HTTP {resp.status_code}")
+                cls._last_status = "running"
+                cls._last_duration_seconds = round(time.perf_counter() - start_time, 1)
+                NotificationService.create_notification(
+                    title="GitHub Actions Runner Active",
+                    message="Workflow run triggered on GitHub Actions runner. Jobs will sync to dashboard.",
+                    type="discovery",
+                    link="/discovery",
+                )
+            else:
+                err_msg = f"GitHub API returned HTTP {resp.status_code}: {resp.text[:120]}"
+                logger.error(err_msg)
+                cls._last_status = "failed"
+                cls._last_error = err_msg
+        except Exception as e:
+            cls._last_status = "failed"
+            cls._last_error = str(e)
+            logger.error(f"Failed to dispatch pipeline to GitHub Actions: {e}", exc_info=True)
+        finally:
+            cls._is_running = False
 
     @classmethod
     def _dispatch_gitlab_pipeline(

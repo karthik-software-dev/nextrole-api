@@ -305,26 +305,42 @@ class JobRepository:
     @staticmethod
     def get_database_stats(session: Session) -> dict[str, Any]:
         """Aggregates high-level metrics from PostgreSQL."""
-        total_jobs = session.scalar(select(func.count(Job.id))) or 0
-        active_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True))) or 0
-        tier1_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.priority_tier.ilike("%TIER 1%"))) or 0
-        tier2_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.priority_tier.ilike("%TIER 2%"))) or 0
+        # Single consolidated aggregate query for all job metrics
+        counts_row = session.execute(
+            select(
+                func.count(Job.id).label("total_jobs"),
+                func.count(Job.id).filter(Job.is_active.is_(True)).label("active_jobs"),
+                func.count(Job.id).filter(Job.is_active.is_(True), Job.priority_tier.ilike("%TIER 1%")).label("tier1_jobs"),
+                func.count(Job.id).filter(Job.is_active.is_(True), Job.priority_tier.ilike("%TIER 2%")).label("tier2_jobs"),
+                func.count(Job.id).filter(Job.is_active.is_(True), Job.location_bucket == "BANGALORE").label("blr_jobs"),
+                func.count(Job.id).filter(Job.is_active.is_(True), Job.location_bucket == "CHENNAI").label("maa_jobs"),
+                func.count(Job.id).filter(Job.is_active.is_(True), Job.is_remote.is_(True), Job.location_bucket.notin_(("ABROAD", "FOREIGN"))).label("remote_jobs"),
+                func.count(Job.id).filter(Job.is_active.is_(True), Job.location_bucket.in_(("ABROAD", "FOREIGN"))).label("abroad_jobs"),
+                func.count(Job.id).filter(Job.is_active.is_(True), Job.location_bucket == "OTHER").label("other_jobs"),
+            )
+        ).first()
+
+        total_jobs = (counts_row.total_jobs if counts_row else 0) or 0
+        active_jobs = (counts_row.active_jobs if counts_row else 0) or 0
+        tier1_jobs = (counts_row.tier1_jobs if counts_row else 0) or 0
+        tier2_jobs = (counts_row.tier2_jobs if counts_row else 0) or 0
+        blr_jobs = (counts_row.blr_jobs if counts_row else 0) or 0
+        maa_jobs = (counts_row.maa_jobs if counts_row else 0) or 0
+        remote_jobs = (counts_row.remote_jobs if counts_row else 0) or 0
+        abroad_jobs = (counts_row.abroad_jobs if counts_row else 0) or 0
+        other_jobs = (counts_row.other_jobs if counts_row else 0) or 0
+
         total_companies = session.scalar(select(func.count(Company.id))) or 0
         total_sources = session.scalar(select(func.count(JobSource.id))) or 0
 
-        blr_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "BANGALORE")) or 0
-        maa_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "CHENNAI")) or 0
-        remote_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.is_remote.is_(True), Job.location_bucket.notin_(("ABROAD", "FOREIGN")))) or 0
-        abroad_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket.in_(("ABROAD", "FOREIGN")))) or 0
-        other_jobs = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "OTHER")) or 0
-
-        # Group sources: distinguish aggregators and specific ATS scrapers
+        # Group sources directly in SQL to avoid full row-table memory transfer
         raw_sources = session.execute(
-            select(JobSource.id, JobSource.source_name, Job.ats_provider)
+            select(JobSource.source_name, Job.ats_provider, func.count(JobSource.id))
             .outerjoin(Job, JobSource.job_id == Job.id)
+            .group_by(JobSource.source_name, Job.ats_provider)
         ).all()
         normalized_counts: dict[str, int] = {}
-        for _, s_name, ats_prov in raw_sources:
+        for s_name, ats_prov, s_cnt in raw_sources:
             norm = (s_name or "").lower()
             if "linkedin" in norm:
                 key = "LinkedIn"
@@ -386,7 +402,7 @@ class JobRepository:
                     key = "Company Careers"
             else:
                 key = s_name.strip() if s_name else "Other"
-            normalized_counts[key] = normalized_counts.get(key, 0) + 1
+            normalized_counts[key] = normalized_counts.get(key, 0) + s_cnt
 
         sources_breakdown = [
             {"name": k, "count": v}

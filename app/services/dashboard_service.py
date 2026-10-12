@@ -32,14 +32,31 @@ from storage.repositories.pipeline_repository import PipelineRepository
 class DashboardService:
     """Service computing aggregated metrics and KPI statistics."""
 
-    @staticmethod
+    _summary_cache: dict[str, tuple[float, DashboardSummaryOut]] = {}
+    CACHE_TTL_SECONDS = 30.0
+
+    @classmethod
+    def clear_cache(cls) -> None:
+        """Clears in-memory summary cache."""
+        cls._summary_cache.clear()
+
+    @classmethod
     def get_summary(
+        cls,
         session: Session,
         date_range: str = "7d",
         start_date: str | None = None,
         end_date: str | None = None,
     ) -> DashboardSummaryOut:
         """Calculates discovery engine and application pipeline statistics."""
+        import time as _py_time
+        cache_key = f"{date_range}:{start_date}:{end_date}"
+        now_ts = _py_time.time()
+        if cache_key in cls._summary_cache:
+            ts, cached_val = cls._summary_cache[cache_key]
+            if now_ts - ts < cls.CACHE_TTL_SECONDS:
+                return cached_val
+
         # 1. Job & Company stats
         job_stats = JobRepository.get_database_stats(session)
 
@@ -222,15 +239,20 @@ class DashboardService:
         combined_activities = app_activities[:3] + disc_activities[:3]
         combined_activities.sort(key=lambda x: x.timestamp, reverse=True)
 
-        # 8. Experience & Salary Distributions (filtered by date window)
-        jobs_in_window = (
-            session.query(Job)
-            .filter(
+        # 8. Experience & Salary Distributions (filtered by date window) - query only required scalars
+        jobs_in_window = session.execute(
+            select(
+                Job.experience_min,
+                Job.experience_max,
+                Job.salary_min,
+                Job.salary_max,
+                Job.salary_raw,
+                Job.currency,
+            ).where(
                 Job.first_seen_at >= start_dt,
                 Job.first_seen_at <= end_dt,
             )
-            .all()
-        )
+        ).all()
 
         exp_1_2 = 0
         exp_2_3 = 0
@@ -417,35 +439,26 @@ class DashboardService:
 
         top_hiring_companies: list[TopHiringCompanyOut] = []
         for cname, ccount, cremote in top_comp_rows:
-            locs: list[str] = []
-            if cremote:
-                locs.append("Remote")
-            loc_samples = session.execute(
-                select(Job.location_bucket)
-                .join(Company, Job.company_id == Company.id)
-                .where(
-                    Company.name == cname,
-                    Job.first_seen_at >= start_dt,
-                    Job.first_seen_at <= end_dt
-                )
-                .limit(2)
-            ).scalars().all()
-            for lb in loc_samples:
-                if lb and lb != "OTHER" and lb.title() not in locs:
-                    locs.append(lb.title())
+            locs: list[str] = ["Remote"] if cremote else []
             top_hiring_companies.append(
                 TopHiringCompanyOut(
                     name=cname,
                     job_count=ccount,
-                    locations=locs[:2],
+                    locations=locs,
                     is_remote=bool(cremote),
                 )
             )
 
         # 11. Deduplication & Spam Suppression Efficiency Metrics
         active_jobs_cnt = job_stats["active_jobs"]
-        multi_source_cnt = session.scalar(select(func.count(Job.id)).where(Job.source_count > 1)) or 0
-        duplicates_filtered_cnt = session.scalar(select(func.sum(Job.source_count - 1))) or 0
+        dedup_row = session.execute(
+            select(
+                func.count(Job.id).filter(Job.source_count > 1),
+                func.coalesce(func.sum(Job.source_count - 1), 0),
+            )
+        ).first()
+        multi_source_cnt = (dedup_row[0] if dedup_row else 0) or 0
+        duplicates_filtered_cnt = (dedup_row[1] if dedup_row else 0) or 0
         total_sightings_cnt = active_jobs_cnt + duplicates_filtered_cnt
         suppression_rate = (
             round((duplicates_filtered_cnt / total_sightings_cnt) * 100, 1)
@@ -548,7 +561,7 @@ class DashboardService:
             for sname, scnt in src_window_rows
         ]
 
-        return DashboardSummaryOut(
+        summary_out = DashboardSummaryOut(
             total_jobs=job_stats["total_jobs"],
             active_jobs=job_stats["active_jobs"],
             inactive_jobs=job_stats["inactive_jobs"],
@@ -572,3 +585,5 @@ class DashboardService:
             latest_pipeline=latest_pipe_out,
             discovery_speed=discovery_speed,
         )
+        cls._summary_cache[cache_key] = (now_ts, summary_out)
+        return summary_out

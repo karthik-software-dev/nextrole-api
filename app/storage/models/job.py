@@ -152,6 +152,9 @@ class Job(Base, TimestampMixin, ActiveMixin):
         Index("idx_jobs_active_priority", "is_active", "priority_score"),
         Index("idx_jobs_company_normalized_title", "company_id", "normalized_title"),
         Index("idx_jobs_matched_skills_gin", "matched_skills", postgresql_using="gin"),
+        Index("idx_jobs_first_seen_at", "first_seen_at"),
+        Index("idx_jobs_active_first_seen", "is_active", "first_seen_at"),
+        Index("idx_jobs_active_loc", "is_active", "location_bucket"),
     )
 
     def __repr__(self) -> str:

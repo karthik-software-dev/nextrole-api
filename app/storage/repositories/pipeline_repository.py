@@ -60,6 +60,11 @@ class PipelineRepository:
         run.error_message = error_message
         run.completed_at = datetime.now(timezone.utc)
         session.flush()
+        try:
+            from services.dashboard_service import DashboardService
+            DashboardService.clear_cache()
+        except Exception:
+            pass
         return run
 
     @staticmethod

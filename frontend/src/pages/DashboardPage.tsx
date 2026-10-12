@@ -33,7 +33,6 @@ import { JobsBySourceChart } from '../components/dashboard/JobsBySourceChart';
 import { JobLocationsChart } from '../components/dashboard/JobLocationsChart';
 import { ExperienceDistributionChart } from '../components/dashboard/ExperienceDistributionChart';
 import { SalaryDistributionChart } from '../components/dashboard/SalaryDistributionChart';
-import { TopHiringCompaniesCard } from '../components/dashboard/TopHiringCompaniesCard';
 import { RecentActivity } from '../components/dashboard/RecentActivity';
 import { JobDetailDrawer } from './JobDetailDrawer';
 import { TierBadge, MatchScoreBadge, ApplicationStatusBadge } from '../components/ui/Badge';
@@ -862,9 +861,8 @@ export const DashboardPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Section 7: Recent Activity & Hiring Velocity Leaderboard (5 Columns) */}
-        <div className="lg:col-span-5 space-y-6">
-          <TopHiringCompaniesCard companies={summary?.top_hiring_companies} />
+        {/* Section 7: Recent Activity (5 Columns) */}
+        <div className="lg:col-span-5 flex flex-col">
           <RecentActivity activities={summary?.recent_activities} />
         </div>
       </div>

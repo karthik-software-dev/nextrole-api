@@ -73,14 +73,14 @@ export const DailyCadenceChart: React.FC<DailyCadenceChartProps> = ({ data }) =>
         </h3>
 
         <span className="text-[12.5px] font-medium text-slate-700 dark:text-slate-400">
-          {totalCollectedToday} jobs collected today &bull; Next run: {nextRunInfo}
+          {totalCollectedToday} jobs collected today
         </span>
       </div>
 
       {/* Chart */}
       <div className="w-full flex-1 pt-3">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={cadenceData} margin={{ top: 18, right: 18, left: -20, bottom: 4 }}>
+          <AreaChart data={cadenceData} margin={{ top: 18, right: 18, left: -20, bottom: 0 }}>
             <defs>
               <linearGradient id="cadencePerRunGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#6366F1" stopOpacity={0.28} />
@@ -112,11 +112,10 @@ export const DailyCadenceChart: React.FC<DailyCadenceChartProps> = ({ data }) =>
                         <span className="font-bold text-slate-800 dark:text-slate-100">
                           {item.time_slot}
                         </span>
-                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize ${
-                          item.status === 'active' ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400' :
-                          item.status === 'completed' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
-                          'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
-                        }`}>
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded capitalize ${item.status === 'active' ? 'bg-indigo-500/15 text-indigo-600 dark:text-indigo-400' :
+                            item.status === 'completed' ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400' :
+                              'bg-slate-100 text-slate-500 dark:bg-slate-800 dark:text-slate-400'
+                          }`}>
                           {item.status}
                         </span>
                       </div>
@@ -148,6 +147,13 @@ export const DailyCadenceChart: React.FC<DailyCadenceChartProps> = ({ data }) =>
             </Area>
           </AreaChart>
         </ResponsiveContainer>
+      </div>
+
+      {/* Footer Meta */}
+      <div className="flex items-center justify-end pt-1">
+        <span className="text-[11.5px] font-medium text-slate-400 dark:text-slate-500">
+          Next run: {nextRunInfo}
+        </span>
       </div>
     </div>
   );

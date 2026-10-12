@@ -402,7 +402,7 @@ export const DiscoveryPage: React.FC = () => {
               <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-400 block truncate">
                 Pipeline Runtime
               </span>
-              <p className="mt-1 text-[34px] sm:text-[36px] font-bold leading-none tracking-tight text-slate-900 dark:text-white truncate">
+              <p className="mt-1 text-[28px] sm:text-[32px] font-bold leading-none tracking-tight text-slate-900 dark:text-white truncate">
                 {isDiscovering ? (
                   <span className="inline-flex items-center gap-1.5 py-1.5" title="Calculating duration...">
                     <span className="h-3 w-3 rounded-full bg-amber-500 animate-bounce [animation-delay:-0.3s]" />
@@ -410,7 +410,14 @@ export const DiscoveryPage: React.FC = () => {
                     <span className="h-3 w-3 rounded-full bg-yellow-500 animate-bounce" />
                   </span>
                 ) : (
-                  `${(status?.last_duration_seconds ?? 0) > 0 ? status?.last_duration_seconds : 0}s`
+                  (() => {
+                    const sec = status?.last_duration_seconds ?? 0;
+                    if (sec <= 0) return '0s';
+                    if (sec < 60) return `${sec.toFixed(1)}s`;
+                    const mins = Math.floor(sec / 60);
+                    const rem = Math.round(sec % 60);
+                    return rem > 0 ? `${mins}m ${rem}s` : `${mins}m`;
+                  })()
                 )}
               </p>
               <p className="mt-2 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -430,19 +437,26 @@ export const DiscoveryPage: React.FC = () => {
               <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-400 block truncate">
                 Last Total Yield
               </span>
-              <p className="mt-1 text-[34px] sm:text-[36px] font-bold leading-none tracking-tight text-slate-900 dark:text-white truncate">
+              <p className="mt-1 text-[28px] sm:text-[32px] font-bold leading-none tracking-tight text-slate-900 dark:text-white flex items-baseline gap-1.5 whitespace-nowrap">
                 {isDiscovering ? (
                   <span className="inline-flex items-center gap-1.5 py-1.5" title="Aggregating postings...">
                     <span className="h-3 w-3 rounded-full bg-indigo-500 animate-bounce [animation-delay:-0.3s]" />
                     <span className="h-3 w-3 rounded-full bg-blue-500 animate-bounce [animation-delay:-0.15s]" />
                     <span className="h-3 w-3 rounded-full bg-emerald-500 animate-bounce" />
                   </span>
-                ) : (status?.last_jobs_found && status.last_jobs_found > 0) ? (
-                  `+${status.last_jobs_found} Jobs`
-                ) : (status?.last_jobs_synced && status.last_jobs_synced > 0) ? (
-                  `+${status.last_jobs_synced} Jobs`
                 ) : (
-                  `${summary?.active_jobs ?? 0} Jobs`
+                  <>
+                    <span>
+                      {status?.last_jobs_found && status.last_jobs_found > 0
+                        ? `+${status.last_jobs_found}`
+                        : status?.last_jobs_synced && status.last_jobs_synced > 0
+                          ? `+${status.last_jobs_synced}`
+                          : `${summary?.active_jobs ?? 0}`}
+                    </span>
+                    <span className="text-sm sm:text-base font-semibold text-slate-500 dark:text-slate-400">
+                      Jobs
+                    </span>
+                  </>
                 )}
               </p>
               <p className="mt-2 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -464,8 +478,11 @@ export const DiscoveryPage: React.FC = () => {
               <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-400 block truncate">
                 Synced to Database
               </span>
-              <p className="mt-1 text-[34px] sm:text-[36px] font-bold leading-none tracking-tight text-purple-600 dark:text-purple-400 truncate">
-                {summary?.active_jobs ?? 0} Verified
+              <p className="mt-1 text-[28px] sm:text-[32px] font-bold leading-none tracking-tight text-purple-600 dark:text-purple-400 flex items-baseline gap-1.5 whitespace-nowrap">
+                <span>{summary?.active_jobs ?? 0}</span>
+                <span className="text-sm sm:text-base font-semibold text-purple-500/80 dark:text-purple-400/80">
+                  Verified
+                </span>
               </p>
               <p className="mt-2 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
                 {summary?.tier1_jobs ?? 0} Tier 1 • {summary?.tier2_jobs ?? 0} Tier 2

@@ -104,6 +104,21 @@ class PipelineStatusOut(BaseModel):
     completed_at: datetime | None = None
 
 
+class DiscoverySpeedBucketOut(BaseModel):
+    key: str
+    label: str
+    tag: str
+    count: int
+    percentage: float
+
+
+class DiscoverySpeedOut(BaseModel):
+    captured_under_4h_pct: float
+    avg_latency_hours: float
+    total_measured_jobs: int
+    buckets: list[DiscoverySpeedBucketOut] = []
+
+
 class DashboardSummaryOut(BaseModel):
     """High-level metrics for dashboard cards and pipeline charts."""
 
@@ -127,4 +142,6 @@ class DashboardSummaryOut(BaseModel):
     top_hiring_companies: list[TopHiringCompanyOut] = []
     dedup_efficiency: DedupEfficiencyOut | None = None
     latest_pipeline: PipelineStatusOut | None = None
+    discovery_speed: DiscoverySpeedOut | None = None
+
 

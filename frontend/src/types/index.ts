@@ -178,6 +178,21 @@ export interface DedupEfficiency {
   suppression_rate_pct: number;
 }
 
+export interface DiscoverySpeedBucket {
+  key: string;
+  label: string;
+  tag: string;
+  count: number;
+  percentage: number;
+}
+
+export interface DiscoverySpeedData {
+  captured_under_4h_pct: number;
+  avg_latency_hours: number;
+  total_measured_jobs: number;
+  buckets: DiscoverySpeedBucket[];
+}
+
 export interface DashboardSummary {
   total_jobs: number;
   active_jobs: number;
@@ -215,6 +230,7 @@ export interface DashboardSummary {
   top_hiring_companies?: TopHiringCompany[];
   dedup_efficiency?: DedupEfficiency | null;
   latest_pipeline?: PipelineRunInfo | null;
+  discovery_speed?: DiscoverySpeedData | null;
 }
 
 export interface PipelineRunInfo {

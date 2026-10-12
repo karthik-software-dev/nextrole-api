@@ -33,6 +33,7 @@ import { JobsBySourceChart } from '../components/dashboard/JobsBySourceChart';
 import { JobLocationsChart } from '../components/dashboard/JobLocationsChart';
 import { ExperienceDistributionChart } from '../components/dashboard/ExperienceDistributionChart';
 import { SalaryDistributionChart } from '../components/dashboard/SalaryDistributionChart';
+import { DiscoverySpeedCard } from '../components/dashboard/DiscoverySpeedCard';
 import { RecentActivity } from '../components/dashboard/RecentActivity';
 import { JobDetailDrawer } from './JobDetailDrawer';
 import { TierBadge, MatchScoreBadge, ApplicationStatusBadge } from '../components/ui/Badge';
@@ -608,11 +609,14 @@ export const DashboardPage: React.FC = () => {
       </div>
 
       {/* -------------------------------------------------- */}
-      {/* SALARY RANGE DISTRIBUTION                          */}
+      {/* SALARY RANGE & DISCOVERY SPEED ADVANTAGE           */}
       {/* -------------------------------------------------- */}
-      <div className="grid grid-cols-1 gap-5">
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {/* Salary Range Distribution (₹ LPA) */}
         <SalaryDistributionChart data={summary?.salary_distribution} />
+
+        {/* Discovery Speed Advantage */}
+        <DiscoverySpeedCard data={summary?.discovery_speed} />
       </div>
 
       {/* -------------------------------------------------- */}

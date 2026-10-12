@@ -111,10 +111,15 @@ class DiscoveryService:
             from config.sources_registry import get_all_sources
             sources_count = len(get_all_sources())
         except Exception:
-            sources_count = 30
+            sources_count = 31
 
         pid = os.getpid()
-        db_name = os.getenv("POSTGRES_DB", "job_agent")
+        try:
+            from storage.database import DATABASE_URL
+            from urllib.parse import urlparse
+            db_name = urlparse(DATABASE_URL).path.lstrip("/") or "defaultdb"
+        except Exception:
+            db_name = os.getenv("POSTGRES_DB", "defaultdb")
 
         cls.add_log("info", "SYS", f"NextRole Discovery Engine initialized on Worker PID {pid}. {sources_count} source connectors ready.")
         cls.add_log("db", "POSTGRES", f"PostgreSQL database connection pool active (database: {db_name}).")
@@ -123,39 +128,19 @@ class DiscoveryService:
 
     @classmethod
     def get_status(cls) -> DiscoveryStatusOut:
-        """Returns the current background scraper status."""
+        """Returns the current background scraper status backed by real pipeline telemetry."""
         last_run = cls._last_run_at
         last_status = cls._last_status
         last_jobs_found = cls._last_jobs_found
         last_jobs_synced = cls._last_jobs_synced
-
-        if cls._total_runs == 0:
-            try:
-                from sqlalchemy import func, select
-                from storage.models.notification import Notification
-                with get_db() as session:
-                    db_runs = session.scalar(
-                        select(func.count(Notification.id)).filter(Notification.title == "Job Discovery Completed")
-                    )
-                    cls._total_runs = int(db_runs or 163)
-            except Exception as e:
-                logger.debug(f"Could not fetch total discovery runs: {e}")
-                cls._total_runs = 163
-
-        if last_run is None:
-            try:
-                with get_db() as session:
-                    db_last_sync = JobRepository.get_latest_sync_timestamp(session)
-                    if db_last_sync:
-                        last_run = db_last_sync
-                        if last_status == "idle":
-                            last_status = "Success"
-            except Exception as e:
-                logger.debug(f"Could not fetch last sync timestamp from DB: {e}")
+        last_duration_seconds = cls._last_duration_seconds
 
         latest_pipe_dict = None
+        total_runs = cls._total_runs
         try:
+            from storage.models.pipeline_run import PipelineRun
             from storage.repositories.pipeline_repository import PipelineRepository
+            from sqlalchemy import func, select
             with get_db() as session:
                 pipe = PipelineRepository.get_latest_pipeline_run(session)
                 if pipe:
@@ -173,8 +158,33 @@ class DiscoveryService:
                         "started_at": pipe.started_at.isoformat() if pipe.started_at else None,
                         "completed_at": pipe.completed_at.isoformat() if pipe.completed_at else None,
                     }
+                    if last_duration_seconds == 0.0 and pipe.duration_seconds:
+                        last_duration_seconds = float(pipe.duration_seconds)
+                    if last_jobs_found == 0 and pipe.jobs_collected:
+                        last_jobs_found = pipe.jobs_collected
+                    if last_jobs_synced == 0 and pipe.jobs_synced:
+                        last_jobs_synced = pipe.jobs_synced
+                    if last_run is None:
+                        last_run = pipe.completed_at or pipe.started_at
+                    if last_status == "idle":
+                        last_status = pipe.status
+
+                if total_runs == 0:
+                    db_runs = session.scalar(select(func.count(PipelineRun.id)))
+                    total_runs = int(db_runs or 0)
         except Exception as e:
-            logger.debug(f"Could not fetch latest pipeline run: {e}")
+            logger.debug(f"Could not fetch pipeline runs from DB: {e}")
+
+        if last_run is None:
+            try:
+                with get_db() as session:
+                    db_last_sync = JobRepository.get_latest_sync_timestamp(session)
+                    if db_last_sync:
+                        last_run = db_last_sync
+                        if last_status == "idle":
+                            last_status = "Success"
+            except Exception as e:
+                logger.debug(f"Could not fetch last sync timestamp from DB: {e}")
 
         return DiscoveryStatusOut(
             is_running=cls._is_running,
@@ -183,8 +193,8 @@ class DiscoveryService:
             last_jobs_found=last_jobs_found,
             last_jobs_synced=last_jobs_synced,
             last_error=cls._last_error,
-            last_duration_seconds=cls._last_duration_seconds if cls._last_duration_seconds > 0 else 12.4,
-            total_runs=cls._total_runs,
+            last_duration_seconds=last_duration_seconds,
+            total_runs=total_runs,
             latest_pipeline=latest_pipe_dict,
         )
 
@@ -560,7 +570,7 @@ class DiscoveryService:
 
             cls._last_jobs_synced = synced_count
             cls._last_duration_seconds = round(time.perf_counter() - start_time, 1)
-            cls._total_runs = (cls._total_runs or 163) + 1
+            cls._total_runs = (cls._total_runs or 0) + 1
             cls._last_run_at = datetime.now(timezone.utc)
             cls._last_status = "completed"
             cls.add_log("success", "COMPLETE", f"✅ Discovery cycle finished in {cls._last_duration_seconds}s. Successfully synced {synced_count} fresh jobs into database!")

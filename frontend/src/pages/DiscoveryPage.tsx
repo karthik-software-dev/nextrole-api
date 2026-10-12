@@ -158,7 +158,7 @@ export const DiscoveryPage: React.FC = () => {
     );
 
   const categoryOptions = [
-    { key: 'all', label: 'All Sources', count: sources.length || 30 },
+    { key: 'all', label: 'All Sources', count: sources.length || 31 },
     { key: 'portals', label: 'Talent Portals', count: sources.filter(isPortals).length },
     { key: 'ats', label: 'Direct ATS Engines', count: sources.filter(isAts).length },
     { key: 'tech', label: 'Tech & Startups', count: sources.filter(isTech).length },
@@ -374,13 +374,15 @@ export const DiscoveryPage: React.FC = () => {
                 ) : status?.last_run_at ? (
                   new Date(status.last_run_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
                 ) : (
-                  lastRunAt || 'Recent'
+                  lastRunAt || 'Standby'
                 )}
               </p>
               <p className="mt-2 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
                 {isDiscovering
                   ? 'Crawling active feeds'
-                  : `Status: ${status?.last_status === 'running' ? 'Active' : (status?.last_status || 'Success')} (${useCache ? 'Cache' : 'Live'})`}
+                  : status?.last_run_at || lastRunAt
+                    ? `Status: ${status?.last_status === 'running' ? 'Active' : (status?.last_status || 'Success')} (${useCache ? 'Cache' : 'Live'})`
+                    : 'Ready for first ingestion'}
               </p>
             </div>
           </div>
@@ -412,7 +414,7 @@ export const DiscoveryPage: React.FC = () => {
                 )}
               </p>
               <p className="mt-2 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
-                Cycle #{status?.total_runs ?? 0} · 30 engines
+                Cycle #{status?.total_runs ?? 0} · {sources.length || 31} engines
               </p>
             </div>
           </div>
@@ -502,8 +504,8 @@ export const DiscoveryPage: React.FC = () => {
               }`}
           >
             <Server className="h-4 w-4 sm:h-4.5 sm:w-4.5" />
-            <span className="sm:hidden">Sources ({sources.length || 30})</span>
-            <span className="hidden sm:inline">Source Connectors ({sources.length || 30})</span>
+            <span className="sm:hidden">Sources ({sources.length || 31})</span>
+            <span className="hidden sm:inline">Source Connectors ({sources.length || 31})</span>
           </button>
         </nav>
       </div>
@@ -736,7 +738,7 @@ export const DiscoveryPage: React.FC = () => {
           <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400 px-1">
             <span>
               Showing <strong className="text-slate-700 dark:text-slate-200 font-semibold">{filteredSources.length}</strong> of{' '}
-              <strong className="text-slate-700 dark:text-slate-200 font-semibold">{sources.length || 30}</strong> configured connectors
+              <strong className="text-slate-700 dark:text-slate-200 font-semibold">{sources.length || 31}</strong> configured connectors
             </span>
           </div>
 

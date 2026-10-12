@@ -104,7 +104,7 @@ export const DiscoveryModal: React.FC = () => {
   };
 
   const steps = [
-    { num: 1, label: '30 Engines', sub: 'Crawling' },
+    { num: 1, label: '31 Engines', sub: 'Crawling' },
     { num: 2, label: 'Schema', sub: 'Parsing' },
     { num: 3, label: 'Relevance', sub: 'Scoring' },
     { num: 4, label: 'Postgres', sub: 'Upserting' },

@@ -150,8 +150,8 @@ export const DailyCadenceChart: React.FC<DailyCadenceChartProps> = ({ data }) =>
       </div>
 
       {/* Footer Meta */}
-      <div className="flex items-center justify-end pt-1">
-        <span className="text-[11.5px] font-medium text-slate-400 dark:text-slate-500">
+      <div className="flex items-center justify-end pt-2.5">
+        <span className="text-[12px] font-medium text-slate-700 dark:text-slate-300">
           Next run: {nextRunInfo}
         </span>
       </div>

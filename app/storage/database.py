@@ -23,6 +23,10 @@ def ensure_database_exists(db_url: str = DATABASE_URL) -> None:
     if not target_db:
         return
 
+    # If the target is already defaultdb / postgres or hosted on Aiven, bypass maintenance check
+    if target_db in ("defaultdb", "postgres") or "aiven" in (parsed.hostname or "").lower():
+        return
+
     # Connection parameters for PostgreSQL maintenance database
     user = parsed.username or "postgres"
     password = parsed.password or ""

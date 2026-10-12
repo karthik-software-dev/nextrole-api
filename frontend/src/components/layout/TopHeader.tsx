@@ -528,7 +528,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
                       </div>
                     </div>
 
-                    {/* GitLab 4GB CI Runner */}
+                    {/* Cloud CI Runner */}
                     <div className="flex items-center justify-between p-2.5 hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="h-7 w-7 rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0 border border-violet-500/20">
@@ -536,21 +536,21 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
                         </div>
                         <div className="min-w-0">
                           <div className="text-[12px] font-bold text-slate-800 dark:text-slate-200 leading-snug">
-                            GitLab 4GB Runner
+                            {latestPipeline?.pipeline_url?.includes('gitlab.com') ? 'GitLab 4GB Runner' : 'GitHub Actions Runner'}
                           </div>
                           <div className="text-[10px] text-slate-500 dark:text-slate-400 truncate">
-                            Playwright Chrome &bull; 5x Daily Schedule
+                            Playwright Chromium &bull; 5x Daily Schedule
                           </div>
                         </div>
                       </div>
                       <div className="text-right shrink-0">
                         {latestPipeline && (latestPipeline.status === 'running' || latestPipeline.status === 'active') ? (
                           <a
-                            href={latestPipeline.pipeline_url || 'https://gitlab.com/karthik-software-dev/job-agent/-/pipelines'}
+                            href={latestPipeline.pipeline_url || 'https://github.com/karthik-software-dev/nextrole-api/actions'}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 hover:underline"
-                            title="GitLab CI Pipeline running"
+                            title="CI Pipeline running"
                           >
                             <span className="relative flex h-1.5 w-1.5">
                               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
@@ -560,11 +560,11 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
                           </a>
                         ) : latestPipeline?.pipeline_id ? (
                           <a
-                            href={latestPipeline.pipeline_url || 'https://gitlab.com/karthik-software-dev/job-agent/-/pipelines'}
+                            href={latestPipeline.pipeline_url || 'https://github.com/karthik-software-dev/nextrole-api/actions'}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/10 text-violet-700 dark:text-violet-400 border border-violet-500/20 hover:underline"
-                            title="Latest GitLab CI pipeline"
+                            title="Latest CI pipeline"
                           >
                             CI #{latestPipeline.pipeline_id}
                           </a>

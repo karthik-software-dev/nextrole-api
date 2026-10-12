@@ -69,7 +69,13 @@ jobs:
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL || 'rahulkarthik056@gmail.com' }}
           ADMIN_INITIAL_PASSWORD: ${{ secrets.ADMIN_INITIAL_PASSWORD || '#Karthick979' }}
-          CI_PIPELINE_SOURCE: "schedule"
+          GITHUB_ACTIONS: "true"
+          GITHUB_RUN_ID: ${{ github.run_id }}
+          GITHUB_RUN_NUMBER: ${{ github.run_number }}
+          GITHUB_ACTOR: ${{ github.actor }}
+          GITHUB_SERVER_URL: ${{ github.server_url }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          CI_PIPELINE_SOURCE: ${{ github.event_name }}
           CI_PIPELINE_ID: ${{ github.run_id }}
           CI_PIPELINE_URL: "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"
         run: |

@@ -316,7 +316,7 @@ export const DiscoveryPage: React.FC = () => {
               />
             </span>
             <span className="font-bold text-slate-900 dark:text-white">
-              🦊 GitLab CI Pipeline #{latestPipeline.pipeline_id || 'Latest'}
+              {latestPipeline.pipeline_url?.includes('gitlab.com') ? '🦊 GitLab CI Pipeline' : '⚡ GitHub Actions Workflow'} #{latestPipeline.pipeline_id || 'Latest'}
             </span>
             <span
               className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold capitalize ${
@@ -344,7 +344,7 @@ export const DiscoveryPage: React.FC = () => {
                 rel="noopener noreferrer"
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60 hover:bg-indigo-50 dark:hover:bg-slate-800 shadow-2xs transition-colors"
               >
-                <span>View in GitLab</span>
+                <span>{latestPipeline.pipeline_url?.includes('gitlab.com') ? 'View in GitLab' : 'View in GitHub'}</span>
                 <ExternalLink className="h-3 w-3" />
               </a>
             )}

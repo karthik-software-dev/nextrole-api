@@ -376,7 +376,7 @@ class DashboardService:
                     status=status,
                     jobs_collected=cnt,
                     cumulative_jobs=running_cum,
-                    runner="GitLab 4GB Runner",
+                    runner="GitHub Actions Runner",
                 )
             )
 

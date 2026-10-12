@@ -18,11 +18,11 @@ interface DailyCadenceChartProps {
 
 export const DailyCadenceChart: React.FC<DailyCadenceChartProps> = ({ data }) => {
   const cadenceData = data && data.length > 0 ? data : [
-    { run_number: 1, time_slot: '09:00 AM', label: 'Morning Market Sync', status: 'completed' as const, jobs_collected: 8, cumulative_jobs: 8, runner: 'GitLab 4GB Runner' },
-    { run_number: 2, time_slot: '12:00 PM', label: 'Mid-day Ingestion', status: 'completed' as const, jobs_collected: 14, cumulative_jobs: 22, runner: 'GitLab 4GB Runner' },
-    { run_number: 3, time_slot: '03:00 PM', label: 'Afternoon Crawl', status: 'completed' as const, jobs_collected: 28, cumulative_jobs: 50, runner: 'GitLab 4GB Runner' },
-    { run_number: 4, time_slot: '06:00 PM', label: 'Evening Sync', status: 'completed' as const, jobs_collected: 75, cumulative_jobs: 125, runner: 'GitLab 4GB Runner' },
-    { run_number: 5, time_slot: '09:00 PM', label: 'Night Roundup', status: 'completed' as const, jobs_collected: 61, cumulative_jobs: 186, runner: 'GitLab 4GB Runner' },
+    { run_number: 1, time_slot: '09:00 AM', label: 'Morning Market Sync', status: 'completed' as const, jobs_collected: 8, cumulative_jobs: 8, runner: 'GitHub Actions Runner' },
+    { run_number: 2, time_slot: '12:00 PM', label: 'Mid-day Ingestion', status: 'completed' as const, jobs_collected: 14, cumulative_jobs: 22, runner: 'GitHub Actions Runner' },
+    { run_number: 3, time_slot: '03:00 PM', label: 'Afternoon Crawl', status: 'completed' as const, jobs_collected: 28, cumulative_jobs: 50, runner: 'GitHub Actions Runner' },
+    { run_number: 4, time_slot: '06:00 PM', label: 'Evening Sync', status: 'completed' as const, jobs_collected: 75, cumulative_jobs: 125, runner: 'GitHub Actions Runner' },
+    { run_number: 5, time_slot: '09:00 PM', label: 'Night Roundup', status: 'completed' as const, jobs_collected: 61, cumulative_jobs: 186, runner: 'GitHub Actions Runner' },
   ];
 
   const totalCollectedToday = cadenceData.reduce((acc, r) => acc + (r.jobs_collected || 0), 0);

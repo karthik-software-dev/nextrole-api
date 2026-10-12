@@ -67,12 +67,23 @@ def main():
     use_cache = not force_live
     start_perf = time.perf_counter()
 
-    # Telemetry & GitLab CI Pipeline tracking
-    ci_pipeline_id = os.getenv("CI_PIPELINE_ID")
-    ci_pipeline_iid = os.getenv("CI_PIPELINE_IID")
-    ci_pipeline_url = os.getenv("CI_PIPELINE_URL")
-    ci_source = os.getenv("CI_PIPELINE_SOURCE", "web" if ci_pipeline_id else "cli")
-    ci_user = os.getenv("GITLAB_USER_NAME") or os.getenv("GITLAB_USER_LOGIN") or ("GitLab Web Runner" if ci_pipeline_id else "Local Terminal")
+    # Telemetry & CI Pipeline tracking
+    is_github = bool(os.getenv("GITHUB_ACTIONS"))
+    ci_pipeline_id = os.getenv("GITHUB_RUN_ID") or os.getenv("CI_PIPELINE_ID")
+    ci_pipeline_iid = os.getenv("GITHUB_RUN_NUMBER") or os.getenv("CI_PIPELINE_IID")
+    ci_pipeline_url = os.getenv("CI_PIPELINE_URL") or (
+        f"{os.getenv('GITHUB_SERVER_URL', 'https://github.com')}/{os.getenv('GITHUB_REPOSITORY')}/actions/runs/{ci_pipeline_id}"
+        if is_github and os.getenv("GITHUB_REPOSITORY") and ci_pipeline_id
+        else None
+    )
+    ci_source = os.getenv("CI_PIPELINE_SOURCE") or ("schedule" if is_github else ("web" if ci_pipeline_id else "cli"))
+    ci_platform = "GitHub Actions" if is_github else ("GitLab CI" if ci_pipeline_id else "Local")
+    ci_user = (
+        os.getenv("GITHUB_ACTOR")
+        or os.getenv("GITLAB_USER_NAME")
+        or os.getenv("GITLAB_USER_LOGIN")
+        or (f"{ci_platform} Runner" if ci_pipeline_id else "Local Terminal")
+    )
 
     active_run_id = None
     try:
@@ -88,7 +99,7 @@ def main():
                 )
                 active_run_id = run_rec.id
                 NotificationService.create_notification(
-                    title="GitLab CI Pipeline Active" if ci_pipeline_id else "Job Discovery Active",
+                    title=f"{ci_platform} Pipeline Active" if ci_pipeline_id else "Job Discovery Active",
                     message=f"Pipeline #{ci_pipeline_id or 'Local'} initiated ({ci_source.upper()}) by {ci_user}.",
                     type="discovery",
                     link="/discovery",
@@ -102,7 +113,7 @@ def main():
 
     print(f"\n[CONFIG] Source: {source_arg.upper()} | Location: {location_arg.upper()} | Cache Mode: {'ENABLED' if use_cache else 'LIVE FETCH'}")
     if ci_pipeline_id:
-        print(f"[GITLAB CI] Pipeline #{ci_pipeline_id} (Source: {ci_source}) | User: {ci_user}")
+        print(f"[{ci_platform.upper()}] Pipeline #{ci_pipeline_id} (Source: {ci_source}) | User: {ci_user}")
     print("\nFetching & normalizing jobs across active sources...\n")
 
     jobs = []
@@ -247,7 +258,7 @@ def main():
                         duration_seconds=duration,
                     )
                     NotificationService.create_notification(
-                        title="GitLab CI Pipeline Success" if ci_pipeline_id else "Job Discovery Completed",
+                        title=f"{ci_platform} Pipeline Success" if ci_pipeline_id else "Job Discovery Completed",
                         message=f"Pipeline #{ci_pipeline_id or 'Local'} finished: {synced_count} opportunities synced in {duration}s.",
                         type="discovery",
                         link="/discovery",

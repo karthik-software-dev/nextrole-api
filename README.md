@@ -11,9 +11,10 @@ NextRole is an intelligent job discovery, matching, and application tracking pla
 - **Backend API Docs (Render)**: [https://nextrole-api-vyzp.onrender.com/docs](https://nextrole-api-vyzp.onrender.com/docs)
 - **Backend API Base**: `https://nextrole-api-vyzp.onrender.com/api/v1`
 
-### Standalone GitLab Repositories
-- **Frontend UI**: [https://gitlab.com/karthik-software-dev/nextrole-ui](https://gitlab.com/karthik-software-dev/nextrole-ui)
-- **Backend API**: [https://gitlab.com/karthik-software-dev/nextrole-api](https://gitlab.com/karthik-software-dev/nextrole-api)
+### Standalone Repositories & CI/CD
+- **GitHub Repository & Actions CI/CD**: [https://github.com/karthik-software-dev/nextrole-api](https://github.com/karthik-software-dev/nextrole-api)
+- **Frontend UI (GitLab)**: [https://gitlab.com/karthik-software-dev/nextrole-ui](https://gitlab.com/karthik-software-dev/nextrole-ui)
+- **Backend API (GitLab)**: [https://gitlab.com/karthik-software-dev/nextrole-api](https://gitlab.com/karthik-software-dev/nextrole-api)
 
 ---
 

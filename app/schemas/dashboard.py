@@ -63,7 +63,7 @@ class DailyCadenceRunOut(BaseModel):
     status: str
     jobs_collected: int
     cumulative_jobs: int
-    runner: str = "GitLab 4GB Runner"
+    runner: str = "GitHub Actions Runner"
 
 
 class TopHiringCompanyOut(BaseModel):

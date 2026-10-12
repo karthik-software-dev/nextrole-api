@@ -51,6 +51,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
     lastRunAt,
     useCache,
     setIsModalOpen,
+    latestPipeline,
   } = useDiscovery();
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -543,9 +544,35 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
                         </div>
                       </div>
                       <div className="text-right shrink-0">
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/10 text-violet-700 dark:text-violet-400 border border-violet-500/20">
-                          Standby
-                        </span>
+                        {latestPipeline && (latestPipeline.status === 'running' || latestPipeline.status === 'active') ? (
+                          <a
+                            href={latestPipeline.pipeline_url || 'https://gitlab.com/karthik-software-dev/job-agent/-/pipelines'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 hover:underline"
+                            title="GitLab CI Pipeline running"
+                          >
+                            <span className="relative flex h-1.5 w-1.5">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+                              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500" />
+                            </span>
+                            Running (#{latestPipeline.pipeline_id || 'CI'})
+                          </a>
+                        ) : latestPipeline?.pipeline_id ? (
+                          <a
+                            href={latestPipeline.pipeline_url || 'https://gitlab.com/karthik-software-dev/job-agent/-/pipelines'}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/10 text-violet-700 dark:text-violet-400 border border-violet-500/20 hover:underline"
+                            title="Latest GitLab CI pipeline"
+                          >
+                            CI #{latestPipeline.pipeline_id}
+                          </a>
+                        ) : (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-violet-500/10 text-violet-700 dark:text-violet-400 border border-violet-500/20">
+                            Standby
+                          </span>
+                        )}
                       </div>
                     </div>
                   </div>

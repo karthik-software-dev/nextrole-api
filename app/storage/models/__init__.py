@@ -5,6 +5,7 @@ from storage.models.company import Company
 from storage.models.job import Job
 from storage.models.job_source import JobSource
 from storage.models.notification import Notification
+from storage.models.pipeline_run import PipelineRun
 from storage.models.user import User
 
 __all__ = [
@@ -18,4 +19,5 @@ __all__ = [
     "Application",
     "ApplicationHistory",
     "Notification",
+    "PipelineRun",
 ]

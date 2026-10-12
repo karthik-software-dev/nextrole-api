@@ -5,6 +5,8 @@ from pathlib import Path
 if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8", errors="replace")
 
+import os
+import time
 from processing.central_processor import CentralJobProcessor
 from custom_scraper import (
     fetch_indeed_jobs,
@@ -15,6 +17,8 @@ from custom_scraper import (
 )
 from storage.database import get_db, init_db
 from storage.repositories.job_repository import JobRepository
+from storage.repositories.pipeline_repository import PipelineRepository
+from services.notification_service import NotificationService
 
 
 def main():
@@ -61,13 +65,44 @@ def main():
     # Check CLI arguments
     force_live = "--live" in sys.argv
     use_cache = not force_live
+    start_perf = time.perf_counter()
 
+    # Telemetry & GitLab CI Pipeline tracking
+    ci_pipeline_id = os.getenv("CI_PIPELINE_ID")
+    ci_pipeline_iid = os.getenv("CI_PIPELINE_IID")
+    ci_pipeline_url = os.getenv("CI_PIPELINE_URL")
+    ci_source = os.getenv("CI_PIPELINE_SOURCE", "web" if ci_pipeline_id else "cli")
+    ci_user = os.getenv("GITLAB_USER_NAME") or os.getenv("GITLAB_USER_LOGIN") or ("GitLab Web Runner" if ci_pipeline_id else "Local Terminal")
+
+    active_run_id = None
+    try:
+        if init_db():
+            with get_db() as session:
+                run_rec = PipelineRepository.start_pipeline_run(
+                    session=session,
+                    pipeline_id=ci_pipeline_id or ("local-" + str(int(time.time()))),
+                    pipeline_iid=ci_pipeline_iid,
+                    pipeline_url=ci_pipeline_url,
+                    source=ci_source,
+                    triggered_by=ci_user,
+                )
+                active_run_id = run_rec.id
+                NotificationService.create_notification(
+                    title="GitLab CI Pipeline Active" if ci_pipeline_id else "Job Discovery Active",
+                    message=f"Pipeline #{ci_pipeline_id or 'Local'} initiated ({ci_source.upper()}) by {ci_user}.",
+                    type="discovery",
+                    link="/discovery",
+                )
+    except Exception as pipe_init_err:
+        print(f"[WARN] Could not initialize pipeline run telemetry: {pipe_init_err}")
 
     # Determine which sources to scrape
     source_arg = next((arg.split("=")[1].lower() for arg in sys.argv if arg.startswith("--source=")), "all")
     location_arg = next((arg.split("=")[1].lower() for arg in sys.argv if arg.startswith("--location=")), "all")
 
     print(f"\n[CONFIG] Source: {source_arg.upper()} | Location: {location_arg.upper()} | Cache Mode: {'ENABLED' if use_cache else 'LIVE FETCH'}")
+    if ci_pipeline_id:
+        print(f"[GITLAB CI] Pipeline #{ci_pipeline_id} (Source: {ci_source}) | User: {ci_user}")
     print("\nFetching & normalizing jobs across active sources...\n")
 
     jobs = []
@@ -181,6 +216,7 @@ def main():
         print(f"Discovery    : {job.discovery_url}", flush=True)
 
     # Persist and Sync Opportunities to PostgreSQL Database ('job_agent')
+    synced_count = 0
     try:
         if init_db():
             with get_db() as session:
@@ -191,7 +227,6 @@ def main():
                     except Exception:
                         pass
 
-                synced_count = 0
                 for job in prioritized_jobs:
                     try:
                         with session.begin_nested():
@@ -200,8 +235,40 @@ def main():
                     except Exception as job_err:
                         print(f"[WARN] Failed to sync job '{job.title}': {job_err}")
                 print(f"\n[DATABASE] Successfully synced {synced_count} opportunities to PostgreSQL ('job_agent')")
+
+                if active_run_id:
+                    duration = round(time.perf_counter() - start_perf, 2)
+                    PipelineRepository.finish_pipeline_run(
+                        session=session,
+                        run_id=active_run_id,
+                        status="success",
+                        jobs_collected=len(jobs),
+                        jobs_synced=synced_count,
+                        duration_seconds=duration,
+                    )
+                    NotificationService.create_notification(
+                        title="GitLab CI Pipeline Success" if ci_pipeline_id else "Job Discovery Completed",
+                        message=f"Pipeline #{ci_pipeline_id or 'Local'} finished: {synced_count} opportunities synced in {duration}s.",
+                        type="discovery",
+                        link="/discovery",
+                    )
     except Exception as e:
         print(f"\n[WARN] Database sync skipped ({e})")
+        if active_run_id:
+            try:
+                with get_db() as session:
+                    duration = round(time.perf_counter() - start_perf, 2)
+                    PipelineRepository.finish_pipeline_run(
+                        session=session,
+                        run_id=active_run_id,
+                        status="failed",
+                        jobs_collected=len(jobs),
+                        jobs_synced=synced_count,
+                        duration_seconds=duration,
+                        error_message=str(e),
+                    )
+            except Exception:
+                pass
 
     print("\n" + "=" * 60)
     print("DONE")

@@ -153,6 +153,29 @@ class DiscoveryService:
             except Exception as e:
                 logger.debug(f"Could not fetch last sync timestamp from DB: {e}")
 
+        latest_pipe_dict = None
+        try:
+            from storage.repositories.pipeline_repository import PipelineRepository
+            with get_db() as session:
+                pipe = PipelineRepository.get_latest_pipeline_run(session)
+                if pipe:
+                    latest_pipe_dict = {
+                        "id": pipe.id,
+                        "pipeline_id": pipe.pipeline_id,
+                        "pipeline_iid": pipe.pipeline_iid,
+                        "pipeline_url": pipe.pipeline_url,
+                        "source": pipe.source,
+                        "status": pipe.status,
+                        "triggered_by": pipe.triggered_by,
+                        "jobs_collected": pipe.jobs_collected,
+                        "jobs_synced": pipe.jobs_synced,
+                        "duration_seconds": float(pipe.duration_seconds) if pipe.duration_seconds else None,
+                        "started_at": pipe.started_at.isoformat() if pipe.started_at else None,
+                        "completed_at": pipe.completed_at.isoformat() if pipe.completed_at else None,
+                    }
+        except Exception as e:
+            logger.debug(f"Could not fetch latest pipeline run: {e}")
+
         return DiscoveryStatusOut(
             is_running=cls._is_running,
             last_run_at=last_run.isoformat() if last_run else None,
@@ -162,6 +185,7 @@ class DiscoveryService:
             last_error=cls._last_error,
             last_duration_seconds=cls._last_duration_seconds if cls._last_duration_seconds > 0 else 12.4,
             total_runs=cls._total_runs,
+            latest_pipeline=latest_pipe_dict,
         )
 
     @classmethod

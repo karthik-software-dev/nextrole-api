@@ -87,6 +87,23 @@ class DedupEfficiencyOut(BaseModel):
 from schemas.analytics import ExperienceDistributionOut, SalaryDistributionOut
 
 
+class PipelineStatusOut(BaseModel):
+    """Execution status and metadata for GitLab CI / scraper pipeline."""
+
+    id: int | None = None
+    pipeline_id: str | None = None
+    pipeline_iid: str | None = None
+    pipeline_url: str | None = None
+    source: str = "gitlab_ci"
+    status: str = "idle"
+    triggered_by: str | None = None
+    jobs_collected: int = 0
+    jobs_synced: int = 0
+    duration_seconds: float | None = None
+    started_at: datetime | None = None
+    completed_at: datetime | None = None
+
+
 class DashboardSummaryOut(BaseModel):
     """High-level metrics for dashboard cards and pipeline charts."""
 
@@ -109,4 +126,5 @@ class DashboardSummaryOut(BaseModel):
     daily_cadence: list[DailyCadenceRunOut] = []
     top_hiring_companies: list[TopHiringCompanyOut] = []
     dedup_efficiency: DedupEfficiencyOut | None = None
+    latest_pipeline: PipelineStatusOut | None = None
 

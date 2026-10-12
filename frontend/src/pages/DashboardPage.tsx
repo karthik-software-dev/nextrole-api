@@ -615,7 +615,7 @@ export const DashboardPage: React.FC = () => {
       {/* -------------------------------------------------- */}
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-2">
         {/* Feature A: 5-Run Daily Cadence Chart */}
-        <DailyCadenceChart data={summary?.daily_cadence} />
+        <DailyCadenceChart data={summary?.daily_cadence} pipeline={summary?.latest_pipeline} />
 
         {/* Section 2: Jobs Discovered Line Chart */}
         <JobsDiscoveredChart data={summary?.discovery_trend} />

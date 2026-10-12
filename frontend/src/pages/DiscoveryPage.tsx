@@ -48,6 +48,7 @@ export const DiscoveryPage: React.FC = () => {
     useCache,
     setUseCache,
     setIsModalOpen,
+    latestPipeline,
   } = useDiscovery();
   const [status, setStatus] = useState<DiscoveryStatus | null>(null);
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
@@ -295,6 +296,61 @@ export const DiscoveryPage: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* GitLab CI Pipeline Runner Telemetry Banner */}
+      {latestPipeline && (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 rounded-2xl border border-indigo-200/80 bg-indigo-50/50 dark:border-indigo-900/60 dark:bg-indigo-950/30 text-xs shadow-xs transition-all">
+          <div className="flex items-center gap-2.5 flex-wrap">
+            <span className="flex h-2.5 w-2.5 relative shrink-0">
+              {(latestPipeline.status === 'running' || latestPipeline.status === 'active') && (
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+              )}
+              <span
+                className={`inline-flex rounded-full h-2.5 w-2.5 ${
+                  latestPipeline.status === 'running' || latestPipeline.status === 'active'
+                    ? 'bg-emerald-500'
+                    : latestPipeline.status === 'success'
+                    ? 'bg-indigo-500'
+                    : 'bg-rose-500'
+                }`}
+              />
+            </span>
+            <span className="font-bold text-slate-900 dark:text-white">
+              🦊 GitLab CI Pipeline #{latestPipeline.pipeline_id || 'Latest'}
+            </span>
+            <span
+              className={`px-2 py-0.5 rounded-full text-[10.5px] font-bold capitalize ${
+                latestPipeline.status === 'running' || latestPipeline.status === 'active'
+                  ? 'bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20'
+                  : latestPipeline.status === 'success'
+                  ? 'bg-indigo-500/15 text-indigo-700 dark:text-indigo-400 border border-indigo-500/20'
+                  : 'bg-rose-500/15 text-rose-700 dark:text-rose-400 border border-rose-500/20'
+              }`}
+            >
+              {latestPipeline.status}
+            </span>
+            <span className="text-slate-500 dark:text-slate-400">
+              Source: <strong className="text-slate-700 dark:text-slate-300 uppercase">{latestPipeline.source}</strong> &bull; Synced:{' '}
+              <strong className="text-emerald-600 dark:text-emerald-400">{latestPipeline.jobs_synced}</strong> jobs
+              {latestPipeline.duration_seconds ? ` (${latestPipeline.duration_seconds}s)` : ''}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2 shrink-0">
+            {latestPipeline.pipeline_url && (
+              <a
+                href={latestPipeline.pipeline_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-semibold bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 border border-indigo-200/60 dark:border-indigo-800/60 hover:bg-indigo-50 dark:hover:bg-slate-800 shadow-2xs transition-colors"
+              >
+                <span>View in GitLab</span>
+                <ExternalLink className="h-3 w-3" />
+              </a>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* KPI Cards - Exact Dashboard Card Dimension & Styling */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

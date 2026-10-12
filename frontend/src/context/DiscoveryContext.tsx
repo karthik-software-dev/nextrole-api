@@ -6,6 +6,7 @@ import {
   getDiscoveryLogs,
   clearDiscoveryLogs as clearDiscoveryLogsApi,
 } from '../api';
+import type { PipelineRunInfo } from '../types';
 import { useToast } from './ToastContext';
 import {
   playDiscoverySuccessSound,
@@ -30,6 +31,7 @@ interface DiscoveryContextType {
   lastRunAt: string | null;
   lastSyncedCount: number;
   terminalLogs: TerminalLog[];
+  latestPipeline: PipelineRunInfo | null;
   runDiscovery: (source?: string, overrideCache?: boolean, openModal?: boolean) => Promise<void>;
   pauseDiscovery: () => void;
   resumeDiscovery: () => void;
@@ -58,6 +60,7 @@ const DiscoveryContext = createContext<DiscoveryContextType>({
   lastRunAt: null,
   lastSyncedCount: 0,
   terminalLogs: INITIAL_LOGS,
+  latestPipeline: null,
   runDiscovery: async () => {},
   pauseDiscovery: () => {},
   resumeDiscovery: () => {},
@@ -78,6 +81,7 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [lastRunAt, setLastRunAt] = useState<string | null>(null);
   const [lastSyncedCount, setLastSyncedCount] = useState<number>(0);
   const [terminalLogs, setTerminalLogs] = useState<TerminalLog[]>(INITIAL_LOGS);
+  const [latestPipeline, setLatestPipeline] = useState<PipelineRunInfo | null>(null);
 
   const isPausedRef = useRef(false);
   const isCancelledRef = useRef(false);
@@ -99,6 +103,9 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
         if (st?.last_jobs_synced) {
           setLastSyncedCount(st.last_jobs_synced);
+        }
+        if (st?.latest_pipeline) {
+          setLatestPipeline(st.latest_pipeline);
         }
       })
       .catch(() => {});
@@ -300,6 +307,7 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         lastRunAt,
         lastSyncedCount,
         terminalLogs,
+        latestPipeline,
         runDiscovery,
         pauseDiscovery,
         resumeDiscovery,

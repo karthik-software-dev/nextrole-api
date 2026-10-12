@@ -214,6 +214,22 @@ export interface DashboardSummary {
   daily_cadence?: DailyCadenceRun[];
   top_hiring_companies?: TopHiringCompany[];
   dedup_efficiency?: DedupEfficiency | null;
+  latest_pipeline?: PipelineRunInfo | null;
+}
+
+export interface PipelineRunInfo {
+  id?: number;
+  pipeline_id?: string;
+  pipeline_iid?: string;
+  pipeline_url?: string;
+  source?: string;
+  status?: string;
+  triggered_by?: string;
+  jobs_collected?: number;
+  jobs_synced?: number;
+  duration_seconds?: number | null;
+  started_at?: string;
+  completed_at?: string | null;
 }
 
 export interface DiscoveryStatus {
@@ -225,6 +241,7 @@ export interface DiscoveryStatus {
   last_error: string | null;
   last_duration_seconds?: number;
   total_runs?: number;
+  latest_pipeline?: PipelineRunInfo | null;
 }
 
 export interface DiscoveryLog {

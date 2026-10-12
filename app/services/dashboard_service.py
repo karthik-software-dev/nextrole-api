@@ -1,5 +1,5 @@
 from datetime import date, datetime, time, timedelta, timezone
-from sqlalchemy import cast, Date, func, select
+from sqlalchemy import cast, Date, func, or_, select
 from sqlalchemy.orm import Session
 
 from schemas.dashboard import (
@@ -10,6 +10,7 @@ from schemas.dashboard import (
     DiscoveryTrendItemOut,
     LocationBreakdownOut,
     LocationStatItemOut,
+    PipelineStatusOut,
     RecentActivityItemOut,
     TopHiringCompanyOut,
 )
@@ -21,6 +22,7 @@ from storage.models.company import Company
 from storage.models.job import Job
 from storage.models.job_source import JobSource
 from storage.repositories.job_repository import JobRepository
+from storage.repositories.pipeline_repository import PipelineRepository
 
 
 class DashboardService:
@@ -299,15 +301,46 @@ class DashboardService:
         # 9. 5-Run Daily Cadence (Partition jobs into 5 standard runner windows)
         now_utc = datetime.now(timezone.utc)
         ist_now = now_utc + timedelta(hours=5, minutes=30)
-        target_date = e_date if e_date == today else today
+        target_date = e_date
 
         target_start_dt = datetime.combine(target_date, time.min, tzinfo=timezone.utc) - timedelta(hours=6)
         target_end_dt = datetime.combine(target_date, time.max, tzinfo=timezone.utc) + timedelta(hours=6)
 
+        job_ts_expr = func.greatest(Job.first_seen_at, Job.last_seen_at)
         day_job_times = session.execute(
-            select(Job.first_seen_at)
-            .where(Job.first_seen_at >= target_start_dt, Job.first_seen_at <= target_end_dt)
+            select(job_ts_expr)
+            .where(
+                Job.is_active.is_(True),
+                or_(
+                    Job.first_seen_at.between(target_start_dt, target_end_dt),
+                    Job.last_seen_at.between(target_start_dt, target_end_dt),
+                ),
+            )
         ).scalars().all()
+
+        effective_date = target_date
+        # If target date has 0 jobs recorded (e.g. today before any runs execute),
+        # fallback to the latest active discovery date within the last 7 days so real batch trends are visible
+        if target_date == today and not day_job_times:
+            latest_ts = session.scalar(select(func.max(job_ts_expr)))
+            if latest_ts:
+                recent_date = (latest_ts + timedelta(hours=5, minutes=30)).date()
+                if (today - recent_date).days <= 7:
+                    recent_start = datetime.combine(recent_date, time.min, tzinfo=timezone.utc) - timedelta(hours=6)
+                    recent_end = datetime.combine(recent_date, time.max, tzinfo=timezone.utc) + timedelta(hours=6)
+                    recent_times = session.execute(
+                        select(job_ts_expr)
+                        .where(
+                            Job.is_active.is_(True),
+                            or_(
+                                Job.first_seen_at.between(recent_start, recent_end),
+                                Job.last_seen_at.between(recent_start, recent_end),
+                            ),
+                        )
+                    ).scalars().all()
+                    if recent_times:
+                        day_job_times = recent_times
+                        effective_date = recent_date
 
         slot_defs = [
             {"run_number": 1, "time_slot": "09:00 AM", "label": "Morning Market Sync", "hour_max": 11, "act_hour": 9},
@@ -321,14 +354,14 @@ class DashboardService:
         for jt in day_job_times:
             if jt:
                 jt_ist = jt + timedelta(hours=5, minutes=30)
-                if jt_ist.date() == target_date:
+                if jt_ist.date() == effective_date:
                     h = jt_ist.hour
                     for sdef in slot_defs:
                         if h < sdef["hour_max"]:
                             slot_counts[sdef["run_number"]] += 1
                             break
 
-        curr_ist_hour = ist_now.hour if target_date == today else 24
+        curr_ist_hour = ist_now.hour if effective_date == today else 24
         daily_cadence: list[DailyCadenceRunOut] = []
         running_cum = 0
 
@@ -337,7 +370,7 @@ class DashboardService:
             cnt = slot_counts[rnum]
             running_cum += cnt
 
-            if target_date < today:
+            if effective_date < today:
                 status = "completed"
             elif curr_ist_hour >= sdef["hour_max"]:
                 status = "completed"
@@ -357,6 +390,27 @@ class DashboardService:
                     runner="GitLab 4GB Runner",
                 )
             )
+
+        # Telemetry: query latest pipeline run from PostgreSQL
+        latest_pipe_rec = PipelineRepository.get_latest_pipeline_run(session)
+        latest_pipe_out = (
+            PipelineStatusOut(
+                id=latest_pipe_rec.id,
+                pipeline_id=latest_pipe_rec.pipeline_id,
+                pipeline_iid=latest_pipe_rec.pipeline_iid,
+                pipeline_url=latest_pipe_rec.pipeline_url,
+                source=latest_pipe_rec.source,
+                status=latest_pipe_rec.status,
+                triggered_by=latest_pipe_rec.triggered_by,
+                jobs_collected=latest_pipe_rec.jobs_collected,
+                jobs_synced=latest_pipe_rec.jobs_synced,
+                duration_seconds=float(latest_pipe_rec.duration_seconds) if latest_pipe_rec.duration_seconds else None,
+                started_at=latest_pipe_rec.started_at,
+                completed_at=latest_pipe_rec.completed_at,
+            )
+            if latest_pipe_rec
+            else None
+        )
 
         # 10. Top Hiring Companies (Hiring velocity leaderboard preview)
         top_comp_rows = session.execute(
@@ -432,4 +486,5 @@ class DashboardService:
             daily_cadence=daily_cadence,
             top_hiring_companies=top_hiring_companies,
             dedup_efficiency=dedup_efficiency,
+            latest_pipeline=latest_pipe_out,
         )

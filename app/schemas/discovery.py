@@ -20,6 +20,7 @@ class DiscoveryStatusOut(BaseModel):
     last_error: str | None = None
     last_duration_seconds: float = 0.0
     total_runs: int = 0
+    latest_pipeline: dict | None = None
 
 
 class DiscoverySourceOut(BaseModel):

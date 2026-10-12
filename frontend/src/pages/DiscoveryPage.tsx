@@ -427,7 +427,7 @@ export const DiscoveryPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Card 3: Last Total Yield */}
+        {/* Card 3: Raw Postings Scraped */}
         <div className="group flex items-center justify-between rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6 shadow-[0_1px_3px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)] transition-[transform,box-shadow,border-color] duration-180 ease-out hover:-translate-y-0.5 hover:border-slate-300 hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)] dark:border-slate-800 dark:bg-[#111726] dark:hover:border-slate-700 dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.25)]">
           <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 flex-1">
             <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-indigo-50 text-indigo-600 ring-1 ring-inset ring-indigo-600/15 shadow-xs dark:bg-indigo-950/60 dark:text-indigo-400 dark:ring-indigo-400/20">
@@ -435,7 +435,7 @@ export const DiscoveryPage: React.FC = () => {
             </div>
             <div className="min-w-0 flex-1">
               <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-400 block truncate">
-                Last Total Yield
+                Raw Postings Scraped
               </span>
               <p className="mt-1 text-[28px] sm:text-[32px] font-bold leading-none tracking-tight text-slate-900 dark:text-white flex items-baseline gap-1.5 whitespace-nowrap">
                 {isDiscovering ? (
@@ -448,9 +448,9 @@ export const DiscoveryPage: React.FC = () => {
                   <>
                     <span>
                       {status?.last_jobs_found && status.last_jobs_found > 0
-                        ? `+${status.last_jobs_found}`
+                        ? `${status.last_jobs_found}`
                         : status?.last_jobs_synced && status.last_jobs_synced > 0
-                          ? `+${status.last_jobs_synced}`
+                          ? `${status.last_jobs_synced}`
                           : `${summary?.active_jobs ?? 0}`}
                     </span>
                     <span className="text-sm sm:text-base font-semibold text-slate-500 dark:text-slate-400">
@@ -461,7 +461,7 @@ export const DiscoveryPage: React.FC = () => {
               </p>
               <p className="mt-2 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
                 {status?.last_jobs_found && status.last_jobs_found > 0
-                  ? 'From latest discovery cycle'
+                  ? `Collected across ${sources.length || 31} engines`
                   : 'Across Bangalore & Chennai'}
               </p>
             </div>

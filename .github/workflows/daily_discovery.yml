@@ -2,8 +2,6 @@ name: NextRole Daily Job Discovery
 
 on:
   schedule:
-    # 0. Test Trigger: 03:45 PM IST (10:15 UTC)
-    - cron: '15 10 * * *'
     # 1. Run 1 - Morning Market Sync: 09:03 AM IST (03:33 UTC)
     - cron: '33 3 * * *'
     # 2. Run 2 - Mid-day Ingestion: 12:03 PM IST (06:33 UTC)

@@ -12,6 +12,7 @@ from processing.deduplication import (
     normalize_company,
     normalize_title,
 )
+from processing.location_normalizer import extract_canonical_city
 from processing.prioritization import get_location_bucket
 from storage.models.company import Company
 from storage.models.job import Job
@@ -35,23 +36,7 @@ def compute_dedup_hash(job: JobDataclass) -> str:
     return hashlib.sha256(key.encode("utf-8")).hexdigest()
 
 
-def extract_city(location: str | None) -> str | None:
-    """Extracts prominent city from raw location string."""
-    if not location:
-        return None
-    loc_lower = location.lower()
-    if any(k in loc_lower for k in ["bengaluru", "bangalore"]):
-        return "Bengaluru"
-    if any(k in loc_lower for k in ["chennai", "madras"]):
-        return "Chennai"
-    if any(k in loc_lower for k in ["hyderabad"]):
-        return "Hyderabad"
-    if any(k in loc_lower for k in ["pune"]):
-        return "Pune"
-    if any(k in loc_lower for k in ["gurgaon", "gurugram", "noida", "delhi"]):
-        return "Delhi NCR"
-    parts = [p.strip() for p in location.split(",") if p.strip()]
-    return parts[0] if parts else None
+extract_city = extract_canonical_city
 
 
 class JobRepository:

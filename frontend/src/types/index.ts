@@ -7,6 +7,22 @@ export interface PaginationMeta {
   total_pages: number;
 }
 
+export type DateRangePreset = 'today' | 'yesterday' | '7d' | '30d' | 'month' | 'custom';
+
+export interface DateRangeOption {
+  label: string;
+  value: DateRangePreset;
+}
+
+export const DATE_RANGE_OPTIONS: readonly DateRangeOption[] = [
+  { label: 'Today', value: 'today' },
+  { label: 'Yesterday', value: 'yesterday' },
+  { label: 'Last 7 Days', value: '7d' },
+  { label: 'Last 30 Days', value: '30d' },
+  { label: 'This Month', value: 'month' },
+  { label: 'Custom Range', value: 'custom' },
+] as const;
+
 export interface PaginatedResponse<T> {
   items: T[];
   meta: PaginationMeta;

@@ -18,6 +18,7 @@ from schemas.dashboard import (
     TopHiringCompanyOut,
 )
 from schemas.analytics import ExperienceDistributionOut, SalaryDistributionOut
+from core.date_utils import resolve_date_range_dates
 from processing.salary_parser import parse_salary_lpa
 from storage.models.application import Application
 from storage.models.application_history import ApplicationHistory
@@ -70,33 +71,12 @@ class DashboardService:
 
         # 3. Determine date window
         today = date.today()
-        if date_range == "custom" and start_date and end_date:
-            try:
-                s_date = date.fromisoformat(start_date)
-                e_date = date.fromisoformat(end_date)
-            except Exception:
-                s_date = today - timedelta(days=6)
-                e_date = today
-            if s_date > e_date:
-                s_date, e_date = e_date, s_date
-        elif date_range == "today":
-            s_date = today
-            e_date = today
-        elif date_range == "yesterday":
-            s_date = today - timedelta(days=1)
-            e_date = s_date
-        elif date_range == "30d":
-            s_date = today - timedelta(days=29)
-            e_date = today
-        elif date_range == "month":
-            s_date = today.replace(day=1)
-            e_date = today
-        else:  # default "7d"
-            s_date = today - timedelta(days=6)
-            e_date = today
-
-        start_dt = datetime.combine(s_date, time.min, tzinfo=timezone.utc)
-        end_dt = datetime.combine(e_date, time.max, tzinfo=timezone.utc)
+        s_date, e_date, start_dt, end_dt = resolve_date_range_dates(
+            date_range=date_range,
+            start_date=start_date,
+            end_date=end_date,
+            default_days=7,
+        )
 
         # 4. New jobs within selected period
         new_jobs = session.scalar(

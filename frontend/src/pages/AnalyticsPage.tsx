@@ -10,21 +10,12 @@ import {
   Layers,
 } from 'lucide-react';
 import { getAnalyticsSummary } from '../api';
-import type { AnalyticsSummary } from '../types';
+import { DATE_RANGE_OPTIONS, type AnalyticsSummary, type DateRangePreset } from '../types';
 import { useToast } from '../context/ToastContext';
 import { AnalyticsKpiCards } from '../components/analytics/AnalyticsKpiCards';
 import { JobIntelligenceSection } from '../components/analytics/JobIntelligenceSection';
 import { ApplicationAnalyticsSection } from '../components/analytics/ApplicationAnalyticsSection';
 import { AgentPerformanceSection } from '../components/analytics/AgentPerformanceSection';
-
-const DATE_RANGE_OPTIONS = [
-  { label: 'Today', value: 'today' },
-  { label: 'Yesterday', value: 'yesterday' },
-  { label: 'Last 7 Days', value: '7d' },
-  { label: 'Last 30 Days', value: '30d' },
-  { label: 'This Month', value: 'month' },
-  { label: 'Custom Range', value: 'custom' },
-];
 
 export const AnalyticsPage: React.FC = () => {
   const { toast } = useToast();

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Building2, ChevronRight, Flame, MapPin, Globe } from 'lucide-react';
+import { ChevronRight, Flame, MapPin, Globe } from 'lucide-react';
 import { CompanyAvatar } from '../ui/CompanyAvatar';
 import type { TopHiringCompany } from '../../types';
 

@@ -96,6 +96,7 @@ EXCLUDED_HEURISTIC_TAGS = {
 }
 
 
+from core.date_utils import compute_comparative_date_windows
 from processing.salary_parser import parse_salary, parse_salary_lpa
 from processing.prioritization import calculate_match_percentage
 
@@ -113,51 +114,11 @@ class AnalyticsService:
         end_date: str | None = None,
     ) -> tuple[datetime, datetime, datetime, datetime]:
         """Calculates current period [start, end] and preceding comparison period [prev_start, prev_end]."""
-        now = datetime.now(timezone.utc)
-
-        if range_val == "today":
-            curr_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            curr_end = now
-            duration = curr_end - curr_start
-            prev_end = curr_start
-            prev_start = prev_end - timedelta(days=1)
-        elif range_val == "yesterday":
-            curr_end = now.replace(hour=0, minute=0, second=0, microsecond=0)
-            curr_start = curr_end - timedelta(days=1)
-            prev_end = curr_start
-            prev_start = prev_end - timedelta(days=1)
-        elif range_val == "7d":
-            curr_start = now - timedelta(days=7)
-            curr_end = now
-            prev_end = curr_start
-            prev_start = curr_start - timedelta(days=7)
-        elif range_val == "month":
-            curr_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-            curr_end = now
-            duration = curr_end - curr_start
-            prev_end = curr_start
-            prev_start = curr_start - duration
-        elif range_val == "custom" and start_date and end_date:
-            try:
-                curr_start = datetime.fromisoformat(start_date).replace(tzinfo=timezone.utc)
-                curr_end = datetime.fromisoformat(end_date).replace(
-                    hour=23, minute=59, second=59, tzinfo=timezone.utc
-                )
-                duration = curr_end - curr_start
-                prev_end = curr_start
-                prev_start = curr_start - duration
-            except Exception:
-                curr_start = now - timedelta(days=30)
-                curr_end = now
-                prev_end = curr_start
-                prev_start = curr_start - timedelta(days=30)
-        else:  # Default "30d"
-            curr_start = now - timedelta(days=30)
-            curr_end = now
-            prev_end = curr_start
-            prev_start = curr_start - timedelta(days=30)
-
-        return curr_start, curr_end, prev_start, prev_end
+        return compute_comparative_date_windows(
+            range_val=range_val,
+            start_date=start_date,
+            end_date=end_date,
+        )
 
     @classmethod
     def get_analytics_summary(

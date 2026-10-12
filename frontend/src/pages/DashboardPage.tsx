@@ -23,7 +23,7 @@ import {
   Clock,
 } from 'lucide-react';
 import { getDashboardSummary, getJobs, createApplication, deleteApplicationByJobId } from '../api';
-import type { DashboardSummary, JobSummary } from '../types';
+import { DATE_RANGE_OPTIONS, type DashboardSummary, type JobSummary, type DateRangePreset } from '../types';
 import { useDiscovery } from '../context/DiscoveryContext';
 import { useToast } from '../context/ToastContext';
 import { DailyCadenceChart } from '../components/dashboard/DailyCadenceChart';
@@ -50,14 +50,6 @@ const isValidSalary = (salary?: string | null): boolean => {
   return /\d/.test(s);
 };
 
-const DATE_RANGE_OPTIONS = [
-  { label: 'Today', value: 'today' },
-  { label: 'Yesterday', value: 'yesterday' },
-  { label: 'Last 7 Days', value: '7d' },
-  { label: 'Last 30 Days', value: '30d' },
-  { label: 'This Month', value: 'month' },
-  { label: 'Custom Range', value: 'custom' },
-];
 
 export const DashboardPage: React.FC = () => {
   const navigate = useNavigate();

@@ -19,33 +19,15 @@ CORE_DATABASES = {
     "Database Design", "Query Optimization", "Orm", "PostgreSQL", "SQLAlchemy",
     "DB Design", "DB Indexing", "Alembic", "Pydantic", "Redis", "pgvector"
 }
-
-FOREIGN_LOCATIONS = [
-    "london", "united kingdom", "uk",
-    "new york", "ny", "united states", "usa", "san francisco", "california",
-    "seattle", "washington", "toronto", "canada", "berlin", "germany",
-    "sydney", "australia", "singapore", "dubai", "uae", "ireland", "dublin",
-    "netherlands", "amsterdam", "paris", "france", "emea", "latam", "europe",
-    "north america"
-]
-
-INDIA_LOCATIONS = [
-    "india", "bengaluru", "bangalore", "chennai", "hyderabad",
-    "pune", "mumbai", "delhi", "noida", "gurgaon", "gurugram",
-    "karnataka", "tamil nadu", "telangana", "maharashtra"
-]
-
-GLOBAL_REMOTE_KEYWORDS = [
-    "worldwide", "anywhere", "global", "all locations", "remote - any",
-    "remote (worldwide)", "remote - worldwide", "remote, anywhere", "work from anywhere"
-]
-
-VISA_SPONSOR_KEYWORDS = [
-    "visa sponsorship", "sponsorship available", "sponsorship provided",
-    "sponsors visa", "visa support", "relocation assistance", "relocation package",
-    "relocation support", "relocation provided", "open to relocation",
-    "we sponsor visas", "we sponsor work visas", "relocation to"
-]
+from processing.location_normalizer import (
+    BANGALORE_KEYWORDS,
+    CHENNAI_KEYWORDS,
+    FOREIGN_LOCATIONS,
+    GLOBAL_REMOTE_KEYWORDS,
+    INDIA_LOCATIONS,
+    TARGET_ABROAD_HUBS,
+    VISA_SPONSOR_KEYWORDS,
+)
 
 
 def get_location_bucket(job: Job) -> str:
@@ -65,7 +47,7 @@ def get_location_bucket(job: Job) -> str:
     is_remote_flag = bool(getattr(job, "is_remote", False)) or any(r in loc for r in ["remote", "work from home", "wfh", "pan india"])
 
     is_dedicated_abroad = getattr(job, "source", "") in ("indeed_abroad", "remotive", "jobicy", "wwr", "arbeitnow", "relocateme", "linkedin_abroad")
-    is_target_abroad_hub = any(h in loc for h in ["dubai", "uae", "singapore", "emirates"])
+    is_target_abroad_hub = any(h in loc for h in TARGET_ABROAD_HUBS)
 
     # 1. Abroad / International Qualified:
     # Dedicated abroad sources (Remotive, Indeed Abroad), Worldwide Remote,
@@ -79,11 +61,11 @@ def get_location_bucket(job: Job) -> str:
         return "FOREIGN"
 
     # 3. Bangalore primary bucket (80% target)
-    if any(k in loc for k in ["bengaluru", "bangalore", "karnataka"]):
+    if any(k in loc for k in BANGALORE_KEYWORDS):
         return "BANGALORE"
 
     # 4. Chennai primary bucket (15% target)
-    if any(k in loc for k in ["chennai", "tamil nadu"]):
+    if any(k in loc for k in CHENNAI_KEYWORDS):
         return "CHENNAI"
 
     # 5. Remote India (5% target)

@@ -277,7 +277,7 @@ class AnalyticsService:
         # ------------------------------------------------------------------
         # 2. JOB INTELLIGENCE (Match Scores, Top Skills, Experience, Salary)
         # ------------------------------------------------------------------
-        # Query jobs discovered in current period; if none in period, fall back to active jobs
+        # Query jobs discovered in current period
         jobs_in_window = (
             session.query(Job)
             .filter(
@@ -286,8 +286,6 @@ class AnalyticsService:
             )
             .all()
         )
-        if not jobs_in_window:
-            jobs_in_window = session.query(Job).filter(Job.is_active == True).all()
 
         total_int_jobs = len(jobs_in_window)
 

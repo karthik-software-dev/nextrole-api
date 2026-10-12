@@ -14,6 +14,7 @@ from schemas.dashboard import (
     LocationStatItemOut,
     PipelineStatusOut,
     RecentActivityItemOut,
+    SourceBreakdownItemOut,
     TopHiringCompanyOut,
 )
 from schemas.analytics import ExperienceDistributionOut, SalaryDistributionOut
@@ -102,6 +103,14 @@ class DashboardService:
             select(func.count(Job.id))
             .where(Job.first_seen_at >= start_dt, Job.first_seen_at <= end_dt)
         ) or 0
+        new_tier1_jobs = session.scalar(
+            select(func.count(Job.id))
+            .where(
+                Job.first_seen_at >= start_dt,
+                Job.first_seen_at <= end_dt,
+                Job.priority_tier.ilike("%tier 1%")
+            )
+        ) or 0
 
         # 5. Discovery Trend across window
         daily_counts = dict(
@@ -124,10 +133,10 @@ class DashboardService:
             for i in range(num_days)
         ]
 
-        # 6. Locations breakdown for vertical bar chart
+        # 6. Locations breakdown for vertical bar chart (filtered by date window)
         loc_rows = session.execute(
             select(Job.location_bucket, Job.is_remote, func.count(Job.id))
-            .where(Job.is_active.is_(True))
+            .where(Job.first_seen_at >= start_dt, Job.first_seen_at <= end_dt)
             .group_by(Job.location_bucket, Job.is_remote)
         ).all()
         loc_map: dict[str, int] = {
@@ -233,7 +242,7 @@ class DashboardService:
         combined_activities = app_activities[:3] + disc_activities[:3]
         combined_activities.sort(key=lambda x: x.timestamp, reverse=True)
 
-        # 8. Experience & Salary Distributions (filtered by date window, fallback to active jobs)
+        # 8. Experience & Salary Distributions (filtered by date window)
         jobs_in_window = (
             session.query(Job)
             .filter(
@@ -242,8 +251,6 @@ class DashboardService:
             )
             .all()
         )
-        if not jobs_in_window:
-            jobs_in_window = session.query(Job).filter(Job.is_active.is_(True)).all()
 
         exp_1_2 = 0
         exp_2_3 = 0
@@ -422,7 +429,7 @@ class DashboardService:
                 func.bool_or(Job.is_remote).label("has_remote")
             )
             .join(Company, Job.company_id == Company.id)
-            .where(Job.is_active.is_(True))
+            .where(Job.first_seen_at >= start_dt, Job.first_seen_at <= end_dt)
             .group_by(Company.name)
             .order_by(func.count(Job.id).desc())
             .limit(5)
@@ -436,7 +443,11 @@ class DashboardService:
             loc_samples = session.execute(
                 select(Job.location_bucket)
                 .join(Company, Job.company_id == Company.id)
-                .where(Company.name == cname, Job.is_active.is_(True))
+                .where(
+                    Company.name == cname,
+                    Job.first_seen_at >= start_dt,
+                    Job.first_seen_at <= end_dt
+                )
                 .limit(2)
             ).scalars().all()
             for lb in loc_samples:
@@ -472,7 +483,7 @@ class DashboardService:
         src_rows = session.execute(
             select(JobSource.first_seen_at, JobSource.source_posted_at)
             .join(Job, JobSource.job_id == Job.id)
-            .where(Job.is_active.is_(True))
+            .where(Job.first_seen_at >= start_dt, Job.first_seen_at <= end_dt)
             .limit(1000)
         ).all()
 
@@ -490,9 +501,8 @@ class DashboardService:
                 except Exception:
                     pass
 
-        # If fresh parsed lags exist (< 24h), use real telemetry; otherwise align with active 5-run daily cadence batch
         fresh_lags = [x for x in parsed_lags if x < 24.0]
-        if len(fresh_lags) >= 15:
+        if len(fresh_lags) > 0:
             u1_cnt = sum(1 for x in fresh_lags if x < 1.0)
             u4_cnt = sum(1 for x in fresh_lags if 1.0 <= x < 4.0)
             u12_cnt = sum(1 for x in fresh_lags if 4.0 <= x < 12.0)
@@ -500,17 +510,15 @@ class DashboardService:
             tot_measured = len(fresh_lags)
             avg_lat = round(sum(fresh_lags) / tot_measured, 1)
         else:
-            # Active daily cadence batch distribution (aligned with today's 186 ingested cadence)
-            total_today = sum(r.jobs_collected for r in daily_cadence) or 186
-            u1_cnt = max(1, round(total_today * 0.247))
-            u4_cnt = max(1, round(total_today * 0.473))
-            u12_cnt = max(1, round(total_today * 0.188))
-            u24_cnt = max(0, total_today - (u1_cnt + u4_cnt + u12_cnt))
-            tot_measured = total_today
-            avg_lat = 2.1
+            u1_cnt = 0
+            u4_cnt = 0
+            u12_cnt = 0
+            u24_cnt = 0
+            tot_measured = 0
+            avg_lat = 0.0
 
         under_4h_cnt = u1_cnt + u4_cnt
-        captured_pct = round((under_4h_cnt / tot_measured) * 100, 1) if tot_measured > 0 else 74.0
+        captured_pct = round((under_4h_cnt / tot_measured) * 100, 1) if tot_measured > 0 else 0.0
 
         discovery_speed = DiscoverySpeedOut(
             captured_under_4h_pct=captured_pct,
@@ -548,6 +556,18 @@ class DashboardService:
             ],
         )
 
+        # 13. Sources Breakdown within window
+        src_window_rows = session.execute(
+            select(JobSource.source_name, func.count(JobSource.id))
+            .where(JobSource.first_seen_at >= start_dt, JobSource.first_seen_at <= end_dt)
+            .group_by(JobSource.source_name)
+            .order_by(func.count(JobSource.id).desc())
+        ).all()
+        sources_breakdown = [
+            SourceBreakdownItemOut(name=sname.title() if sname else "Other", count=scnt)
+            for sname, scnt in src_window_rows
+        ]
+
         return DashboardSummaryOut(
             total_jobs=job_stats["total_jobs"],
             active_jobs=job_stats["active_jobs"],
@@ -558,8 +578,9 @@ class DashboardService:
             total_sources=job_stats["total_sources"],
             location_breakdown=loc_breakdown,
             application_breakdown=app_breakdown,
-            sources_breakdown=job_stats.get("sources_breakdown", []),
+            sources_breakdown=sources_breakdown,
             new_jobs=new_jobs,
+            new_tier1_jobs=new_tier1_jobs,
             discovery_trend=discovery_trend,
             locations_breakdown=locations_breakdown,
             recent_activities=combined_activities,

@@ -254,8 +254,8 @@ export const DashboardPage: React.FC = () => {
 
   // Real KPI Metrics derived strictly from real DB records
   const activeJobsCount = summary?.active_jobs ?? 0;
-  const newJobsCount = summary?.new_jobs ?? summary?.active_jobs ?? 0;
-  const highMatchCount = summary?.tier1_jobs ?? 0;
+  const newJobsCount = summary?.new_jobs ?? 0;
+  const highMatchCount = summary?.new_tier1_jobs ?? 0;
 
   const appBreakdown = summary?.application_breakdown;
   const appliedTotal = appBreakdown

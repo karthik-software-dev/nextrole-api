@@ -221,6 +221,7 @@ export interface DashboardSummary {
     count: number;
   }>;
   new_jobs?: number;
+  new_tier1_jobs?: number;
   discovery_trend?: DiscoveryTrendItem[];
   locations_breakdown?: LocationStatItem[];
   recent_activities?: RecentActivityItem[];

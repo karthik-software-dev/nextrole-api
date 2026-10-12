@@ -2,6 +2,8 @@ import React from 'react';
 import {
   AreaChart,
   Area,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
@@ -38,6 +40,47 @@ export const JobsDiscoveredChart: React.FC<JobsDiscoveredChartProps> = ({ data }
           <div className="flex h-full items-center justify-center text-xs text-slate-400">
             No discovery data available for this period.
           </div>
+        ) : chartData.length === 1 ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart data={chartData} margin={{ top: 16, right: 24, left: -20, bottom: 0 }}>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" opacity={0.4} />
+              <XAxis
+                dataKey="date"
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 12.3, fill: '#334155', fontWeight: 600, fontFamily: 'Inter, sans-serif' }}
+              />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tick={{ fontSize: 12.3, fill: '#334155', fontWeight: 600, fontFamily: 'Inter, sans-serif' }}
+                allowDecimals={false}
+              />
+              <Tooltip
+                content={({ active, payload }) => {
+                  if (active && payload && payload.length) {
+                    const item = payload[0].payload as DiscoveryTrendItem;
+                    return (
+                      <div className="rounded-lg bg-slate-900 px-3 py-2 text-xs text-white shadow-lg">
+                        <p className="font-semibold text-slate-200">{item.date}</p>
+                        <p className="mt-0.5 text-[13px] font-bold text-violet-400">
+                          {item.count} {item.count === 1 ? 'job discovered' : 'jobs discovered'}
+                        </p>
+                      </div>
+                    );
+                  }
+                  return null;
+                }}
+              />
+              <Bar
+                dataKey="count"
+                fill="#8B5CF6"
+                radius={[6, 6, 0, 0]}
+                maxBarSize={56}
+                animationDuration={350}
+              />
+            </BarChart>
+          </ResponsiveContainer>
         ) : (
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData} margin={{ top: 12, right: 12, left: -24, bottom: 0 }}>

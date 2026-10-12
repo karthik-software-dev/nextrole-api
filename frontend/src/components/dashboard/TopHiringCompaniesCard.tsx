@@ -11,13 +11,7 @@ interface TopHiringCompaniesCardProps {
 export const TopHiringCompaniesCard: React.FC<TopHiringCompaniesCardProps> = ({ companies }) => {
   const navigate = useNavigate();
 
-  const companyList: TopHiringCompany[] = companies && companies.length > 0 ? companies : [
-    { name: 'Bosch Group', job_count: 8, locations: ['Bangalore'], is_remote: false },
-    { name: 'Infosys', job_count: 8, locations: ['Bangalore', 'Remote'], is_remote: true },
-    { name: 'PubMatic', job_count: 7, locations: ['Pune'], is_remote: false },
-    { name: 'ElevenLabs', job_count: 6, locations: ['Remote'], is_remote: true },
-    { name: 'Super.com', job_count: 6, locations: ['Remote'], is_remote: true },
-  ];
+  const companyList: TopHiringCompany[] = companies || [];
 
   return (
     <div className="flex flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-sm dark:border-slate-800 dark:bg-[#111726]">
@@ -32,7 +26,7 @@ export const TopHiringCompaniesCard: React.FC<TopHiringCompaniesCardProps> = ({ 
               Hiring Velocity Leaderboard
             </h3>
             <p className="text-[11.5px] text-slate-500 dark:text-slate-400">
-              Top companies aggressively recruiting right now
+              Top companies aggressively recruiting in this period
             </p>
           </div>
         </div>
@@ -48,7 +42,12 @@ export const TopHiringCompaniesCard: React.FC<TopHiringCompaniesCardProps> = ({ 
 
       {/* List Body */}
       <div className="flex-1 divide-y divide-slate-100 dark:divide-slate-800/80 p-3 sm:p-4">
-        {companyList.map((company, index) => {
+        {companyList.length === 0 ? (
+          <div className="flex min-h-[220px] items-center justify-center text-xs text-slate-400">
+            No company hiring activity recorded in this period.
+          </div>
+        ) : (
+          companyList.map((company, index) => {
           const rank = index + 1;
           const isSpree = company.job_count >= 6;
 
@@ -113,7 +112,8 @@ export const TopHiringCompaniesCard: React.FC<TopHiringCompaniesCardProps> = ({ 
               </div>
             </div>
           );
-        })}
+        })
+      )}
       </div>
     </div>
   );

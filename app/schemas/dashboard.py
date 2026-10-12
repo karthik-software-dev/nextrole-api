@@ -133,6 +133,7 @@ class DashboardSummaryOut(BaseModel):
     application_breakdown: ApplicationStatusBreakdownOut
     sources_breakdown: list[SourceBreakdownItemOut] = []
     new_jobs: int = 0
+    new_tier1_jobs: int = 0
     discovery_trend: list[DiscoveryTrendItemOut] = []
     locations_breakdown: list[LocationStatItemOut] = []
     recent_activities: list[RecentActivityItemOut] = []

@@ -2,16 +2,18 @@ name: NextRole Daily Job Discovery
 
 on:
   schedule:
-    # 1. Run 1 - Morning Market Sync: 09:00 AM IST (03:30 UTC)
-    - cron: '30 3 * * *'
-    # 2. Run 2 - Mid-day Ingestion: 12:00 PM IST (06:30 UTC)
-    - cron: '30 6 * * *'
-    # 3. Run 3 - Afternoon Crawl: 03:00 PM IST (09:30 UTC)
-    - cron: '30 9 * * *'
-    # 4. Run 4 - Evening Sync: 06:00 PM IST (12:30 UTC)
-    - cron: '30 12 * * *'
-    # 5. Run 5 - Night Roundup: 09:00 PM IST (15:30 UTC)
-    - cron: '30 15 * * *'
+    # 0. Test Trigger: 03:45 PM IST (10:15 UTC)
+    - cron: '15 10 * * *'
+    # 1. Run 1 - Morning Market Sync: 09:03 AM IST (03:33 UTC)
+    - cron: '33 3 * * *'
+    # 2. Run 2 - Mid-day Ingestion: 12:03 PM IST (06:33 UTC)
+    - cron: '33 6 * * *'
+    # 3. Run 3 - Afternoon Crawl: 03:03 PM IST (09:33 UTC)
+    - cron: '33 9 * * *'
+    # 4. Run 4 - Evening Sync: 06:03 PM IST (12:33 UTC)
+    - cron: '33 12 * * *'
+    # 5. Run 5 - Night Roundup: 09:03 PM IST (15:33 UTC)
+    - cron: '33 15 * * *'
   workflow_dispatch:
     inputs:
       source:

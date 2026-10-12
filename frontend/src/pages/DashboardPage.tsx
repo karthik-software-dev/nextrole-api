@@ -21,7 +21,6 @@ import {
   Check,
   X,
   Clock,
-  ShieldCheck,
 } from 'lucide-react';
 import { getDashboardSummary, getJobs, createApplication, deleteApplicationByJobId } from '../api';
 import type { DashboardSummary, JobSummary } from '../types';
@@ -416,9 +415,9 @@ export const DashboardPage: React.FC = () => {
 
 
       {/* -------------------------------------------------- */}
-      {/* SECTION 1 — FIVE KPI CARDS                         */}
+      {/* SECTION 1 — FOUR KPI CARDS                         */}
       {/* -------------------------------------------------- */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-5">
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
 
         {/* Card 1: Active Jobs */}
         <div
@@ -569,43 +568,6 @@ export const DashboardPage: React.FC = () => {
             className="h-4.5 w-4.5 shrink-0 text-slate-400 transition-all duration-200
                  group-hover:translate-x-1 group-hover:text-amber-600
                  dark:group-hover:text-amber-400 ml-2"
-          />
-        </div>
-
-        {/* Card 5: Noise & Duplicate Filtered KPI (Feature F) */}
-        <div
-          onClick={() => navigate('/discovery')}
-          className="group flex cursor-pointer items-center justify-between rounded-2xl border border-slate-200/80 bg-white p-5 sm:p-6
-               shadow-[0_1px_3px_rgba(0,0,0,0.03),0_1px_2px_rgba(0,0,0,0.02)]
-               transition-[transform,box-shadow,border-color] duration-180 ease-out
-               hover:-translate-y-0.5 hover:border-slate-300
-               hover:shadow-[0_8px_24px_rgba(0,0,0,0.06)]
-               dark:border-slate-800 dark:bg-[#111726] dark:hover:border-slate-700 dark:hover:shadow-[0_8px_24px_rgba(0,0,0,0.25)]"
-        >
-          <div className="flex items-center gap-3.5 sm:gap-4 min-w-0 flex-1">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-teal-50 text-teal-600 ring-1 ring-inset ring-teal-600/15 shadow-xs dark:bg-teal-950/60 dark:text-teal-400 dark:ring-teal-400/20">
-              <ShieldCheck className="h-5 w-5" />
-            </div>
-
-            <div className="min-w-0 flex-1">
-              <span className="text-[13.5px] font-semibold text-slate-600 dark:text-slate-400">
-                Spam Filtered
-              </span>
-
-              <p className="mt-1 text-[36px] sm:text-[38px] font-bold leading-none tracking-tight text-slate-900 dark:text-white">
-                {isLoading ? '...' : (summary?.dedup_efficiency?.multi_source_jobs ?? 140)}
-              </p>
-
-              <p className="mt-2 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
-                🛡️ {summary?.dedup_efficiency?.duplicates_filtered ?? 1255} filtered ({summary?.dedup_efficiency?.suppression_rate_pct ?? 83.2}% suppressed)
-              </p>
-            </div>
-          </div>
-
-          <ChevronRight
-            className="h-4.5 w-4.5 shrink-0 text-slate-400 transition-all duration-200
-                 group-hover:translate-x-1 group-hover:text-teal-600
-                 dark:group-hover:text-teal-400 ml-2"
           />
         </div>
 

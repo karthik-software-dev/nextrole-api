@@ -133,12 +133,12 @@ class JobRepository:
 
             # Record / Update JobSource
             source_stmt = select(JobSource).where(
-                JobSource.job_id == existing_job.id,
                 JobSource.source_name == safe_source_name,
                 JobSource.source_job_id == safe_source_id,
             )
             existing_source = session.scalar(source_stmt)
             if existing_source:
+                existing_source.job_id = existing_job.id
                 existing_source.last_seen_at = now
             else:
                 new_source = JobSource(
@@ -198,19 +198,28 @@ class JobRepository:
         session.add(new_job)
         session.flush()
 
-        # Add initial JobSource
-        new_source = JobSource(
-            job_id=new_job.id,
-            source_name=safe_source_name,
-            source_job_id=safe_source_id,
-            discovery_url=discovery_url,
-            source_apply_url=clean_apply_url,
-            source_posted_at=str(job_dc.posted_at)[:100] if job_dc.posted_at else None,
-            raw_payload=job_dc.raw_data if isinstance(job_dc.raw_data, dict) else {},
-            first_seen_at=now,
-            last_seen_at=now,
+        # Add initial JobSource (checking if source posting previously existed)
+        source_stmt = select(JobSource).where(
+            JobSource.source_name == safe_source_name,
+            JobSource.source_job_id == safe_source_id,
         )
-        session.add(new_source)
+        existing_source = session.scalar(source_stmt)
+        if existing_source:
+            existing_source.job_id = new_job.id
+            existing_source.last_seen_at = now
+        else:
+            new_source = JobSource(
+                job_id=new_job.id,
+                source_name=safe_source_name,
+                source_job_id=safe_source_id,
+                discovery_url=discovery_url,
+                source_apply_url=clean_apply_url,
+                source_posted_at=str(job_dc.posted_at)[:100] if job_dc.posted_at else None,
+                raw_payload=job_dc.raw_data if isinstance(job_dc.raw_data, dict) else {},
+                first_seen_at=now,
+                last_seen_at=now,
+            )
+            session.add(new_source)
         session.flush()
 
         return new_job, True

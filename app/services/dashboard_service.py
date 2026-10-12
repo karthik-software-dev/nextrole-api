@@ -203,10 +203,7 @@ class DashboardService:
             )
 
         disc_activities: list[RecentActivityItemOut] = []
-        hm_count = session.scalar(
-            select(func.count(Job.id))
-            .where(Job.priority_tier.ilike("%tier 1%"))
-        ) or 0
+        hm_count = job_stats.get("tier1_jobs", 0)
         latest_job_time = session.scalar(select(func.max(Job.first_seen_at)))
         if hm_count > 0 and latest_job_time:
             disc_activities.append(

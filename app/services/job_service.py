@@ -49,6 +49,14 @@ def sanitize_salary_display(
 class JobService:
     """Service handling job search, filtering, pagination, and details."""
 
+    _filter_counts_cache: tuple[float, FilterCountsOut] | None = None
+    FILTER_CACHE_TTL_SECONDS = 60.0
+
+    @classmethod
+    def clear_filter_cache(cls) -> None:
+        """Clears in-memory filter counts cache."""
+        cls._filter_counts_cache = None
+
     @staticmethod
     def get_jobs(
         session: Session,
@@ -268,10 +276,15 @@ class JobService:
             ),
         )
 
-    @staticmethod
-    def get_filter_counts(session: Session) -> FilterCountsOut:
-        """Computes live counts for work modes, locations, experience, and salary bands."""
-        total_active = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True))) or 0
+    @classmethod
+    def get_filter_counts(cls, session: Session) -> FilterCountsOut:
+        """Computes live counts for work modes, locations, experience, and salary bands using batch SQL aggregation."""
+        import time as _py_time
+        now_ts = _py_time.time()
+        if cls._filter_counts_cache is not None:
+            cached_ts, cached_obj = cls._filter_counts_cache
+            if now_ts - cached_ts < cls.FILTER_CACHE_TTL_SECONDS:
+                return cached_obj
 
         is_hybrid_safe = or_(
             func.coalesce(Job.location, "").ilike("%hybrid%"),
@@ -279,77 +292,107 @@ class JobService:
             func.coalesce(Job.description, "").ilike("%hybrid%"),
         )
         is_abroad_cond = Job.location_bucket == "ABROAD"
+        now_dt = datetime.now(timezone.utc)
 
-        wfo_count = session.scalar(
-            select(func.count(Job.id)).where(
-                Job.is_active.is_(True),
-                Job.is_remote.is_(False),
-                Job.location_bucket != "REMOTE_INDIA",
-                not_(is_hybrid_safe),
-                not_(is_abroad_cond),
+        # 1. Single consolidated aggregate query for all job facet counts
+        facet_row = session.execute(
+            select(
+                func.count(Job.id).label("total_active"),
+                func.count(Job.id).filter(
+                    Job.is_remote.is_(False),
+                    Job.location_bucket != "REMOTE_INDIA",
+                    not_(is_hybrid_safe),
+                    not_(is_abroad_cond),
+                ).label("wfo_count"),
+                func.count(Job.id).filter(
+                    or_(Job.is_remote.is_(True), Job.location_bucket == "REMOTE_INDIA"),
+                    not_(is_hybrid_safe),
+                    not_(is_abroad_cond),
+                ).label("wfh_count"),
+                func.count(Job.id).filter(is_hybrid_safe).label("hybrid_count"),
+                func.count(Job.id).filter(is_abroad_cond, not_(is_hybrid_safe)).label("abroad_count"),
+                func.count(Job.id).filter(Job.location_bucket == "BANGALORE").label("blr_count"),
+                func.count(Job.id).filter(Job.location_bucket == "CHENNAI").label("chn_count"),
+                func.count(Job.id).filter(Job.location_bucket == "REMOTE_INDIA").label("remote_in_count"),
+                func.count(Job.id).filter(Job.location_bucket == "OTHER").label("other_count"),
+                func.count(Job.id).filter(Job.location_bucket == "ABROAD").label("abroad_loc_count"),
+                func.count(Job.id).filter(
+                    or_(Job.experience_min.is_(None), Job.experience_min <= 2),
+                    or_(Job.experience_max.is_(None), Job.experience_max >= 2),
+                ).label("exp_sweet_spot"),
+                func.count(Job.id).filter(
+                    or_(Job.experience_min.is_(None), Job.experience_min <= 2)
+                ).label("exp_0_2"),
+                func.count(Job.id).filter(
+                    Job.experience_min >= 3, Job.experience_min <= 5
+                ).label("exp_3_5"),
+                func.count(Job.id).filter(
+                    Job.salary_max >= 400000, Job.salary_min <= 800000
+                ).label("sal_4_8"),
+                func.count(Job.id).filter(
+                    Job.salary_max >= 800000, Job.salary_min <= 1500000
+                ).label("sal_8_15"),
+                func.count(Job.id).filter(
+                    Job.salary_max >= 1500000, Job.salary_min <= 2500000
+                ).label("sal_15_25"),
+                func.count(Job.id).filter(Job.salary_max >= 2500000).label("sal_25_plus"),
+                func.count(Job.id).filter(Job.salary_min.is_(None), Job.salary_max.is_(None)).label("sal_undisclosed"),
+                func.count(Job.id).filter(Job.priority_tier.ilike("%TIER 1%")).label("tier1_count"),
+                func.count(Job.id).filter(Job.priority_tier.ilike("%TIER 2%")).label("tier2_count"),
+                func.count(Job.id).filter(Job.priority_tier.ilike("%TIER 3%")).label("tier3_count"),
+                func.count(Job.id).filter(Job.first_seen_at >= now_dt - timedelta(days=1)).label("f_24h"),
+                func.count(Job.id).filter(Job.first_seen_at >= now_dt - timedelta(days=3)).label("f_3d"),
+                func.count(Job.id).filter(Job.first_seen_at >= now_dt - timedelta(days=7)).label("f_7d"),
+                func.count(Job.id).filter(Job.first_seen_at >= now_dt - timedelta(days=14)).label("f_14d"),
+            ).where(Job.is_active.is_(True))
+        ).first()
+
+        total_active = (facet_row.total_active if facet_row else 0) or 0
+        wfo_count = (facet_row.wfo_count if facet_row else 0) or 0
+        wfh_count = (facet_row.wfh_count if facet_row else 0) or 0
+        hybrid_count = (facet_row.hybrid_count if facet_row else 0) or 0
+        abroad_count = (facet_row.abroad_count if facet_row else 0) or 0
+        blr_count = (facet_row.blr_count if facet_row else 0) or 0
+        chn_count = (facet_row.chn_count if facet_row else 0) or 0
+        remote_in_count = (facet_row.remote_in_count if facet_row else 0) or 0
+        other_count = (facet_row.other_count if facet_row else 0) or 0
+        abroad_loc_count = (facet_row.abroad_loc_count if facet_row else 0) or 0
+        exp_sweet_spot = (facet_row.exp_sweet_spot if facet_row else 0) or 0
+        exp_0_2 = (facet_row.exp_0_2 if facet_row else 0) or 0
+        exp_3_5 = (facet_row.exp_3_5 if facet_row else 0) or 0
+        sal_4_8 = (facet_row.sal_4_8 if facet_row else 0) or 0
+        sal_8_15 = (facet_row.sal_8_15 if facet_row else 0) or 0
+        sal_15_25 = (facet_row.sal_15_25 if facet_row else 0) or 0
+        sal_25_plus = (facet_row.sal_25_plus if facet_row else 0) or 0
+        sal_undisclosed = (facet_row.sal_undisclosed if facet_row else 0) or 0
+        tier1_count = (facet_row.tier1_count if facet_row else 0) or 0
+        tier2_count = (facet_row.tier2_count if facet_row else 0) or 0
+        tier3_count = (facet_row.tier3_count if facet_row else 0) or 0
+        f_24h = (facet_row.f_24h if facet_row else 0) or 0
+        f_3d = (facet_row.f_3d if facet_row else 0) or 0
+        f_7d = (facet_row.f_7d if facet_row else 0) or 0
+        f_14d = (facet_row.f_14d if facet_row else 0) or 0
+
+        # 2. Consolidated application tracking statuses (single query)
+        app_row = session.execute(
+            select(
+                func.count(Job.id).filter(
+                    or_(Application.id.is_(None), Application.status.in_(("discovered", "saved", None)))
+                ).label("unapplied_count"),
+                func.count(Job.id).filter(Application.status == "drafted").label("drafted_count"),
+                func.count(Job.id).filter(Application.status == "applied").label("applied_count"),
+                func.count(Job.id).filter(Application.status == "interviewing").label("interviewing_count"),
             )
-        ) or 0
-        wfh_count = session.scalar(
-            select(func.count(Job.id)).where(
-                Job.is_active.is_(True),
-                or_(Job.is_remote.is_(True), Job.location_bucket == "REMOTE_INDIA"),
-                not_(is_hybrid_safe),
-                not_(is_abroad_cond),
-            )
-        ) or 0
-        hybrid_count = session.scalar(
-            select(func.count(Job.id)).where(Job.is_active.is_(True), is_hybrid_safe)
-        ) or 0
-        abroad_count = session.scalar(
-            select(func.count(Job.id)).where(Job.is_active.is_(True), is_abroad_cond, not_(is_hybrid_safe))
-        ) or 0
+            .outerjoin(Job.application)
+            .where(Job.is_active.is_(True))
+        ).first()
 
-        blr_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "BANGALORE")) or 0
-        chn_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "CHENNAI")) or 0
-        remote_in_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "REMOTE_INDIA")) or 0
-        other_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "OTHER")) or 0
-        abroad_loc_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.location_bucket == "ABROAD")) or 0
+        unapplied_count = (app_row.unapplied_count if app_row else 0) or 0
+        drafted_count = (app_row.drafted_count if app_row else 0) or 0
+        applied_count = (app_row.applied_count if app_row else 0) or 0
+        interviewing_count = (app_row.interviewing_count if app_row else 0) or 0
 
-        exp_sweet_spot = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), or_(Job.experience_min.is_(None), Job.experience_min <= 2), or_(Job.experience_max.is_(None), Job.experience_max >= 2))) or 0
-        exp_0_2 = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), or_(Job.experience_min.is_(None), Job.experience_min <= 2))) or 0
-        exp_3_5 = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.experience_min >= 3, Job.experience_min <= 5)) or 0
-
-        sal_4_8 = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.salary_max >= 400000, Job.salary_min <= 800000)) or 0
-        sal_8_15 = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.salary_max >= 800000, Job.salary_min <= 1500000)) or 0
-        sal_15_25 = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.salary_max >= 1500000, Job.salary_min <= 2500000)) or 0
-        sal_25_plus = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.salary_max >= 2500000)) or 0
-        sal_undisclosed = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.salary_min.is_(None), Job.salary_max.is_(None))) or 0
-
-        # Priority Tiers
-        tier1_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.priority_tier.ilike("%TIER 1%"))) or 0
-        tier2_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.priority_tier.ilike("%TIER 2%"))) or 0
-        tier3_count = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.priority_tier.ilike("%TIER 3%"))) or 0
-
-        # Application Tracking Statuses
-        unapplied_count = session.scalar(
-            select(func.count(Job.id)).outerjoin(Job.application).where(
-                Job.is_active.is_(True),
-                or_(Application.id.is_(None), Application.status.in_(("discovered", "saved", None)))
-            )
-        ) or 0
-        drafted_count = session.scalar(
-            select(func.count(Job.id)).join(Job.application).where(Job.is_active.is_(True), Application.status == "drafted")
-        ) or 0
-        applied_count = session.scalar(
-            select(func.count(Job.id)).join(Job.application).where(Job.is_active.is_(True), Application.status == "applied")
-        ) or 0
-        interviewing_count = session.scalar(
-            select(func.count(Job.id)).join(Job.application).where(Job.is_active.is_(True), Application.status == "interviewing")
-        ) or 0
-
-        # Freshness buckets
-        now = datetime.now(timezone.utc)
-        f_24h = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.first_seen_at >= now - timedelta(days=1))) or 0
-        f_3d = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.first_seen_at >= now - timedelta(days=3))) or 0
-        f_7d = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.first_seen_at >= now - timedelta(days=7))) or 0
-        f_14d = session.scalar(select(func.count(Job.id)).where(Job.is_active.is_(True), Job.first_seen_at >= now - timedelta(days=14))) or 0
-
-        # Sources (Option B: Live counts exactly matching get_jobs query)
+        # 3. Canonical Sources (Single query mapped in memory)
         canonical_sources = [
             ("greenhouse", "Greenhouse"),
             ("ashby", "Ashby"),
@@ -370,24 +413,32 @@ class JobService:
             ("remotive", "Remotive"),
             ("wwr", "We Work Remotely"),
         ]
-        sources_list = []
-        for s_key, s_label in canonical_sources:
-            cnt = session.scalar(
-                select(func.count(Job.id.distinct()))
-                .outerjoin(Job.sources)
-                .where(
-                    Job.is_active.is_(True),
-                    or_(
-                        JobSource.source_name.ilike(f"%{s_key}%"),
-                        Job.ats_provider.ilike(f"%{s_key}%"),
-                    ),
-                )
-            ) or 0
-            if cnt > 0:
-                sources_list.append(FilterCountItem(key=s_key, label=s_label, count=cnt))
+
+        source_rows = session.execute(
+            select(
+                func.lower(JobSource.source_name),
+                func.lower(Job.ats_provider),
+                Job.id,
+            )
+            .outerjoin(Job.sources)
+            .where(Job.is_active.is_(True))
+        ).all()
+
+        source_job_sets: dict[str, set[int]] = {k: set() for k, _ in canonical_sources}
+        for s_name, ats_prov, j_id in source_rows:
+            combined_src = f"{s_name or ''} {ats_prov or ''}"
+            for s_key, _ in canonical_sources:
+                if s_key in combined_src:
+                    source_job_sets[s_key].add(j_id)
+
+        sources_list = [
+            FilterCountItem(key=s_key, label=s_label, count=len(source_job_sets[s_key]))
+            for s_key, s_label in canonical_sources
+            if len(source_job_sets[s_key]) > 0
+        ]
         sources_list.sort(key=lambda x: x.count, reverse=True)
 
-        return FilterCountsOut(
+        res = FilterCountsOut(
             total_active=total_active,
             work_modes=[
                 FilterCountItem(key="wfo", label="Work from office", count=wfo_count),
@@ -433,6 +484,9 @@ class JobService:
                 FilterCountItem(key="14", label="📆 Past 14 Days", count=f_14d),
             ],
         )
+
+        cls._filter_counts_cache = (now_ts, res)
+        return res
 
     @staticmethod
     def get_job_by_id(session: Session, job_id: int) -> JobDetailOut | None:

@@ -9,7 +9,6 @@ import {
   ResponsiveContainer,
   LabelList,
 } from 'recharts';
-import { TrendingUp, ExternalLink } from 'lucide-react';
 import type { DailyCadenceRun, PipelineRunInfo } from '../../types';
 
 interface DailyCadenceChartProps {
@@ -17,7 +16,7 @@ interface DailyCadenceChartProps {
   pipeline?: PipelineRunInfo | null;
 }
 
-export const DailyCadenceChart: React.FC<DailyCadenceChartProps> = ({ data, pipeline }) => {
+export const DailyCadenceChart: React.FC<DailyCadenceChartProps> = ({ data }) => {
   const cadenceData = data && data.length > 0 ? data : [
     { run_number: 1, time_slot: '09:00 AM', label: 'Morning Market Sync', status: 'completed' as const, jobs_collected: 8, cumulative_jobs: 8, runner: 'GitLab 4GB Runner' },
     { run_number: 2, time_slot: '12:00 PM', label: 'Mid-day Ingestion', status: 'completed' as const, jobs_collected: 14, cumulative_jobs: 22, runner: 'GitLab 4GB Runner' },
@@ -28,13 +27,22 @@ export const DailyCadenceChart: React.FC<DailyCadenceChartProps> = ({ data, pipe
 
   const totalCollectedToday = cadenceData.reduce((acc, r) => acc + (r.jobs_collected || 0), 0);
 
-  // Peak run calculation
-  const peakRun = cadenceData.reduce<DailyCadenceRun | null>((max, r) => {
-    if (!max || (r.jobs_collected || 0) > (max.jobs_collected || 0)) {
-      return r;
+  // Helper to determine the next scheduled run date & time
+  const nextRunInfo = React.useMemo(() => {
+    const now = new Date();
+    const scheduledRun = cadenceData.find((r) => r.status === 'scheduled');
+
+    if (scheduledRun) {
+      const todayStr = now.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+      return `${todayStr} at ${scheduledRun.time_slot}`;
     }
-    return max;
-  }, null);
+
+    // If all runs today are completed or no scheduled runs remain, next is tomorrow 09:00 AM
+    const tomorrow = new Date(now);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    return `${tomorrowStr} at 09:00 AM`;
+  }, [cadenceData]);
 
   // Calculate dynamic upper bound for Y-axis with headroom for numeric labels
   const maxCollected = Math.max(...cadenceData.map((r) => r.jobs_collected || 0), 0);
@@ -57,53 +65,22 @@ export const DailyCadenceChart: React.FC<DailyCadenceChartProps> = ({ data, pipe
   };
 
   return (
-    <div className="relative flex h-[335px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-[transform,box-shadow,border-color] duration-180 ease-out hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-[#111726]">
+    <div className="relative flex h-[315px] flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white p-5 shadow-sm transition-[transform,box-shadow,border-color] duration-180 ease-out hover:-translate-y-0.5 hover:shadow-md dark:border-slate-800 dark:bg-[#111726]">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 border-b border-slate-100 pb-3 dark:border-slate-800">
-        <div>
-          <h3 className="text-[17px] font-bold tracking-tight text-slate-900 dark:text-white">
-            5-Run Daily Cadence
-          </h3>
-          <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">
-            Jobs discovered in each scheduled run today
-          </p>
-        </div>
+      <div className="flex items-start justify-between border-b border-slate-100 pb-3 dark:border-slate-800">
+        <h3 className="text-[17px] font-bold tracking-tight text-slate-900 dark:text-white">
+          5-Run Daily Cadence
+        </h3>
 
-        <div className="flex flex-col items-start sm:items-end gap-1 shrink-0">
-          <div className="text-[13px] text-slate-600 dark:text-slate-400">
-            <strong className="text-[15px] font-bold text-slate-900 dark:text-white">
-              {totalCollectedToday}
-            </strong>{' '}
-            total ingested
-          </div>
-
-          <div className="flex items-center gap-1.5 flex-wrap">
-            {peakRun && peakRun.jobs_collected > 0 && (
-              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium bg-violet-50 text-violet-700 dark:bg-violet-950/60 dark:text-violet-300 border border-violet-200/80 dark:border-violet-800/80">
-                <TrendingUp className="h-3 w-3 text-violet-600 dark:text-violet-400" />
-                <span>Peak at {peakRun.time_slot} &bull; {peakRun.jobs_collected} jobs</span>
-              </span>
-            )}
-            {pipeline?.pipeline_id && (
-              <a
-                href={pipeline.pipeline_url || 'https://gitlab.com/karthik-software-dev/job-agent/-/pipelines'}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10.5px] font-semibold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 transition-colors"
-                title="GitLab CI Pipeline"
-              >
-                <span>CI #{pipeline.pipeline_id}</span>
-                <ExternalLink className="h-2.5 w-2.5 text-slate-400" />
-              </a>
-            )}
-          </div>
-        </div>
+        <span className="text-[12.5px] font-medium text-slate-700 dark:text-slate-400">
+          {totalCollectedToday} jobs collected today &bull; Next run: {nextRunInfo}
+        </span>
       </div>
 
       {/* Chart */}
       <div className="w-full flex-1 pt-3">
         <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={cadenceData} margin={{ top: 22, right: 18, left: -6, bottom: 4 }}>
+          <AreaChart data={cadenceData} margin={{ top: 18, right: 18, left: -20, bottom: 4 }}>
             <defs>
               <linearGradient id="cadencePerRunGradient" x1="0" y1="0" x2="0" y2="1">
                 <stop offset="5%" stopColor="#6366F1" stopOpacity={0.28} />
@@ -124,19 +101,6 @@ export const DailyCadenceChart: React.FC<DailyCadenceChartProps> = ({ data, pipe
               tick={{ fontSize: 11.5, fill: '#64748B', fontWeight: 500, fontFamily: 'Inter, sans-serif' }}
               allowDecimals={false}
               domain={[0, yDomainMax]}
-              label={{
-                value: 'Jobs Discovered',
-                angle: -90,
-                position: 'insideLeft',
-                offset: 14,
-                style: {
-                  textAnchor: 'middle',
-                  fill: '#64748B',
-                  fontSize: 11.5,
-                  fontWeight: 500,
-                  fontFamily: 'Inter, sans-serif',
-                },
-              }}
             />
             <Tooltip
               content={({ active, payload }) => {

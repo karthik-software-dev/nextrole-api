@@ -227,6 +227,14 @@ export interface DiscoveryStatus {
   total_runs?: number;
 }
 
+export interface DiscoveryLog {
+  id: string;
+  timestamp: string;
+  level: string;
+  tag: string;
+  message: string;
+}
+
 export interface DiscoverySource {
   id: number;
   name: string;

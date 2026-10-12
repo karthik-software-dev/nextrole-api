@@ -39,3 +39,14 @@ class DiscoverySourceOut(BaseModel):
     tier1_count: int = 0
     last_synced_at: str | None = None
 
+
+class DiscoveryLogOut(BaseModel):
+    """Real-time log message emitted by the scraper engine."""
+
+    id: str
+    timestamp: str
+    level: str
+    tag: str
+    message: str
+
+

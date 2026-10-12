@@ -1,6 +1,11 @@
 from fastapi import APIRouter, BackgroundTasks, status
 
-from schemas.discovery import DiscoveryRunIn, DiscoverySourceOut, DiscoveryStatusOut
+from schemas.discovery import (
+    DiscoveryLogOut,
+    DiscoveryRunIn,
+    DiscoverySourceOut,
+    DiscoveryStatusOut,
+)
 from services.discovery_service import DiscoveryService
 
 router = APIRouter(prefix="/discovery", tags=["Discovery"])
@@ -24,6 +29,27 @@ def get_discovery_status() -> DiscoveryStatusOut:
 def get_discovery_sources() -> list[DiscoverySourceOut]:
     """Returns the complete catalog of 30 sources with real-time database yield metrics."""
     return DiscoveryService.get_sources()
+
+
+@router.get(
+    "/logs",
+    response_model=list[DiscoveryLogOut],
+    summary="Get live crawler terminal execution logs",
+)
+def get_discovery_logs(since_id: int = 0) -> list[DiscoveryLogOut]:
+    """Returns sequential real-time execution logs from the in-memory scraper ring buffer."""
+    return DiscoveryService.get_logs(since_id=since_id)
+
+
+@router.delete(
+    "/logs",
+    summary="Clear in-memory terminal logs",
+)
+def clear_discovery_logs() -> dict[str, str]:
+    """Resets the live terminal log buffer."""
+    DiscoveryService.clear_logs()
+    return {"message": "Discovery terminal logs cleared."}
+
 
 
 

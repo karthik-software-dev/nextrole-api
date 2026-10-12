@@ -352,11 +352,11 @@ export const DiscoveryPage: React.FC = () => {
                     <span className="h-3 w-3 rounded-full bg-yellow-500 animate-bounce" />
                   </span>
                 ) : (
-                  `${status?.last_duration_seconds && status.last_duration_seconds > 0 ? status.last_duration_seconds : 12.4}s`
+                  `${(status?.last_duration_seconds ?? 0) > 0 ? status?.last_duration_seconds : 0}s`
                 )}
               </p>
               <p className="mt-2 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
-                Cycle #{status?.total_runs || 165} · 30 engines
+                Cycle #{status?.total_runs ?? 0} · 30 engines
               </p>
             </div>
           </div>
@@ -384,7 +384,7 @@ export const DiscoveryPage: React.FC = () => {
                 ) : (status?.last_jobs_synced && status.last_jobs_synced > 0) ? (
                   `+${status.last_jobs_synced} Jobs`
                 ) : (
-                  `${summary?.active_jobs ?? 100} Jobs`
+                  `${summary?.active_jobs ?? 0} Jobs`
                 )}
               </p>
               <p className="mt-2 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
@@ -407,10 +407,10 @@ export const DiscoveryPage: React.FC = () => {
                 Synced to Database
               </span>
               <p className="mt-1 text-[34px] sm:text-[36px] font-bold leading-none tracking-tight text-purple-600 dark:text-purple-400 truncate">
-                {summary?.active_jobs ?? 100} Verified
+                {summary?.active_jobs ?? 0} Verified
               </p>
               <p className="mt-2 truncate text-xs font-medium text-slate-500 dark:text-slate-400">
-                {summary?.tier1_jobs ?? 28} Tier 1 • {summary?.tier2_jobs ?? 72} Tier 2
+                {summary?.tier1_jobs ?? 0} Tier 1 • {summary?.tier2_jobs ?? 0} Tier 2
               </p>
             </div>
           </div>

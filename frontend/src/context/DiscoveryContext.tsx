@@ -1,5 +1,11 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
-import { triggerDiscoveryRun, getDashboardSummary, getDiscoveryStatus } from '../api';
+import {
+  triggerDiscoveryRun,
+  getDashboardSummary,
+  getDiscoveryStatus,
+  getDiscoveryLogs,
+  clearDiscoveryLogs as clearDiscoveryLogsApi,
+} from '../api';
 import { useToast } from './ToastContext';
 import {
   playDiscoverySuccessSound,
@@ -38,31 +44,10 @@ interface DiscoveryContextType {
 const INITIAL_LOGS: TerminalLog[] = [
   {
     id: 'init-1',
-    timestamp: '10:00:00',
+    timestamp: '--:--:--',
     level: 'info',
     tag: 'SYS',
-    message: 'NextRole Discovery Engine v2.4 initialized. 30 source connectors ready.',
-  },
-  {
-    id: 'init-2',
-    timestamp: '10:00:01',
-    level: 'db',
-    tag: 'DB',
-    message: 'PostgreSQL connection verified (localhost:5432 / database: job_agent).',
-  },
-  {
-    id: 'init-3',
-    timestamp: '10:00:02',
-    level: 'filter',
-    tag: 'CALIB',
-    message: 'Target filter calibrated: Python, FastAPI, Backend Engineer (Min score: 50%).',
-  },
-  {
-    id: 'init-4',
-    timestamp: '10:00:03',
-    level: 'success',
-    tag: 'STANDBY',
-    message: 'Engine in standby. Click "Trigger Full Discovery Run" or top bar button to execute.',
+    message: 'Connecting to live Discovery Engine backend telemetry...',
   },
 ];
 
@@ -102,7 +87,7 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return saved !== null ? saved === 'true' : true;
   });
 
-  // Fetch real status from backend on mount so last executed time is immediately available
+  // Fetch real status and real terminal logs from backend on mount
   useEffect(() => {
     let isMounted = true;
     getDiscoveryStatus()
@@ -117,6 +102,16 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
       })
       .catch(() => {});
+
+    getDiscoveryLogs()
+      .then((logs) => {
+        if (!isMounted) return;
+        if (logs && logs.length > 0) {
+          setTerminalLogs(logs as TerminalLog[]);
+        }
+      })
+      .catch(() => {});
+
     return () => {
       isMounted = false;
     };
@@ -129,6 +124,7 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const clearTerminalLogs = useCallback(() => {
     setTerminalLogs([]);
+    clearDiscoveryLogsApi().catch(() => {});
   }, []);
 
   const addLog = (level: TerminalLog['level'], tag: string, message: string) => {
@@ -191,15 +187,7 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
       try {
         setIsDiscovering(true);
-        const startTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-        addLog('info', 'SESSION', `──────────────── Discovery Session Started at ${startTime} [Source: ${source || 'ALL_30_INTEGRATED_SOURCES'}] ────────────────`);
-        setDiscoveryStatusText('Bootstrapping crawler workers across 30 integrated sources...');
-        addLog('info', 'INIT', `Bootstrapping NextRole Discovery Engine v2.4 (Worker PID: 10488)`);
-        addLog(
-          'info',
-          'CONFIG',
-          `Mode: ${activeCache ? '💾 TEST CACHE (Fast Offline Snapshot)' : '🌐 REAL-TIME LIVE SCRAPE (Active Web APIs)'} | Target: Python / FastAPI / Backend Engineer`
-        );
+        setDiscoveryStatusText('Triggering backend discovery pipeline...');
 
         // Trigger backend API in background with selected cache mode
         await triggerDiscoveryRun({ source, use_cache: activeCache }).catch((err) => {
@@ -212,7 +200,7 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         let hasSeenRunning = false;
         let lastFetchedStatus = null;
 
-        // Poll backend /api/v1/discovery/status until background tasks finish
+        // Poll backend /api/v1/discovery/status and /api/v1/discovery/logs concurrently
         while (isBackendRunning && pollCount < 180) {
           if (isCancelledRef.current) {
             break;
@@ -234,77 +222,49 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           const elapsedSec = pollCount;
 
           try {
-            const st = await getDiscoveryStatus();
+            const [st, backendLogs] = await Promise.all([
+              getDiscoveryStatus(),
+              getDiscoveryLogs(),
+            ]);
             lastFetchedStatus = st;
+
+            if (backendLogs && backendLogs.length > 0) {
+              setTerminalLogs(backendLogs as TerminalLog[]);
+              const lastLog = backendLogs[backendLogs.length - 1];
+              if (lastLog?.message) {
+                setDiscoveryStatusText(`${lastLog.message} (${elapsedSec}s)`);
+              }
+            }
 
             if (st.is_running || st.last_status === 'running') {
               hasSeenRunning = true;
             }
 
-            // Only complete when backend is not running AND it was observed running (or minimum 2 polls checked)
+            // Complete when backend is not running AND it was observed running (or minimum 2 polls checked)
             if (!st.is_running && st.last_status !== 'running' && (hasSeenRunning || pollCount >= 2)) {
               isBackendRunning = false;
               break;
             }
-
-            if (activeCache) {
-              setDiscoveryStatusText(`Ingesting cached snapshots... (${elapsedSec}s)`);
-              if (pollCount === 1) {
-                addLog('net', 'CACHE', 'Loading pre-cached postings from local snapshot storage across 30 sources...');
-              } else if (pollCount === 2) {
-                addLog('parse', 'PARSE', 'Normalizing job schema records and eliminating duplicates...');
-              } else if (pollCount === 4) {
-                addLog('tier', 'TIER', 'Evaluating relevance threshold and computing priority tiers...');
-              } else if (pollCount === 6) {
-                addLog('db', 'POSTGRES', 'Writing transactional upserts to PostgreSQL (localhost:5432/job_agent)...');
-              }
-            } else {
-              // Live Scraping Progress Logging
-              if (pollCount === 1) {
-                setDiscoveryStatusText(`Querying Indeed & Naukri live... (${elapsedSec}s)`);
-                addLog('net', 'NET', 'Dispatching live concurrent HTTP/2 scrapers to active pipelines...');
-                addLog('scrape', 'INDEED', '[Indeed India] Executing live search "Python Developer Bangalore"...');
-              } else if (pollCount === 3) {
-                setDiscoveryStatusText(`Scanning ATS & Tech Portals... (${elapsedSec}s)`);
-                addLog('scrape', 'NAUKRI', '[Naukri Portal] Searching "Backend Engineer 3-5 Yrs"...');
-                addLog('scrape', 'ATS', '[ATS Engines] Scanning Greenhouse, Lever, SmartRecruiters, Workday, and Ashby boards...');
-              } else if (pollCount === 7) {
-                setDiscoveryStatusText(`Querying LinkedIn, Hirist & Wellfound live... (${elapsedSec}s)`);
-                addLog('scrape', 'LINKEDIN', '[LinkedIn] In-house crawler querying job listings...');
-                addLog('scrape', 'HIRIST', '[Hirist API] Fetching technology specialist opportunities...');
-                addLog('scrape', 'WELLFOUND', '[Wellfound] Fetching verified startup postings with salary metadata...');
-              } else if (pollCount === 12) {
-                setDiscoveryStatusText(`Normalizing schemas & tech stack scoring... (${elapsedSec}s)`);
-                addLog('parse', 'PARSE', 'Candidate postings retrieved across feeds. Executing schema normalization pipeline...');
-                addLog('filter', 'RELEVANCE', 'Evaluating Tech Stack relevance (Python, FastAPI, PostgreSQL, AWS)... Threshold >= 50%');
-              } else if (pollCount === 17) {
-                setDiscoveryStatusText(`Deduplicating & computing priority tiers... (${elapsedSec}s)`);
-                addLog('dedup', 'DEDUP', 'Computing SHA-256 fingerprint collision hashes... Eliminating duplicates');
-                addLog('tier', 'TIER', 'Classifying Priority: Tier-1 opportunities (Target ATS & score >= 80%), Tier-2 opportunities');
-              } else if (pollCount >= 22) {
-                setDiscoveryStatusText(`Synchronizing PostgreSQL database... (${elapsedSec}s)`);
-                if (pollCount === 22) {
-                  addLog('db', 'POSTGRES', 'Writing transactional upserts to PostgreSQL (localhost:5432/job_agent)...');
-                }
-              } else {
-                setDiscoveryStatusText(`Crawling & syncing jobs to database... (${elapsedSec}s)`);
-              }
-            }
           } catch (pollErr) {
             console.warn('Status poll warning:', pollErr);
           }
-
-          await new Promise((r) => setTimeout(r, 1500));
         }
 
         if (isCancelledRef.current) {
           return;
         }
 
-        // Fetch final status and summary
-        const finalStatus = await getDiscoveryStatus().catch(() => lastFetchedStatus);
-        const summaryRes = await getDashboardSummary().catch(() => null);
-        const totalVerified = summaryRes?.active_jobs ?? 0;
+        // Fetch final status, summary, and real complete logs
+        const [finalStatus, summaryRes, finalLogs] = await Promise.all([
+          getDiscoveryStatus().catch(() => lastFetchedStatus),
+          getDashboardSummary().catch(() => null),
+          getDiscoveryLogs().catch(() => null),
+        ]);
+
+        if (finalLogs && finalLogs.length > 0) {
+          setTerminalLogs(finalLogs as TerminalLog[]);
+        }
+
         const syncedCount = finalStatus?.last_jobs_synced ?? 0;
         const finishTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
 
@@ -312,17 +272,9 @@ export const DiscoveryProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         setLastSyncedCount(syncedCount);
 
         if (finalStatus?.last_error) {
-          addLog('warn', 'WARN', `Discovery completed with warning: ${finalStatus.last_error}`);
           toast.error(`Discovery warning: ${finalStatus.last_error.slice(0, 100)}`, 10000);
         } else {
-          addLog(
-            'success',
-            'COMPLETE',
-            `✅ Discovery cycle finished at ${finishTime}. Successfully synced ${syncedCount} fresh jobs into database! Total active jobs: ${totalVerified}.`
-          );
-          // Play pleasant notification sound chime
           playDiscoverySuccessSound();
-          // Clear toast message
           toast.success(`🎉 Successfully discovered ${syncedCount} fresh jobs!`, 10000);
         }
       } catch (err: any) {

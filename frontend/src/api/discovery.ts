@@ -1,5 +1,5 @@
 import { apiClient } from './client';
-import type { DiscoveryStatus, DiscoverySource, SystemHealth } from '../types';
+import type { DiscoveryStatus, DiscoverySource, DiscoveryLog, SystemHealth } from '../types';
 
 export const getSystemHealth = async (): Promise<SystemHealth> => {
   const response = await apiClient.get<SystemHealth>('/health');
@@ -20,4 +20,15 @@ export const triggerDiscoveryRun = async (params: { source?: string; location?: 
   const response = await apiClient.post<{ message: string; status: string }>('/discovery/run', params);
   return response.data;
 };
+
+export const getDiscoveryLogs = async (sinceId: number = 0): Promise<DiscoveryLog[]> => {
+  const response = await apiClient.get<DiscoveryLog[]>('/discovery/logs', { params: { since_id: sinceId } });
+  return response.data;
+};
+
+export const clearDiscoveryLogs = async (): Promise<{ message: string }> => {
+  const response = await apiClient.delete<{ message: string }>('/discovery/logs');
+  return response.data;
+};
+
 

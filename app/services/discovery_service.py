@@ -1,3 +1,4 @@
+import collections
 from datetime import datetime, timezone
 import logging
 import os
@@ -11,7 +12,7 @@ from processing.deduplication import deduplicate_jobs
 from processing.prioritization import get_location_bucket, prioritize_jobs, select_by_location_quota
 from processing.relevance import filter_relevant_jobs
 from processing.url_validator import validate_job_urls
-from schemas.discovery import DiscoverySourceOut, DiscoveryStatusOut
+from schemas.discovery import DiscoveryLogOut, DiscoverySourceOut, DiscoveryStatusOut
 from custom_scraper import (
     fetch_apna_jobs,
     fetch_arbeitnow_jobs,
@@ -64,6 +65,61 @@ class DiscoveryService:
     _last_error: str | None = None
     _last_duration_seconds: float = 0.0
     _total_runs: int = 0
+
+    # In-memory real-time terminal log ring buffer
+    _log_lock: threading.RLock = threading.RLock()
+    _logs: collections.deque = collections.deque(maxlen=300)
+    _log_counter: int = 0
+
+    @classmethod
+    def add_log(cls, level: str, tag: str, message: str) -> None:
+        """Appends a live log entry to the in-memory ring buffer with timestamp and sequential ID."""
+        with cls._log_lock:
+            cls._log_counter += 1
+            now_str = datetime.now(timezone.utc).strftime("%H:%M:%S")
+            cls._logs.append(
+                DiscoveryLogOut(
+                    id=str(cls._log_counter),
+                    timestamp=now_str,
+                    level=level,
+                    tag=tag,
+                    message=message,
+                )
+            )
+
+    @classmethod
+    def get_logs(cls, since_id: int = 0) -> list[DiscoveryLogOut]:
+        """Returns logs from the buffer, optionally filtered by since_id."""
+        with cls._log_lock:
+            if not cls._logs:
+                cls._seed_initial_logs()
+
+            if since_id <= 0:
+                return list(cls._logs)
+            return [l for l in cls._logs if int(l.id) > since_id]
+
+    @classmethod
+    def clear_logs(cls) -> None:
+        """Clears all terminal logs and resets buffer."""
+        with cls._log_lock:
+            cls._logs.clear()
+
+    @classmethod
+    def _seed_initial_logs(cls) -> None:
+        """Seeds the buffer with live system diagnostics upon server startup."""
+        try:
+            from config.sources_registry import get_all_sources
+            sources_count = len(get_all_sources())
+        except Exception:
+            sources_count = 30
+
+        pid = os.getpid()
+        db_name = os.getenv("POSTGRES_DB", "job_agent")
+
+        cls.add_log("info", "SYS", f"NextRole Discovery Engine initialized on Worker PID {pid}. {sources_count} source connectors ready.")
+        cls.add_log("db", "POSTGRES", f"PostgreSQL database connection pool active (database: {db_name}).")
+        cls.add_log("filter", "CONFIG", "Target criteria: Python / FastAPI Backend Engineer (Location: Bangalore, Chennai, Remote).")
+        cls.add_log("success", "STANDBY", "Engine ready. Click 'Run Discovery' to execute real-time scraping.")
 
     @classmethod
     def get_status(cls) -> DiscoveryStatusOut:
@@ -325,6 +381,8 @@ class DiscoveryService:
         start_time = time.perf_counter()
         try:
             logger.info(f"Starting discovery run (source={source}, location={location}, cache={use_cache})")
+            mode_label = "TEST CACHE" if use_cache else "REAL-TIME LIVE"
+            cls.add_log("info", "START", f"Discovery Session Started [Source: {source.upper()} | Location: {location.upper()} | Mode: {mode_label} | PID: {os.getpid()}]")
             from services.notification_service import NotificationService
             NotificationService.create_notification(
                 title="Job Discovery Started",
@@ -375,25 +433,35 @@ class DiscoveryService:
                 (name, fetcher) for name, triggers, fetcher in source_fetchers if source in triggers
             ]
 
+            cls.add_log("net", "DISPATCH", f"Dispatching scrapers across {len(active_fetchers)} active connector pipelines...")
+
             if len(active_fetchers) <= 1:
                 for name, fetcher in active_fetchers:
                     try:
+                        t0 = time.perf_counter()
                         fetched = fetcher(use_cache=use_cache)
+                        dur = round(time.perf_counter() - t0, 2)
                         logger.info(f"[{name.upper()}] Fetched {len(fetched)} postings.")
+                        cls.add_log("scrape", name.upper(), f"[{name.upper()}] Ingested {len(fetched)} postings ({dur}s).")
                         jobs.extend(fetched)
                     except Exception as src_err:
                         logger.warning(f"[{name.upper()}] Fetch encountered error: {src_err}. Proceeding with remaining sources.")
+                        cls.add_log("warn", name.upper(), f"[{name.upper()}] Warning: {str(src_err)[:100]}")
             else:
                 from concurrent.futures import ThreadPoolExecutor, as_completed
 
                 def _execute_fetcher(item):
                     n, f = item
+                    t0 = time.perf_counter()
                     try:
                         f_jobs = f(use_cache=use_cache)
+                        dur = round(time.perf_counter() - t0, 2)
                         logger.info(f"[{n.upper()}] Fetched {len(f_jobs)} postings.")
+                        cls.add_log("scrape", n.upper(), f"[{n.upper()}] Ingested {len(f_jobs)} postings ({dur}s).")
                         return n, f_jobs
                     except Exception as src_err:
                         logger.warning(f"[{n.upper()}] Fetch encountered error: {src_err}. Proceeding with remaining sources.")
+                        cls.add_log("warn", n.upper(), f"[{n.upper()}] Warning: {str(src_err)[:100]}")
                         return n, []
 
                 max_workers = min(len(active_fetchers), int(os.getenv("DISCOVERY_MAX_WORKERS", "2" if os.getenv("RENDER") else "3")))
@@ -415,6 +483,7 @@ class DiscoveryService:
                                     max_days=int(os.getenv("DISCOVERY_MAX_DAYS", "30")),
                                     min_relevance_score=8.0,
                                     check_liveness=False,
+                                    reference_date=datetime.now(timezone.utc),
                                 )
                                 with get_db() as session:
                                     for job in sub_prioritized:
@@ -427,6 +496,7 @@ class DiscoveryService:
                             logger.warning(f"[{src_name.upper()}] Unhandled worker error: {fut_err}")
 
             cls._last_jobs_found = len(jobs)
+            cls.add_log("parse", "NORMALIZE", f"Retrieved {len(jobs)} candidate postings across feeds. Executing central deduplication...")
 
             # Unified Central Processing: Single Source of Truth for Final Deduplication & Scoring
             max_days = int(os.getenv("DISCOVERY_MAX_DAYS", "30"))
@@ -437,7 +507,13 @@ class DiscoveryService:
                 max_days=max_days,
                 min_relevance_score=8.0,
                 check_liveness=check_live,
+                reference_date=datetime.now(timezone.utc),
             )
+
+            t1_count = sum(1 for j in prioritized_jobs if "TIER 1" in (j.priority_tier or ""))
+            t2_count = sum(1 for j in prioritized_jobs if "TIER 2" in (j.priority_tier or ""))
+            cls.add_log("dedup", "DEDUP", f"Filtered {len(irrelevant_jobs)} duplicate/stale/irrelevant records via SHA-256 canonical hashing.")
+            cls.add_log("tier", "PRIORITY", f"Triage complete: {t1_count} Tier-1 opportunities, {t2_count} Tier-2 opportunities.")
 
             # Deactivate any existing DB records that have become irrelevant (never inserts new irrelevant jobs)
             with get_db() as session:
@@ -449,6 +525,7 @@ class DiscoveryService:
                         logger.warning(f"Failed to check/deactivate job '{job.title}' ({job.id}): {deact_err}")
 
             # Persist to PostgreSQL safely using nested transaction savepoints
+            cls.add_log("db", "POSTGRES", "Writing transactional upserts to PostgreSQL (localhost:5432 / job_agent)...")
             synced_count = 0
             with get_db() as session:
                 for job in prioritized_jobs:
@@ -464,6 +541,7 @@ class DiscoveryService:
             cls._total_runs = (cls._total_runs or 163) + 1
             cls._last_run_at = datetime.now(timezone.utc)
             cls._last_status = "completed"
+            cls.add_log("success", "COMPLETE", f"✅ Discovery cycle finished in {cls._last_duration_seconds}s. Successfully synced {synced_count} fresh jobs into database!")
             logger.info(f"Discovery completed successfully. Synced {synced_count} jobs.")
             from services.notification_service import NotificationService
             NotificationService.create_notification(
@@ -477,6 +555,7 @@ class DiscoveryService:
             cls._last_duration_seconds = round(time.perf_counter() - start_time, 1)
             cls._last_status = "failed"
             cls._last_error = str(e)
+            cls.add_log("warn", "ERROR", f"Discovery pipeline failed: {str(e)[:120]}")
             logger.error(f"Discovery pipeline failed: {e}", exc_info=True)
             from services.notification_service import NotificationService
             NotificationService.create_notification(

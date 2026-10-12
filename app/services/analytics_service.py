@@ -109,7 +109,7 @@ class AnalyticsService:
     """Service generating comprehensive, non-fabricated metrics for Analytics (Tab 2)."""
 
     _analytics_cache: dict[str, tuple[float, AnalyticsSummaryOut]] = {}
-    CACHE_TTL_SECONDS = 30.0
+    CACHE_TTL_SECONDS = 60.0
 
     @classmethod
     def clear_cache(cls) -> None:
@@ -153,32 +153,27 @@ class AnalyticsService:
         # ------------------------------------------------------------------
         # 1. TOP KPI CARDS (Applications, Interviews, Rates with real comparison)
         # ------------------------------------------------------------------
-        # Applications in current window (excluding drafts)
-        curr_apps = session.execute(
+        # Applications in single consolidated query (excluding drafts)
+        all_apps = session.execute(
             select(
                 Application.id,
                 Application.status,
                 Application.created_at,
                 Application.applied_at,
                 Application.portal_type,
-            ).where(
-                Application.created_at >= curr_start,
-                Application.created_at <= curr_end,
-                Application.status != "drafted",
-            )
+            ).where(Application.status != "drafted")
         ).all()
+
+        curr_apps = [
+            a for a in all_apps
+            if a.created_at and curr_start <= a.created_at <= curr_end
+        ]
         total_apps = len(curr_apps)
 
-        prev_apps = session.execute(
-            select(
-                Application.id,
-                Application.status,
-            ).where(
-                Application.created_at >= prev_start,
-                Application.created_at < prev_end,
-                Application.status != "drafted",
-            )
-        ).all()
+        prev_apps = [
+            a for a in all_apps
+            if a.created_at and prev_start <= a.created_at < prev_end
+        ]
         total_prev_apps = len(prev_apps)
 
         if total_prev_apps > 0:
@@ -281,7 +276,7 @@ class AnalyticsService:
                 Job.title,
                 Job.normalized_title,
                 Job.priority_tier,
-                Job.description,
+                func.left(Job.description, 200).label("description_snippet"),
                 Company.name.label("company_name"),
             )
             .outerjoin(Company, Job.company_id == Company.id)
@@ -484,7 +479,7 @@ class AnalyticsService:
         onsite_count = 0
         for j in jobs_in_window:
             loc = (j.location or "").lower()
-            desc_start = (j.description or "").lower()[:200]
+            desc_start = (j.description_snippet or "").lower()
             if "hybrid" in loc or "hybrid" in desc_start:
                 hybrid_count += 1
             elif j.is_remote or "remote" in loc:
@@ -538,15 +533,7 @@ class AnalyticsService:
         # ------------------------------------------------------------------
         # Group applications in current window by date
         # If fewer than 2 days in curr_apps, we inspect all non-draft applications to provide a rich chart
-        target_apps = curr_apps if len(curr_apps) > 0 else session.execute(
-            select(
-                Application.id,
-                Application.status,
-                Application.created_at,
-                Application.applied_at,
-                Application.portal_type,
-            ).where(Application.status != "drafted")
-        ).all()
+        target_apps = curr_apps if len(curr_apps) > 0 else all_apps
 
         date_counts: Counter[str] = Counter()
         for a in target_apps:
@@ -652,37 +639,40 @@ class AnalyticsService:
         # ------------------------------------------------------------------
         # 4. AGENT PERFORMANCE (Processing Funnel & Filtering Efficiency)
         # ------------------------------------------------------------------
-        # Real scraper telemetry in window from PipelineRun
-        raw_scraped_in_window = session.scalar(
-            select(func.sum(PipelineRun.jobs_collected)).where(
-                PipelineRun.started_at >= curr_start,
-                PipelineRun.started_at <= curr_end,
+        # Real scraper telemetry in window from PipelineRun (single consolidated query)
+        pipe_stats = session.execute(
+            select(
+                func.coalesce(
+                    func.sum(PipelineRun.jobs_collected).filter(
+                        PipelineRun.started_at >= curr_start,
+                        PipelineRun.started_at <= curr_end,
+                    ),
+                    0,
+                ),
+                func.coalesce(func.sum(PipelineRun.jobs_collected), 0),
             )
+        ).first()
+        raw_scraped_in_window = (
+            pipe_stats[0] if pipe_stats and pipe_stats[0] > 0 else (pipe_stats[1] if pipe_stats else 0)
         )
-        if not raw_scraped_in_window:
-            raw_scraped_in_window = session.scalar(select(func.sum(PipelineRun.jobs_collected))) or 0
 
-        jobs_count = session.scalar(
-            select(func.count(Job.id)).where(
-                Job.first_seen_at >= curr_start,
-                Job.first_seen_at <= curr_end,
-            )
-        ) or 0
-        if jobs_count == 0:
-            jobs_count = session.scalar(select(func.count(Job.id))) or 0
+        if total_int_jobs > 0:
+            jobs_count = total_int_jobs
+            target_pipe_jobs = jobs_in_window
+        else:
+            target_pipe_jobs = session.execute(
+                select(
+                    Job.id,
+                    Job.priority_score,
+                    Job.relevance_score,
+                    Job.priority_tier,
+                    Job.apply_type,
+                )
+            ).all()
+            jobs_count = len(target_pipe_jobs)
 
         total_collected = max(int(raw_scraped_in_window), jobs_count)
         duplicates_removed = max(0, total_collected - jobs_count)
-
-        target_pipe_jobs = jobs_in_window if len(jobs_in_window) > 0 else session.execute(
-            select(
-                Job.id,
-                Job.priority_score,
-                Job.relevance_score,
-                Job.priority_tier,
-                Job.apply_type,
-            )
-        ).all()
 
         relevant_jobs_count = sum(
             1 for j in target_pipe_jobs

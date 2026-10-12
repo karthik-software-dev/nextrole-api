@@ -34,6 +34,7 @@ from schemas.analytics import (
 from storage.models.application import Application
 from storage.models.job import Job
 from storage.models.job_source import JobSource
+from storage.models.pipeline_run import PipelineRun
 
 
 STATUS_COLOR_MAP = {
@@ -603,17 +604,17 @@ class AnalyticsService:
         # ------------------------------------------------------------------
         # 4. AGENT PERFORMANCE (Processing Funnel & Filtering Efficiency)
         # ------------------------------------------------------------------
-        # Real database counts in window
-        postings_collected = (
-            session.query(func.sum(Job.source_count))
+        # Real scraper telemetry in window from PipelineRun
+        raw_scraped_in_window = (
+            session.query(func.sum(PipelineRun.jobs_collected))
             .filter(
-                Job.first_seen_at >= curr_start,
-                Job.first_seen_at <= curr_end,
+                PipelineRun.started_at >= curr_start,
+                PipelineRun.started_at <= curr_end,
             )
             .scalar()
         )
-        if not postings_collected:
-            postings_collected = session.query(func.sum(Job.source_count)).scalar() or 0
+        if not raw_scraped_in_window:
+            raw_scraped_in_window = session.query(func.sum(PipelineRun.jobs_collected)).scalar() or 0
 
         jobs_count = (
             session.query(func.count(Job.id))
@@ -627,7 +628,7 @@ class AnalyticsService:
         if jobs_count == 0:
             jobs_count = session.query(func.count(Job.id)).scalar() or 0
 
-        total_collected = max(int(postings_collected), jobs_count)
+        total_collected = max(int(raw_scraped_in_window), jobs_count)
         duplicates_removed = max(0, total_collected - jobs_count)
 
         target_pipe_jobs = jobs_in_window if len(jobs_in_window) > 0 else session.query(Job).all()

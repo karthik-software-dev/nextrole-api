@@ -16,6 +16,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { useDiscovery } from '../../context/DiscoveryContext';
 import { useAuth } from '../../context/AuthContext';
 import { getSettings } from '../../api/settings';
+import { getSystemHealth } from '../../api';
+import type { SystemHealth } from '../../types';
 
 interface NavItem {
   name: string;
@@ -45,10 +47,50 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
       })
       .catch(() => { });
     return () => {
-
       isMounted = false;
     };
   }, []);
+
+  const [health, setHealth] = React.useState<SystemHealth | null>(null);
+
+  React.useEffect(() => {
+    let isMounted = true;
+    const fetchHealth = () => {
+      getSystemHealth()
+        .then((data) => {
+          if (isMounted && data) {
+            setHealth(data);
+          }
+        })
+        .catch(() => { });
+    };
+
+    fetchHealth();
+    const interval = setInterval(fetchHealth, 30000);
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, []);
+
+  const memoryMb = health?.memory_rss_mb ?? 173;
+
+  let ramStatusColor = 'bg-emerald-500';
+  let ramBorderColor = 'border-emerald-500/30 dark:border-emerald-500/30';
+  let ramTextColor = 'text-emerald-700 dark:text-emerald-400';
+  let ramBadgeBg = 'bg-emerald-50/90 dark:bg-emerald-950/50';
+
+  if (memoryMb > 450) {
+    ramStatusColor = 'bg-rose-500';
+    ramBorderColor = 'border-rose-500/30 dark:border-rose-500/30';
+    ramTextColor = 'text-rose-700 dark:text-rose-400';
+    ramBadgeBg = 'bg-rose-50/90 dark:bg-rose-950/50';
+  } else if (memoryMb > 350) {
+    ramStatusColor = 'bg-amber-500';
+    ramBorderColor = 'border-amber-500/30 dark:border-amber-500/30';
+    ramTextColor = 'text-amber-700 dark:text-amber-400';
+    ramBadgeBg = 'bg-amber-50/90 dark:bg-amber-950/50';
+  }
 
   const navItems: NavItem[] = [
     { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
@@ -175,14 +217,27 @@ export const Sidebar: React.FC<SidebarProps> = ({ isMobileOpen, onMobileClose })
 
             {/* Mobile Drawer Footer: Sync Status + User Profile + Theme Toggle */}
             <div className="mt-auto border-t border-slate-200/80 dark:border-slate-800/80 bg-slate-50/60 dark:bg-slate-900/40 p-3.5 space-y-2.5 shrink-0">
-              {/* Engine Sync Indicator */}
-              <div className="flex items-center justify-between px-1">
+              {/* Engine Sync & Live RAM Telemetry */}
+              <div className="flex items-center justify-between px-1 gap-2">
                 <div className="flex items-center gap-1.5 text-[11.5px] text-slate-500 dark:text-slate-400 font-medium">
-                  <span className="relative flex h-2 w-2">
+                  <span className="relative flex h-2 w-2 shrink-0">
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
                   </span>
-                  <span>Last sync: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{lastRunAt || 'Recent'}</strong></span>
+                  <span className="truncate">Last sync: <strong className="text-slate-700 dark:text-slate-300 font-semibold">{lastRunAt || 'Recent'}</strong></span>
+                </div>
+
+                {/* Live RAM Pill */}
+                <div
+                  className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg text-[11px] font-medium border ${ramBadgeBg} ${ramBorderColor} shrink-0`}
+                  title={`Live Memory Footprint: ${memoryMb} MB / 512 MB`}
+                >
+                  <span className="relative flex h-1.5 w-1.5 shrink-0">
+                    <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${ramStatusColor} opacity-75`} />
+                    <span className={`relative inline-flex rounded-full h-1.5 w-1.5 ${ramStatusColor}`} />
+                  </span>
+                  <span className="text-[9.5px] text-slate-500 dark:text-slate-400 font-semibold tracking-wide uppercase">RAM:</span>
+                  <span className={`font-bold font-mono text-[11px] ${ramTextColor}`}>{memoryMb} MB</span>
                 </div>
               </div>
 

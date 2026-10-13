@@ -362,7 +362,7 @@ export const TopHeader: React.FC<TopHeaderProps> = ({ onSearch, onToggleMobileNa
           }
 
           return (
-            <div className="relative" ref={healthRef}>
+            <div className="hidden md:block relative" ref={healthRef}>
               <button
                 type="button"
                 onClick={() => setIsHealthOpen(!isHealthOpen)}

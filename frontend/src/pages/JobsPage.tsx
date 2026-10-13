@@ -25,7 +25,7 @@ import { getJobs, getJobFilterCounts, createApplication, deleteApplicationByJobI
 import { useDiscovery } from '../context/DiscoveryContext';
 import { useToast } from '../context/ToastContext';
 import type { FilterCounts, JobSummary } from '../types';
-import { TierBadge, MatchScoreBadge, ApplicationStatusBadge } from '../components/ui/Badge';
+import { TierBadge, MatchScoreBadge, ApplicationStatusBadge, RecommendedResumeBadge } from '../components/ui/Badge';
 import { CompanyAvatar } from '../components/ui/CompanyAvatar';
 import { Pagination } from '../components/ui/Pagination';
 import { JobDetailDrawer } from './JobDetailDrawer';
@@ -2222,10 +2222,11 @@ export const JobsPage: React.FC = () => {
                               </div>
                             </div>
 
-                            {/* Line 1 Badges: Priority Tier + Match Score + Application Status */}
+                            {/* Line 1 Badges: Priority Tier + Match Score + Recommended Resume + Application Status */}
                             <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap pt-1 sm:pt-1.5">
                               <TierBadge tier={job.priority_tier} />
                               <MatchScoreBadge score={job.relevance_score} matchPercentage={job.match_percentage} />
+                              <RecommendedResumeBadge job={job} size="sm" />
                               {job.application_status && (
                                 <ApplicationStatusBadge status={job.application_status} size="sm" />
                               )}

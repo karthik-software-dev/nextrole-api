@@ -1,4 +1,5 @@
 import React from 'react';
+import { Sparkles, Layers, Server } from 'lucide-react';
 
 interface BadgeProps {
   children: React.ReactNode;
@@ -6,6 +7,7 @@ interface BadgeProps {
   size?: 'xs' | 'sm' | 'md';
   className?: string;
   dot?: boolean;
+  title?: string;
 }
 
 export const Badge: React.FC<BadgeProps> = ({
@@ -14,6 +16,7 @@ export const Badge: React.FC<BadgeProps> = ({
   size = 'sm',
   className = '',
   dot = false,
+  title,
 }) => {
   const sizeStyles = {
     xs: 'px-1.5 py-0.5 text-[10.5px] font-semibold',
@@ -49,6 +52,7 @@ export const Badge: React.FC<BadgeProps> = ({
 
   return (
     <span
+      title={title}
       className={`inline-flex items-center gap-1.5 whitespace-nowrap shrink-0 rounded-md border transition-colors ${sizeStyles[size]} ${variantStyles[variant]} ${className}`}
     >
       {dot && <span className={`h-1.5 w-1.5 rounded-full shrink-0 ${dotStyles[variant]}`} />}
@@ -136,3 +140,107 @@ export const MatchScoreBadge: React.FC<{ score: number; matchPercentage?: number
     </span>
   );
 };
+
+export interface RecommendedResumeInfo {
+  track: 'ai' | 'fullstack' | 'backend';
+  title: string;
+  fileName: string;
+  badgeLabel: string;
+  variant: 'purple' | 'blue' | 'emerald';
+  description: string;
+}
+
+export const getRecommendedResume = (job?: {
+  title?: string;
+  matched_skills?: string[];
+  tags?: string[];
+  description_snippet?: string | null;
+} | null): RecommendedResumeInfo => {
+  if (!job) {
+    return {
+      track: 'backend',
+      title: 'Python Backend Track',
+      fileName: 'Karthik_Backend.pdf',
+      badgeLabel: 'Python Backend',
+      variant: 'emerald',
+      description: 'Optimized for FastAPI, Django, Flask & Backend Architecture',
+    };
+  }
+
+  const title = (job.title || '').toLowerCase();
+  const skills = (job.matched_skills || []).map((s) => s.toLowerCase()).join(' ');
+  const tags = (job.tags || []).map((t) => t.toLowerCase()).join(' ');
+  const snippet = (job.description_snippet || '').toLowerCase();
+  const combined = `${title} ${skills} ${tags} ${snippet}`;
+
+  // 1. Check AI / GenAI Track
+  const aiRegex = /\b(ai|genai|gen\s*ai|llm|llms|rag|agentic|machine\s*learning|deep\s*learning|nlp|computer\s*vision|opencv|langchain|llamaindex|prompt|data\s*scientist|data\s*science|pytorch|tensorflow|huggingface)\b/i;
+  if (aiRegex.test(combined)) {
+    return {
+      track: 'ai',
+      title: 'Python + AI Track',
+      fileName: 'Karthik_AI.pdf',
+      badgeLabel: 'Python + AI',
+      variant: 'purple',
+      description: 'Optimized for GenAI, LLMs, Agents & ML workflows',
+    };
+  }
+
+  // 2. Check Full Stack (React + Python) Track
+  const fullstackRegex = /\b(full\s*stack|fullstack|react|reactjs|react\.js|frontend|front\s*end|front-end|nextjs|next\.js|mern|ui\s*developer|web\s*developer|typescript)\b/i;
+  if (fullstackRegex.test(combined)) {
+    return {
+      track: 'fullstack',
+      title: 'Full Stack Track',
+      fileName: 'Karthik_FullStack.pdf',
+      badgeLabel: 'Full Stack',
+      variant: 'blue',
+      description: 'Optimized for React.js, Next.js UI & Python APIs',
+    };
+  }
+
+  // 3. Fallback: Python Backend Specialist
+  return {
+    track: 'backend',
+    title: 'Python Backend Track',
+    fileName: 'Karthik_Backend.pdf',
+    badgeLabel: 'Python Backend',
+    variant: 'emerald',
+    description: 'Optimized for FastAPI, Django, Flask & Backend Architecture',
+  };
+};
+
+export const RecommendedResumeBadge: React.FC<{
+  job?: {
+    title?: string;
+    matched_skills?: string[];
+    tags?: string[];
+    description_snippet?: string | null;
+  } | null;
+  size?: 'xs' | 'sm' | 'md';
+  className?: string;
+  showIcon?: boolean;
+}> = ({ job, size = 'sm', className = '', showIcon = true }) => {
+  const rec = getRecommendedResume(job);
+
+  const iconSizes = {
+    xs: 'h-2.5 w-2.5',
+    sm: 'h-3 w-3',
+    md: 'h-3.5 w-3.5',
+  };
+
+  const IconComponent = rec.track === 'ai' ? Sparkles : rec.track === 'fullstack' ? Layers : Server;
+
+  return (
+    <Badge
+      variant={rec.variant}
+      size={size}
+      className={`font-semibold cursor-default select-none shadow-2xs group ${className}`}
+      title={`Recommended Resume: ${rec.fileName} (${rec.description})`}
+    >
+      {showIcon && <IconComponent className={`${iconSizes[size]} shrink-0`} />}
+      <span>{rec.badgeLabel}</span>
+    </Badge>
+  );
+};
+

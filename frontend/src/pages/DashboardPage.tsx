@@ -36,7 +36,7 @@ import { SalaryDistributionChart } from '../components/dashboard/SalaryDistribut
 import { DiscoverySpeedCard } from '../components/dashboard/DiscoverySpeedCard';
 import { RecentActivity } from '../components/dashboard/RecentActivity';
 import { JobDetailDrawer } from './JobDetailDrawer';
-import { TierBadge, MatchScoreBadge, ApplicationStatusBadge } from '../components/ui/Badge';
+import { TierBadge, MatchScoreBadge, ApplicationStatusBadge, RecommendedResumeBadge } from '../components/ui/Badge';
 import { CompanyAvatar } from '../components/ui/CompanyAvatar';
 import { playJobApplySound } from '../utils/audio';
 import { formatRelativeTime } from '../utils/date';
@@ -698,6 +698,7 @@ export const DashboardPage: React.FC = () => {
                             <div className="flex items-center gap-1.5 flex-wrap pt-1">
                               <TierBadge tier={job.priority_tier} />
                               <MatchScoreBadge score={job.relevance_score} matchPercentage={job.match_percentage} />
+                              <RecommendedResumeBadge job={job} size="xs" />
                               {job.application_status && (
                                 <ApplicationStatusBadge status={job.application_status} size="xs" />
                               )}

@@ -15,9 +15,10 @@ import {
   Trash2,
   PlusCircle,
   Loader2,
+  Server,
 } from 'lucide-react';
 import { Drawer } from '../components/ui/Drawer';
-import { TierBadge, MatchScoreBadge, ApplicationStatusBadge } from '../components/ui/Badge';
+import { TierBadge, MatchScoreBadge, ApplicationStatusBadge, RecommendedResumeBadge, getRecommendedResume } from '../components/ui/Badge';
 import { CompanyAvatar } from '../components/ui/CompanyAvatar';
 import { Button } from '../components/ui/Button';
 import { getJobById, createApplication, deactivateJob } from '../api';
@@ -192,8 +193,9 @@ export const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
                   <span className="text-[9.5px] uppercase tracking-wider font-bold opacity-90 mt-0.5">Match</span>
                 </div>
                 <div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
                     <TierBadge tier={job.priority_tier} />
+                    <RecommendedResumeBadge job={job} size="sm" />
                     {job.application_status && (
                       <ApplicationStatusBadge status={job.application_status} size="sm" />
                     )}
@@ -335,6 +337,46 @@ export const JobDetailDrawer: React.FC<JobDetailDrawerProps> = ({
           {/* Tab Content */}
           {activeTab === 'overview' && (
             <div className="space-y-4">
+              {/* Recommended Target Resume Card */}
+              {(() => {
+                const rec = getRecommendedResume(job);
+                return (
+                  <div className="p-4 rounded-2xl border border-indigo-200/80 dark:border-indigo-900/50 bg-gradient-to-r from-indigo-50/60 via-slate-50/30 to-indigo-50/30 dark:from-indigo-950/20 dark:via-slate-900/30 dark:to-indigo-950/10 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-start gap-3">
+                      <div className="p-2.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 shadow-2xs shrink-0 mt-0.5 sm:mt-0">
+                        {rec.track === 'ai' ? (
+                          <Sparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                        ) : rec.track === 'fullstack' ? (
+                          <Layers className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                        ) : (
+                          <Server className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
+                        )}
+                      </div>
+                      <div>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-[11.5px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                            Recommended Target Resume
+                          </span>
+                          <RecommendedResumeBadge job={job} size="xs" />
+                        </div>
+                        <p className="font-bold text-[14.5px] text-slate-900 dark:text-white mt-0.5">
+                          Upload: <span className="font-mono text-indigo-600 dark:text-indigo-400 select-all">{rec.fileName}</span>
+                        </p>
+                        <p className="text-[12px] text-slate-600 dark:text-slate-400 mt-0.5">
+                          {rec.description}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="sm:self-center shrink-0">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11.5px] font-semibold bg-white dark:bg-[#111726] border border-slate-200/80 dark:border-slate-700/80 text-slate-700 dark:text-slate-300 shadow-2xs">
+                        <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500" />
+                        Profile Matched
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
+
               <div className="grid grid-cols-2 gap-3.5">
                 <div className="p-4 rounded-2xl border border-slate-200/80 dark:border-slate-800 bg-white dark:bg-[#111726] shadow-2xs hover:border-slate-300 dark:hover:border-slate-700 transition-colors">
                   <span className="text-[12px] font-bold uppercase tracking-wider text-slate-700 dark:text-slate-400">Location Bucket</span>
